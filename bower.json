@@ -1,0 +1,36 @@
+{
+  "name": "Easelbone",
+  "authors": [
+    "Thijs Van der Schaeghe <thijs@catlab.be>"
+  ],
+  "description": "GUI engine combining easeljs and backbonejs. Developed to be used with flash cc html5 output, but can be used with any easeljs content.",
+  "main": "dist/scripts/easeljs-backbone.js",
+  "moduleType": [
+    "amd"
+  ],
+  "keywords": [
+    "easeljs",
+	"backbone"
+  ],
+  "license": "MIT",
+  "homepage": "https://www.catlab.eu/",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests",
+    "app",
+    "bower.json",
+    "Gruntfile.js",
+    "package.json"
+  ],
+  "dependencies": {
+
+  },
+  "devDependencies": {
+    "requirejs": null,
+    "grunt": null
+  }
+}
