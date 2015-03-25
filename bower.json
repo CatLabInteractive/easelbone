@@ -27,10 +27,16 @@
     "package.json"
   ],
   "dependencies": {
-
+	"backbone": "1.*",
+	"underscore": "1.*",
+	"EaselJS": "0.8.0",
+	"TweenJS": "0.6.0",
+	"PreloadJS": "0.6.0",
+	"SoundJS": "0.6.0",
+	"requirejs": null,
+	"jquery": null
   },
   "devDependencies": {
-    "requirejs": null,
-    "grunt": null
+    "requirejs": null
   }
 }

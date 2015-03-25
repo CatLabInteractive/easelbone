@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+	<head lang="en">
+
+	</head>
+
+	<body>
+
+		<script src="../scripts/vendor/requirejs/require.js"></script>
+
+		<script>
+
+			require.config ({
+				'baseUrl' : '../scripts/',
+				'urlArgs' : 'bust=v2'
+			});
+
+			require ([ 'main' ], function (easelbone)
+			{
+
+				easelbone.test ();
+
+			});
+
+		</script>
+
+	</body>
+</html>
