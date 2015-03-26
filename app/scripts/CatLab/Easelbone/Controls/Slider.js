@@ -9,7 +9,7 @@ define (
 			var self = this;
 
 			this.element = element;
-			this.value = 0.5;
+			this.value = 0.7;
 			this.initialized = false;
 
 			var listener = element.addEventListener ('tick', function () {
@@ -23,7 +23,7 @@ define (
 			this.initialized = true;
 			this.setValue (this.value);
 
-			//this.element.gotoAndPlay ('Over');
+			this.element.gotoAndPlay ('Over');
 		};
 
 		Slider.prototype.link = function (model, attribute) {
