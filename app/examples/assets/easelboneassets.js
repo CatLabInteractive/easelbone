@@ -326,18 +326,7 @@ if (loop == null) { loop = false; }	this.initialize(mode,startPosition,loop,{"Up
 
 	// timeline functions:
 	this.frame_0 = function() {
-		if (typeof (this.setValue) == 'undefined') {
-			this.setValue = function (percentage) {
-		
-				var width = 300;
-				var margin = 35;
-		
-				this.pointer.x = margin + (percentage * width);
-			};
-		}
-		
 		this.pointer.gotoAndStop('Up');
-		
 		this.stop();
 	}
 	this.frame_1 = function() {
