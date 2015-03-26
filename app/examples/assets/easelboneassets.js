@@ -373,31 +373,50 @@ p.nominalBounds = new cjs.Rectangle(0,4.9,379.1,36.1);
 	this.initialize();
 
 	// Layer 1
+	this.instance = new lib.Cog();
+	this.instance.setTransform(753.2,44.1,0.466,0.466,0,0,0,75,77.2);
+
+	this.text = new cjs.Text("This is another checkbox.", "20px 'Times New Roman'");
+	this.text.lineHeight = 22;
+	this.text.lineWidth = 386;
+	this.text.setTransform(104.1,202);
+
+	this.text_1 = new cjs.Text("This is a checkbox.", "20px 'Times New Roman'");
+	this.text_1.lineHeight = 22;
+	this.text_1.lineWidth = 386;
+	this.text_1.setTransform(104,145.3);
+
+	this.checkbox2 = new lib.Checkbox();
+	this.checkbox2.setTransform(50.2,221,1,1,0,0,0,13.9,19.2);
+
+	this.checkbox1 = new lib.Checkbox();
+	this.checkbox1.setTransform(49.7,161.8,1,1,0,0,0,13.9,19.2);
+
 	this.button2 = new lib.Button();
-	this.button2.setTransform(462.4,182,1,1,0,0,0,108.6,39.4);
+	this.button2.setTransform(472.4,313,1,1,0,0,0,108.6,39.4);
 
 	this.button1 = new lib.Button();
-	this.button1.setTransform(155.1,182,1,1,0,0,0,108.6,39.4);
+	this.button1.setTransform(140.1,313,1,1,0,0,0,108.6,39.4);
 
-	this.text = new cjs.Text("Slider 2", "20px 'Times New Roman'", "#320B1F");
-	this.text.lineHeight = 22;
-	this.text.lineWidth = 100;
-	this.text.setTransform(35.8,94);
+	this.text_2 = new cjs.Text("Slider 2", "20px 'Times New Roman'", "#320B1F");
+	this.text_2.lineHeight = 22;
+	this.text_2.lineWidth = 100;
+	this.text_2.setTransform(35.8,94);
 
 	this.slider2 = new lib.Slider();
 	this.slider2.setTransform(416.8,102,1,1,0,0,0,189.6,22.9);
 
-	this.text_1 = new cjs.Text("Slider 1", "20px 'Times New Roman'", "#320B1F");
-	this.text_1.lineHeight = 22;
-	this.text_1.lineWidth = 100;
-	this.text_1.setTransform(36,44);
+	this.text_3 = new cjs.Text("Slider 1", "20px 'Times New Roman'", "#320B1F");
+	this.text_3.lineHeight = 22;
+	this.text_3.lineWidth = 100;
+	this.text_3.setTransform(36,44);
 
 	this.slider1 = new lib.Slider();
 	this.slider1.setTransform(417,52,1,1,0,0,0,189.6,22.9);
 
-	this.addChild(this.slider1,this.text_1,this.slider2,this.text,this.button1,this.button2);
+	this.addChild(this.slider1,this.text_3,this.slider2,this.text_2,this.button1,this.button2,this.checkbox1,this.checkbox2,this.text_1,this.text,this.instance);
 }).prototype = p = new cjs.Container();
-p.nominalBounds = new cjs.Rectangle(35.3,34,571.3,187.5);
+p.nominalBounds = new cjs.Rectangle(20.3,8.1,768,344.3);
 
 
 // stage content:
@@ -408,15 +427,12 @@ p.nominalBounds = new cjs.Rectangle(35.3,34,571.3,187.5);
 	this.initialize();
 
 	// Layer 1
-	this.instance = new lib.Cog();
-	this.instance.setTransform(716,515,1,1,0,0,0,75,77.1);
+	this.instance = new lib.ExampleSettingsView();
+	this.instance.setTransform(297,43,1,1,0,0,0,296.1,43);
 
-	this.instance_1 = new lib.ExampleSettingsView();
-	this.instance_1.setTransform(297,43,1,1,0,0,0,296.1,43);
-
-	this.addChild(this.instance_1,this.instance);
+	this.addChild(this.instance);
 }).prototype = p = new cjs.Container();
-p.nominalBounds = new cjs.Rectangle(436.1,334,755,558.2);
+p.nominalBounds = new cjs.Rectangle(421.1,308.1,767.9,344.3);
 
 })(lib = lib||{}, images = images||{}, createjs = createjs||{});
 var lib, images, createjs;
