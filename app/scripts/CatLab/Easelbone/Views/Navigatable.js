@@ -34,8 +34,6 @@ define (
 					}
 				}
 
-				console.log (this._controls);
-
 				// Reset the options for Navigatable
 				this.resetOptions ();
 			},
@@ -50,8 +48,6 @@ define (
 				this._users = users;
 
 				var self = this;
-
-				console.log (this._controls);
 
 				// Set the events for this controller.
 				for (var i = 0; i < this._users.length; i ++)
