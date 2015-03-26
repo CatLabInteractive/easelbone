@@ -3,6 +3,12 @@ module.exports = function(grunt) {
 	grunt.initConfig
 	({
 
+		bowerRequirejs: {
+			target: {
+				rjsConfig: 'app/scripts/main.js'
+			}
+		},
+
 		'requirejs' : {
 			'compile' : {
 				'options' : {
@@ -48,6 +54,7 @@ module.exports = function(grunt) {
 	// Copy
 	grunt.loadNpmTasks('grunt-contrib-copy');
 
-	// Tasks
-	grunt.registerTask('default', ['requirejs', 'copy', 'clean' ]);
+	grunt.loadNpmTasks('grunt-bower-requirejs');
+
+	grunt.registerTask('default', ['bower', 'requirejs', 'copy', 'clean' ]);
 };

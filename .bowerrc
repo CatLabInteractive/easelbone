@@ -1,3 +1,6 @@
 {
-  "directory" : "app/scripts/vendor/"
+  "directory" : "app/scripts/vendor/",
+  "scripts": {
+	"postinstall": "grunt bower"
+  }
 }
