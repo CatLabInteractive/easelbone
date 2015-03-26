@@ -53,7 +53,7 @@ define (
 				// Ticker
 				//createjs.Ticker.timingMode = createjs.Ticker.RAF_SYNCHED;
 				createjs.Ticker.addEventListener ('tick', function (e) { self.tick (e) });
-				//createjs.Ticker.addEventListener ("tick", Quizted.RootView.stage);
+				createjs.Ticker.addEventListener ('tick', this.stage);
 
 				//this.stage.enableMouseOver(assets.properties.fps);
 				this.resize ();
@@ -121,7 +121,7 @@ define (
 					this.update ();
 
 				// Update the stage.
-				this.stage.handleEvent ("tick", event);
+				//this.stage.handleEvent ("tick", event);
 
 				this.trigger ('tick:after');
 			},
