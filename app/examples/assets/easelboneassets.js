@@ -346,18 +346,18 @@ if (loop == null) { loop = false; }	this.initialize(mode,startPosition,loop,{"Up
 	this.timeline.addTween(cjs.Tween.get(this).call(this.frame_0).wait(1).call(this.frame_1).wait(1).call(this.frame_2).wait(1).call(this.frame_3).wait(1));
 
 	// Markers
+	this.pointer = new lib.Pointer();
+	this.pointer.setTransform(35,41.1,1,1,0,0,0,0,2);
+
 	this.maximum = new lib.Marker();
-	this.maximum.setTransform(349.5,33.3);
+	this.maximum.setTransform(342,35);
 
 	this.minimum = new lib.Marker();
-	this.minimum.setTransform(29.5,41);
+	this.minimum.setTransform(35,41);
 
-	this.timeline.addTween(cjs.Tween.get({}).to({state:[{t:this.minimum},{t:this.maximum}]}).wait(4));
+	this.timeline.addTween(cjs.Tween.get({}).to({state:[{t:this.minimum},{t:this.maximum},{t:this.pointer}]}).wait(4));
 
 	// Line
-	this.pointer = new lib.Pointer();
-	this.pointer.setTransform(42,55.1,1,1,0,0,0,11.4,14.1);
-
 	this.shape = new cjs.Shape();
 	this.shape.graphics.f().s("#320B1F").ss(4).p("AgY4mMAAxAxN");
 	this.shape.setTransform(186,26.5,1.113,1.111,-90,0,0,0.1,0);
@@ -370,10 +370,10 @@ if (loop == null) { loop = false; }	this.initialize(mode,startPosition,loop,{"Up
 	this.shape_2.graphics.f("#320B1F").s().p("AgkAlQgQgPAAgWQAAgUAQgQQAPgQAVAAQAVAAAQAQQAQAQAAAUQAAAWgQAPQgQAQgVAAQgVAAgPgQg");
 	this.shape_2.setTransform(370.1,24,1.694,1.694,-90);
 
-	this.timeline.addTween(cjs.Tween.get({}).to({state:[{t:this.shape_2},{t:this.shape_1},{t:this.shape},{t:this.pointer}]}).to({state:[{t:this.shape_2},{t:this.shape_1},{t:this.shape},{t:this.pointer}]},1).to({state:[{t:this.shape_2},{t:this.shape_1},{t:this.shape},{t:this.pointer}]},1).to({state:[{t:this.shape_2},{t:this.shape_1},{t:this.shape},{t:this.pointer}]},1).wait(1));
+	this.timeline.addTween(cjs.Tween.get({}).to({state:[{t:this.shape_2},{t:this.shape_1},{t:this.shape}]}).to({state:[{t:this.shape_2},{t:this.shape_1},{t:this.shape}]},1).to({state:[{t:this.shape_2},{t:this.shape_1},{t:this.shape}]},1).to({state:[{t:this.shape_2},{t:this.shape_1},{t:this.shape}]},1).wait(1));
 
 }).prototype = p = new cjs.MovieClip();
-p.nominalBounds = new cjs.Rectangle(0,12.8,379.1,28.2);
+p.nominalBounds = new cjs.Rectangle(0,10.9,379.1,30.1);
 
 
 (lib.ExampleSettingsView = function() {
