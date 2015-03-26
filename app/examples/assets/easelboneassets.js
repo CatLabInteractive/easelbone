@@ -17,6 +17,13 @@ lib.properties = {
 
 
 
+(lib.Marker = function() {
+	this.initialize();
+
+}).prototype = p = new cjs.Container();
+p.nominalBounds = null;
+
+
 (lib.BigtextPlaceHolder = function() {
 	this.initialize();
 
@@ -30,10 +37,11 @@ p.nominalBounds = null;
 	// Layer 1
 	this.shape = new cjs.Shape();
 	this.shape.graphics.f("#320B1F").s().p("AjQiRIENALICfCGIiTCHIkkALg");
+	this.shape.setTransform(-22,0);
 
 	this.addChild(this.shape);
 }).prototype = p = new cjs.Container();
-p.nominalBounds = new cjs.Rectangle(-22,-14.7,44.1,29.4);
+p.nominalBounds = new cjs.Rectangle(-44,-14.7,44.1,29.4);
 
 
 (lib.PointerActive = function() {
@@ -42,10 +50,11 @@ p.nominalBounds = new cjs.Rectangle(-22,-14.7,44.1,29.4);
 	// Layer 1
 	this.shape = new cjs.Shape();
 	this.shape.graphics.f("#006633").s().p("AjQiRIENALICfCGIiTCHIkkALg");
+	this.shape.setTransform(-22,0.1);
 
 	this.addChild(this.shape);
 }).prototype = p = new cjs.Container();
-p.nominalBounds = new cjs.Rectangle(-22,-14.7,44.1,29.4);
+p.nominalBounds = new cjs.Rectangle(-44,-14.6,44.1,29.4);
 
 
 (lib.Checkbox = function(mode,startPosition,loop) {
@@ -115,16 +124,16 @@ p.nominalBounds = new cjs.Rectangle(-75,-77.1,150.1,154.3);
 if (loop == null) { loop = false; }	this.initialize(mode,startPosition,loop,{"Up":0,"Over":1,"Down":2,Out:3});
 
 	// Layer 1
-	this.instance = new lib.PointerInactive("synched",0);
-	this.instance.setTransform(14.4,19.1,0.639,0.774,90,0,0,7.8,-3.9);
+	this.instance = new lib.PointerInactive("synched",0,false);
+	this.instance.setTransform(3,5,0.639,0.774,90,0,0,7.8,-3.9);
 
 	this.instance_1 = new lib.PointerActive("synched",0);
-	this.instance_1.setTransform(14.4,19.1,0.639,0.774,90,0,0,7.8,-3.9);
+	this.instance_1.setTransform(3,5,0.639,0.774,90,0,0,7.8,-3.9);
 
-	this.timeline.addTween(cjs.Tween.get({}).to({state:[{t:this.instance}]}).to({state:[{t:this.instance_1}]},1).to({state:[{t:this.instance_1}]},1).to({state:[{t:this.instance_1}]},1).wait(1));
+	this.timeline.addTween(cjs.Tween.get({}).to({state:[{t:this.instance}]}).to({state:[{t:this.instance_1,p:{x:3,y:5}}]},1).to({state:[{t:this.instance_1,p:{x:3,y:5}}]},1).to({state:[{t:this.instance_1,p:{x:3.1,y:5.1}}]},1).wait(1));
 
 }).prototype = p = new cjs.MovieClip();
-p.nominalBounds = new cjs.Rectangle(0,0,22.8,28.2);
+p.nominalBounds = new cjs.Rectangle(-11.4,-28.1,22.8,28.2);
 
 
 (lib.Button = function(mode,startPosition,loop) {
@@ -319,17 +328,17 @@ if (loop == null) { loop = false; }	this.initialize(mode,startPosition,loop,{"Up
 	this.frame_0 = function() {
 		if (typeof (this.setValue) == 'undefined') {
 			this.setValue = function (percentage) {
-				
+		
 				var width = 300;
 				var margin = 35;
-				
+		
 				this.pointer.x = margin + (percentage * width);
 			};
 		}
 		
-		this.pointer.gotoAndStop ('Up');
+		this.pointer.gotoAndStop('Up');
 		
-		this.stop ();
+		this.stop();
 	}
 	this.frame_1 = function() {
 		this.stop ();
@@ -347,9 +356,18 @@ if (loop == null) { loop = false; }	this.initialize(mode,startPosition,loop,{"Up
 	// actions tween:
 	this.timeline.addTween(cjs.Tween.get(this).call(this.frame_0).wait(1).call(this.frame_1).wait(1).call(this.frame_2).wait(1).call(this.frame_3).wait(1));
 
+	// Markers
+	this.maximum = new lib.Marker();
+	this.maximum.setTransform(349.5,33.3);
+
+	this.minimum = new lib.Marker();
+	this.minimum.setTransform(29.5,41);
+
+	this.timeline.addTween(cjs.Tween.get({}).to({state:[{t:this.minimum},{t:this.maximum}]}).wait(4));
+
 	// Line
 	this.pointer = new lib.Pointer();
-	this.pointer.setTransform(34,19,1,1,0,0,0,11.4,14.1);
+	this.pointer.setTransform(42,55.1,1,1,0,0,0,11.4,14.1);
 
 	this.shape = new cjs.Shape();
 	this.shape.graphics.f().s("#320B1F").ss(4).p("AgY4mMAAxAxN");
@@ -366,7 +384,7 @@ if (loop == null) { loop = false; }	this.initialize(mode,startPosition,loop,{"Up
 	this.timeline.addTween(cjs.Tween.get({}).to({state:[{t:this.shape_2},{t:this.shape_1},{t:this.shape},{t:this.pointer}]}).to({state:[{t:this.shape_2},{t:this.shape_1},{t:this.shape},{t:this.pointer}]},1).to({state:[{t:this.shape_2},{t:this.shape_1},{t:this.shape},{t:this.pointer}]},1).to({state:[{t:this.shape_2},{t:this.shape_1},{t:this.shape},{t:this.pointer}]},1).wait(1));
 
 }).prototype = p = new cjs.MovieClip();
-p.nominalBounds = new cjs.Rectangle(0,4.9,379.1,36.1);
+p.nominalBounds = new cjs.Rectangle(0,12.8,379.1,28.2);
 
 
 (lib.ExampleSettingsView = function() {
