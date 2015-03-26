@@ -4,7 +4,7 @@
     "Thijs Van der Schaeghe <thijs@catlab.be>"
   ],
   "description": "GUI engine combining easeljs and backbonejs. Developed to be used with flash cc html5 output, but can be used with any easeljs content.",
-  "main": "dist/scripts/easeljs-backbone.js",
+  "main": "dist/scripts/easelbone.js",
   "moduleType": [
     "amd"
   ],
@@ -18,7 +18,7 @@
   "ignore": [
     "**/.*",
     "node_modules",
-    "bower_components",
+    "vendor",
     "test",
     "tests",
     "app",
@@ -34,7 +34,7 @@
 	"PreloadJS": "0.6.0",
 	"SoundJS": "0.6.0",
 	"requirejs": null,
-	"jquery": null
+	"jquery": "2.1.*"
   },
   "devDependencies": {
     "requirejs": null

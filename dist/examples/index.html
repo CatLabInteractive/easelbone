@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+	<head lang="en">
+
+	</head>
+
+	<body>
+
+		<!-- Ze canvas -->
+		<div id="container" style="width: 1024px; height: 768px;"></div>
+
+		<!-- Ze requirejs -->
+		<script src="../scripts/vendor/requirejs/require.js"></script>
+
+		<!-- Ze game code -->
+		<script>
+
+			require.config ({
+				'baseUrl' : '../scripts/',
+				'urlArgs' : 'bust=v2'
+			});
+
+			require ([ 'main' ], function (easelbone)
+			{
+				// Some additional config to load the assets is required here.
+				require.config ({
+					'paths' : {
+						'assets' : '../examples/assets/easelboneassets'
+					},
+
+					'shim' : {
+						assets: {
+							deps: [
+								"Movieclip"
+							],
+							exports: "lib"
+						}
+					}
+				});
+
+				// We'll need backbone to define our view, and easeljs to handle our rendering.
+				// We'll also need the assets.
+				require ([ 'backbone', 'EaselJS', 'assets' ], function (backbone, createjs, assets) {
+
+					var rootView = new easelbone.Views.Root ({'container': document.getElementById ('container') });
+
+					// Set default properties
+					easelbone.setProperties (assets.properties);
+
+					// Ticker
+					createjs.Ticker.addEventListener ("tick", rootView.stage);
+					createjs.Ticker.setFPS (assets.properties.fps);
+
+					// Load assets
+					easelbone.Loader.loadAssets (assets, '../examples/assets/');
+
+					// And actually do load them.
+					easelbone.Loader.load (function () {
+
+						// NOW WE ARE READY FOR THE REAL SHIZZLE
+						// Create a view and add it to the root.
+
+						// An example settings view.slider1
+						var ExampleView = easelbone.Views.Navigatable.extend ({
+
+							'initialize' : function () {
+
+								this.view = new assets.ExampleSettingsView ();
+
+								// Register the various controls
+								this.addControl (new easelbone.Controls.Slider (this.view.slider1));
+								this.addControl (new easelbone.Controls.Slider (this.view.slider2));
+
+							},
+
+							'render' : function () {
+
+								this.addCenter (this.view);
+
+							}
+
+						});
+
+						rootView.setView (new ExampleView ());
+					});
+				});
+			});
+
+		</script>
+
+	</body>
+</html>

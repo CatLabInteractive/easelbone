@@ -20,7 +20,15 @@ module.exports = function(grunt) {
 					optimizeCss: "standard",
 					removeCombined: true,
 					exclude: [
-
+						'jquery',
+						'EaselJS',
+						'Movieclip',
+						'PreloadJS',
+						'SoundJS',
+						'TweenJS',
+						'backbone',
+						'requirejs',
+						'underscore'
 					]
 				}
 			}
@@ -56,5 +64,5 @@ module.exports = function(grunt) {
 
 	grunt.loadNpmTasks('grunt-bower-requirejs');
 
-	grunt.registerTask('default', ['bower', 'requirejs', 'copy', 'clean' ]);
+	grunt.registerTask('default', ['requirejs', 'copy', 'clean' ]);
 };

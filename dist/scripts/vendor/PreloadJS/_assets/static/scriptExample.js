@@ -1,0 +1,1 @@
+(function(){window.foo=!0})();

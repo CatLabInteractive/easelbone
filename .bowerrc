@@ -1,6 +1,6 @@
 {
   "directory" : "app/scripts/vendor/",
   "scripts": {
-	"postinstall": "grunt bower"
+	"postinstall": "grunt bowerRequirejs"
   }
 }

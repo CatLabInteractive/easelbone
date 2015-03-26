@@ -23,8 +23,8 @@ require.config ({
 			],
 			exports: "createjs"
 		},
-		"Movieclip": {
-			deps : [
+		Movieclip: {
+			deps: [
 				"EaselJS",
 				"TweenJS"
 			],
