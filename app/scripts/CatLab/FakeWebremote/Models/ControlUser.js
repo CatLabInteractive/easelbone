@@ -205,7 +205,7 @@ define (
 
 		WebcontrolUser.prototype.log = function (string)
 		{
-			this.Webcontrol.log ("[u:" + this.getId () + "] " + string);
+			console.log ("[u:" + this.getId () + "] " + string);
 		};
 
 		return WebcontrolUser;

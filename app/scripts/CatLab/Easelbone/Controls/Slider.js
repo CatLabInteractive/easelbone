@@ -1,8 +1,10 @@
 define (
 	[
-
+		'CatLab/Easelbone/Controls/Base'
 	],
-	function () {
+	function (
+		Base
+	) {
 
 		var Slider = function (element) {
 
@@ -19,11 +21,12 @@ define (
 
 		};
 
+		// Extend base.
+		Slider.prototype = new Base ();
+
 		Slider.prototype.afterFirstFrame = function () {
 			this.initialized = true;
 			this.setValue (this.value);
-
-			this.element.gotoAndPlay ('Over');
 		};
 
 		Slider.prototype.link = function (model, attribute) {
@@ -33,13 +36,29 @@ define (
 
 		};
 
-		Slider.prototype.setValue = function(value) {
-
-			console.log (value);
+		Slider.prototype.setValue = function (value) {
 
 			this.value = value;
 			if (this.initialized)
 				this.element.setValue (this.value);
+
+		};
+
+		Slider.prototype.keyInput = function (input) {
+
+			console.log (input);
+
+			switch (input) {
+				case 'up':
+					this.value = Math.min (1, this.value + 0.1);
+				break;
+
+				case 'down':
+					this.value = Math.max (0, this.value - 0.1);
+				break;
+			}
+
+			this.setValue (this.value);
 
 		};
 

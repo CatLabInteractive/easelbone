@@ -1,6 +1,6 @@
 define (
 	[
-		'CatLab/Webremote/Models/ControlUser'
+		'CatLab/FakeWebremote/Models/ControlUser'
 	],
 	function (User)
 	{
