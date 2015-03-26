@@ -14,7 +14,7 @@
   ],
   "license": "MIT",
   "homepage": "https://www.catlab.eu/",
-  "private": true,
+  "private": false,
   "ignore": [
     "**/.*",
     "node_modules",
