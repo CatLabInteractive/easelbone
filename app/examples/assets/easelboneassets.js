@@ -17,14 +17,20 @@ lib.properties = {
 
 
 
-(lib.Marker = function() {
+(lib.TextPlaceholder = function() {
 	this.initialize();
 
+	// Layer 1
+	this.shape = new cjs.Shape();
+	this.shape.graphics.f("#FF00FF").s().p("AnzHzIAAvmIPmAAIAAPmg");
+	this.shape.setTransform(50,50);
+
+	this.addChild(this.shape);
 }).prototype = p = new cjs.Container();
-p.nominalBounds = null;
+p.nominalBounds = new cjs.Rectangle(0,0,100,100);
 
 
-(lib.BigtextPlaceHolder = function() {
+(lib.Marker = function() {
 	this.initialize();
 
 }).prototype = p = new cjs.Container();
@@ -160,10 +166,10 @@ if (loop == null) { loop = false; }	this.initialize(mode,startPosition,loop,{"Ov
 	this.timeline.addTween(cjs.Tween.get(this).call(this.frame_0).wait(6).call(this.frame_6).wait(5).call(this.frame_11).wait(1).call(this.frame_12).wait(1).call(this.frame_13).wait(1));
 
 	// Layer 4
-	this.text = new lib.BigtextPlaceHolder();
-	this.text.setTransform(105.7,37,1.092,1,0,0,0,87.2,23.4);
+	this.text = new lib.TextPlaceholder();
+	this.text.setTransform(10.5,13.6,1.806,0.495);
 
-	this.timeline.addTween(cjs.Tween.get(this.text).wait(1).to({scaleX:1,x:106},0).wait(1).to({regX:0,regY:0,scaleX:1.05,scaleY:1.05,rotation:2.9,x:15.9,y:7.9},0).wait(1).to({scaleX:1.08,scaleY:1.08,rotation:5.1,x:13.9,y:3.2},0).wait(1).to({scaleX:1.11,scaleY:1.11,rotation:6.7,x:12.6,y:-0.3},0).wait(1).to({scaleX:1.13,scaleY:1.13,rotation:7.6,x:11.9,y:-2.4},0).wait(1).to({regX:87,regY:23.3,scaleX:1.13,scaleY:1.13,rotation:8,x:105.5,y:36.7},0).wait(1).to({regX:87.2,regY:23.4,scaleX:1,scaleY:1,rotation:0,x:106,y:37},4).wait(3));
+	this.timeline.addTween(cjs.Tween.get(this.text).wait(1).to({regX:87.2,regY:23.4,scaleX:1.85,scaleY:0.5,x:175.3,y:25.8},0).wait(1).to({regX:50,regY:50,scaleX:1.85,scaleY:0.5,rotation:1.9,x:104.5,y:39},0).wait(1).to({scaleX:1.86,scaleY:0.51,rotation:3.4,x:103},0).wait(1).to({scaleX:1.86,scaleY:0.51,rotation:4.4,x:102},0).wait(1).to({scaleX:1.86,scaleY:0.51,rotation:5.1,x:101.4,y:38.9},0).wait(1).to({regX:87.2,regY:23.4,scaleY:0.52,rotation:5.3,x:171.4,y:31.6},0).wait(1).to({regX:87.1,regY:23.1,scaleX:2.03,scaleY:0.54,rotation:6.2,x:180.3,y:32.7},0).to({regX:87.2,regY:23.4,scaleX:1.78,scaleY:0.49,rotation:0,x:169.3,y:27.5},4).wait(1).to({regX:87.1,scaleX:1.78,scaleY:0.52,x:168.1,y:26.2},0).wait(1).to({regX:87.2,scaleX:1.7,scaleY:0.48,x:165.2,y:26.1},0).wait(1));
 
 	// Layer 3
 	this.shape = new cjs.Shape();
