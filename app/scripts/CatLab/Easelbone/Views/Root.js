@@ -25,15 +25,22 @@ define (
 			{
 				var self = this;
 
-				if (typeof (options.container) == 'undefined')
+				if (typeof (options.canvas) !== 'undefined')
 				{
-					throw new Error ("Container must be defined for root view.");
+					this.canvas = options.canvas;
+					this.container = this.canvas.parentNode;
 				}
+				else {
+					if (typeof (options.container) == 'undefined')
+					{
+						throw new Error ("Container must be defined for root view.");
+					}
 
-				this.container = options.container;
+					this.canvas = document.createElement('canvas');
+					this.container = options.container;
+					this.container.appendChild (this.canvas);
 
-				this.canvas = document.createElement ('canvas');
-				this.container.appendChild (this.canvas);
+				}
 
 				this.stage = new createjs.Stage (this.canvas);
 
