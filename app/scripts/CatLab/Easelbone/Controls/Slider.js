@@ -1,33 +1,24 @@
 define (
 	[
-		'CatLab/Easelbone/Controls/Base'
+		'CatLab/Easelbone/Controls/Base',
+		'CatLab/Easelbone/Utilities/Path'
 	],
 	function (
-		Base
+		Base,
+		Path
 	) {
 
 		var Slider = function (element) {
 
-			var self = this;
-
 			this.element = element;
-			this.value = 0.7;
-			this.initialized = false;
 
-			var listener = element.addEventListener ('tick', function () {
-				element.removeEventListener ('tick', listener);
-				self.afterFirstFrame ();
-			});
+			this.path = new Path (this.element.minimum, this.element.maximum);
+			this.setValue (0.5);
 
 		};
 
 		// Extend base.
 		Slider.prototype = new Base ();
-
-		Slider.prototype.afterFirstFrame = function () {
-			this.initialized = true;
-			this.setValue (this.value);
-		};
 
 		Slider.prototype.link = function (model, attribute) {
 
@@ -39,9 +30,7 @@ define (
 		Slider.prototype.setValue = function (value) {
 
 			this.value = value;
-			if (this.initialized)
-				this.element.setValue (this.value);
-
+			this.path.position (this.element.pointer, this.value);
 		};
 
 		Slider.prototype.keyInput = function (input) {

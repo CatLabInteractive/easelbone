@@ -11,13 +11,31 @@ define (
 			'_current' : null,
 			'_options' : [],
 
-			'initialize' : function ()
-			{
-				this.initializeNavigatable ();
+			'_controls' : {
+
+				'navigation' : [ 'left' , 'right' ],
+				'toggle' : [ 'a' ],
+				'manipulation' : [ 'down', 'up' ]
+
 			},
 
-			'initializeNavigatable' : function ()
+			'initialize' : function (options)
 			{
+				this.initializeNavigatable (options);
+			},
+
+			'initializeNavigatable' : function (options)
+			{
+				if (typeof (options.orientation) !== 'undefined') {
+
+					if (options.orientation == 'vertical') {
+						this._controls.navigation = [ 'up', 'down' ];
+						this._controls.manipulation = [ 'left' , 'right' ];
+					}
+				}
+
+				console.log (this._controls);
+
 				// Reset the options for Navigatable
 				this.resetOptions ();
 			},
@@ -33,6 +51,8 @@ define (
 
 				var self = this;
 
+				console.log (this._controls);
+
 				// Set the events for this controller.
 				for (var i = 0; i < this._users.length; i ++)
 				{
@@ -41,15 +61,15 @@ define (
 					user.setView ("catlab-nes");
 					user.clearEvents ();
 
-					user.control ('left').click (function () { self.previous (); });
-					user.control ('right').click (function () { self.next (); });
+					user.control (this._controls.navigation[0]).click (function () { self.previous (); });
+					user.control (this._controls.navigation[1]).click (function () { self.next (); });
 
 					// A or start.
-					user.control ('a').click (function () { self.keyInput ('a'); });
-					user.control ('b').click (function () { self.keyInput ('b'); });
+					user.control (this._controls.toggle).click (function () { self.keyInput ('a'); });
+					//user.control ('b').click (function () { self.keyInput ('b'); });
 
-					user.control ('up').click (function () { self.keyInput ('up'); });
-					user.control ('down').click (function () { self.keyInput ('down'); });
+					user.control (this._controls.manipulation[0]).click (function () { self.keyInput ('down'); });
+					user.control (this._controls.manipulation[1]).click (function () { self.keyInput ('up'); });
 
 					//Webcontrol.getUsers ()[i].control ('start').click (function () { self.callCurrentOption (); });
 				}
@@ -81,10 +101,16 @@ define (
 
 			'addControl' : function (control) {
 
+				var self = this;
+
 				this._options.push (control);
 				if (this._options.length === 1) {
 					// First control added? Activate that one.
-					this.activate (0);
+					setTimeout (function ()
+					{
+						self.activate (0);
+					}, 1);
+
 				}
 				else {
 					control.deactivate ();
