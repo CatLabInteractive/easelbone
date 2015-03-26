@@ -7,6 +7,8 @@ define (
 		'CatLab/Easelbone/Views/Navigatable',
 
 		'CatLab/Easelbone/Controls/Slider',
+		'CatLab/Easelbone/Controls/Checkbox',
+		'CatLab/Easelbone/Controls/Button',
 
 		'CatLab/Easelbone/Utilities/GlobalProperties'
 	],
@@ -18,6 +20,8 @@ define (
 		NavigatableView,
 
 		SliderControl,
+		CheckboxControl,
+		ButtonControl,
 
 		GlobalProperties
 	) {
@@ -43,7 +47,9 @@ define (
 			},
 
 			'Controls' : {
-				'Slider' : SliderControl
+				'Slider' : SliderControl,
+				'Checkbox' : CheckboxControl,
+				'Button' : ButtonControl
 			},
 
 			'Loader' : new Loader ()

@@ -6,8 +6,9 @@ define (
 	{
 		return BaseView.extend ({
 
-			'_previesOptionIndex' : 0,
-			'_currentOptionIndex' : 0,
+			'_users' : [],
+			'_currentIndex' : null,
+			'_current' : null,
 			'_options' : [],
 
 			'initialize' : function ()
@@ -17,8 +18,6 @@ define (
 
 			'initializeNavigatable' : function ()
 			{
-				var self = this;
-
 				// Reset the options for Navigatable
 				this.resetOptions ();
 			},
@@ -30,30 +29,49 @@ define (
 			 */
 			'setUsers' : function (users) {
 
-				this.users = users;
+				this._users = users;
 
 				var self = this;
 
 				// Set the events for this controller.
-				for (var i = 0; i < this.users.length; i ++)
+				for (var i = 0; i < this._users.length; i ++)
 				{
-					var user = this.users[i];
+					var user = this._users[i];
 
 					user.setView ("catlab-nes");
 					user.clearEvents ();
-					user.control ('left').click (function () { self.callOptionLeft(); });
-					user.control ('right').click (function () { self.callOptionRight(); });
+
+					user.control ('left').click (function () { self.previous (); });
+					user.control ('right').click (function () { self.next (); });
 
 					// A or start.
-					user.control ('a').click (function () { self.callOptionA(); });
-					user.control ('b').click (function () { self.callOptionB(); });
+					user.control ('a').click (function () { self.keyInput ('a'); });
+					user.control ('b').click (function () { self.keyInput ('b'); });
 
-					user.control ('up').click (function () { self.callOptionUp(); });
-					user.control ('down').click (function () { self.callOptionDown(); });
+					user.control ('up').click (function () { self.keyInput ('up'); });
+					user.control ('down').click (function () { self.keyInput ('down'); });
 
 					//Webcontrol.getUsers ()[i].control ('start').click (function () { self.callCurrentOption (); });
 				}
 
+			},
+
+			'next' : function () {
+				this.activate ((this._currentIndex + 1) % this._options.length);
+			},
+
+			'previous' : function () {
+				var previous = this._currentIndex - 1;
+				if (previous < 0) {
+					previous = this._options.length - 1;
+				}
+				this.activate (previous);
+			},
+
+			'keyInput' : function (button) {
+				if (this._current) {
+					this._current.keyInput (button);
+				}
 			},
 
 			'resetOptions' : function ()
@@ -63,102 +81,24 @@ define (
 
 			'addControl' : function (control) {
 
-			},
-
-			'addOption' : function (button, callbackOptionA,callbackOptionB,callbackOptionUp,callbackOptionDown,callbackOptionLeft,callbackOptionRight)
-			{
-				// Add click event
-				//button.addEventListener ("click", callback);
-				//button.addEventListener ('click', callbackOptionA, this);
-
-				this._options.push ({ 'button' : button, 'optionA' : callbackOptionA, 'optionB' : callbackOptionB,'optionUp':callbackOptionUp,'optionDown':callbackOptionDown,'optionLeft':callbackOptionLeft,'optionRight':callbackOptionRight });
-			},
-
-			'nextOption' : function ()
-			{
-				this._previesOptionIndex = this._currentOptionIndex;
-				this._currentOptionIndex = ((this._currentOptionIndex + 1) % this._options.length);
-				this.updateOptions ();
-			},
-
-			'previousOption' : function ()
-			{
-				this._previesOptionIndex = this._currentOptionIndex;
-				this._currentOptionIndex = ((this._options.length + this._currentOptionIndex - 1) % this._options.length);
-				this.updateOptions ();
-			},
-
-			'selectOption':function(button){
-				for (var i = 0;i<this._options.length;i++){
-					if (this._options[i].button==button){
-						this._previesOptionIndex = this._currentOptionIndex;
-						this._currentOptionIndex = i;
-					}
+				this._options.push (control);
+				if (this._options.length === 1) {
+					// First control added? Activate that one.
+					this.activate (0);
 				}
-				this.updateOptions();
-			},
-
-			'updateOptions' : function ()
-			{
-				this._options[this._previesOptionIndex].button.unactivate();
-				this._options[this._currentOptionIndex].button.activate();
-			},
-
-			'callOptionA' : function()
-			{
-				if (this._options[this._currentOptionIndex].optionA != null)
-				{
-					this._options[this._currentOptionIndex].optionA ();
+				else {
+					control.deactivate ();
 				}
 			},
 
-			'callOptionB' : function()
-			{
-				if (this._options[this._currentOptionIndex].optionB != null)
-				{
-					this._options[this._currentOptionIndex].optionB();
+			'activate' : function (index) {
+				if (this._currentIndex !== null) {
+					this._options[this._currentIndex].deactivate ();
 				}
-			},
 
-			'callOptionUp' : function()
-			{
-				if (this._options[this._currentOptionIndex].optionUp != null)
-				{
-					this._options[this._currentOptionIndex].optionUp();
-				}
-			},
-
-			'callOptionDown' : function()
-			{
-				if (this._options[this._currentOptionIndex].optionDown != null)
-				{
-					this._options[this._currentOptionIndex].optionDown();
-				}
-			},
-
-			'callOptionLeft' : function()
-			{
-				if (this._options[this._currentOptionIndex].optionLeft != null)
-				{
-					this._options[this._currentOptionIndex].optionLeft();
-				}
-			},
-
-			'callOptionRight' : function()
-			{
-				if (this._options[this._currentOptionIndex].optionRight != null)
-				{
-					this._options[this._currentOptionIndex].optionRight();
-				}
-			},
-
-			'getCurrentOptionIndex' : function(){
-				for(var i = 0 ; i< this._options.length;i++){
-					if (this._options[i].isActive()){
-						this._currentOptionIndex = i;
-						break;
-					}
-				}
+				this._currentIndex = index;
+				this._options[index].activate ();
+				this._current = this._options[index];
 			}
 
 		});

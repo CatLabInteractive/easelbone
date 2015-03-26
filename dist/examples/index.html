@@ -40,7 +40,18 @@
 
 				// We'll need backbone to define our view, and easeljs to handle our rendering.
 				// We'll also need the assets.
-				require ([ 'backbone', 'EaselJS', 'assets' ], function (backbone, createjs, assets) {
+				require ([
+					'backbone',
+					'EaselJS',
+					'assets',
+					'CatLab/FakeWebremote/Models/KeyboardUser'
+				],
+				function (
+					backbone,
+					createjs,
+					assets,
+					KeyboardUser
+				) {
 
 					var rootView = new easelbone.Views.Root ({'container': document.getElementById ('container') });
 
@@ -52,6 +63,11 @@
 
 					// Load assets
 					easelbone.Loader.loadAssets (assets, '../examples/assets/');
+
+					// Prepare our "users"
+					var users = [
+						new KeyboardUser ()
+					];
 
 					// And actually do load them.
 					easelbone.Loader.load (function () {
@@ -70,6 +86,17 @@
 								this.addControl (new easelbone.Controls.Slider (this.view.slider1));
 								this.addControl (new easelbone.Controls.Slider (this.view.slider2));
 
+								var checkbox1 = new easelbone.Controls.Checkbox (this.view.checkbox1)
+								checkbox1.checked = true;
+								this.addControl (checkbox1);
+
+
+								var checkbox2 = new easelbone.Controls.Checkbox (this.view.checkbox2);
+								checkbox2.checked = false;
+								this.addControl (checkbox2);
+
+								this.addControl (new easelbone.Controls.Button (this.view.button1));
+								this.addControl (new easelbone.Controls.Button (this.view.button2));
 							},
 
 							'render' : function () {
@@ -80,7 +107,10 @@
 
 						});
 
-						rootView.setView (new ExampleView ());
+						var view = new ExampleView ();
+						view.setUsers (users);
+
+						rootView.setView (view);
 					});
 				});
 			});

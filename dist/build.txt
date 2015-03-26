@@ -71,6 +71,9 @@ scripts/CatLab/Easelbone/Views/Root.js
 scripts/CatLab/Easelbone/Utilities/GlobalProperties.js
 scripts/CatLab/Easelbone/Views/Base.js
 scripts/CatLab/Easelbone/Views/Navigatable.js
+scripts/CatLab/Easelbone/Controls/Base.js
 scripts/CatLab/Easelbone/Controls/Slider.js
+scripts/CatLab/Easelbone/Controls/Checkbox.js
+scripts/CatLab/Easelbone/Controls/Button.js
 scripts/CatLab/Easelbone/FrontController.js
 scripts/easelbone.js
