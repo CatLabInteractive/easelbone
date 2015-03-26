@@ -20,7 +20,7 @@ define (
 				throw "All buttons should have a text placeholder.";
 			}
 
-			this.text = new TextPlaceholder (this.element.text);
+			this.convertText ();
 
 		};
 
@@ -30,6 +30,10 @@ define (
 		Button.prototype.setText = function (text, font, color) {
 			var bigtext = new BigText (text, font, color);
 			this.text.addChild (bigtext);
+		};
+
+		Button.prototype.convertText = function (){
+			this.text = new TextPlaceholder (this.element.text);
 		};
 
 		Button.prototype.keyInput = function (input) {

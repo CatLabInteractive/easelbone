@@ -6,7 +6,7 @@ define (
 	{
 		var width;
 		var height;
-		var debug = false;
+		var debug = true;
 
 		var BigText = function (aTextstring, aFont, aColor)
 		{
