@@ -10,6 +10,8 @@ define (
 		'CatLab/Easelbone/Controls/Checkbox',
 		'CatLab/Easelbone/Controls/Button',
 
+		'CatLab/Easelbone/EaselJS/DisplayObjects/BigText',
+
 		'CatLab/Easelbone/Utilities/GlobalProperties'
 	],
 	function (
@@ -22,6 +24,8 @@ define (
 		SliderControl,
 		CheckboxControl,
 		ButtonControl,
+
+		BigText,
 
 		GlobalProperties
 	) {
@@ -50,6 +54,10 @@ define (
 				'Slider' : SliderControl,
 				'Checkbox' : CheckboxControl,
 				'Button' : ButtonControl
+			},
+
+			'EaselJS' : {
+				'BigText' : BigText
 			},
 
 			'Loader' : new Loader ()

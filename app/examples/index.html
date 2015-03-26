@@ -80,6 +80,10 @@
 
 							'initialize' : function () {
 
+								// First call the parent.
+								this.initializeNavigatable ({ 'orientation' : 'vertical' });
+
+								// Now set the view
 								this.view = new assets.ExampleSettingsView ();
 
 								// Register the various controls
@@ -95,8 +99,13 @@
 								checkbox2.checked = false;
 								this.addControl (checkbox2);
 
-								this.addControl (new easelbone.Controls.Button (this.view.button1));
-								this.addControl (new easelbone.Controls.Button (this.view.button2));
+								var button1 = new easelbone.Controls.Button (this.view.button1);
+								button1.setText ("Short text", "sans-serif", "white");
+								this.addControl (button1);
+
+								var button2 = new easelbone.Controls.Button (this.view.button2);
+								button2.setText ("Rather long text for demonstration purposes. Don't try to put too much text in a small space though, it might ruin your user experience.", "sans-serif", "white");
+								this.addControl (button2);
 							},
 
 							'render' : function () {
