@@ -117,8 +117,11 @@ define (
 					}
 				}
 
+				if (dirty)
+					this.update ();
+
 				// Update the stage.
-				this.stage.tick (event);
+				this.stage.handleEvent ("tick", event);
 
 				this.trigger ('tick:after');
 			},
