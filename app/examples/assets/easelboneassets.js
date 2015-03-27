@@ -240,7 +240,7 @@ if (loop == null) { loop = false; }	this.initialize(mode,startPosition,loop,{"Up
 
 	// Text
 	this.value = new lib.TextPlaceholder();
-	this.value.setTransform(1.1,7.1,2.24,0.677,0,0,0,0.5,1.1);
+	this.value.setTransform(7.1,14.9,2.14,0.507,0,0,0,0.5,1.1);
 
 	this.timeline.addTween(cjs.Tween.get(this.value).wait(4));
 
