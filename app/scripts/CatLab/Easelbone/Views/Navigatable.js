@@ -109,7 +109,7 @@ define (
 
 				}
 				else {
-					control.deactivate ();
+					control.deactivate (false);
 				}
 			},
 
