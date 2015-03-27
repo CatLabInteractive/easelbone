@@ -17,10 +17,10 @@ lib.properties = {
 
 
 
-(lib.TextPlaceholder = function() {
+(lib.TextPlaceholderBackground = function() {
 	this.initialize();
 
-	// Layer 1
+	// Laag 1
 	this.shape = new cjs.Shape();
 	this.shape.graphics.f("#FF00FF").s().p("AnzHzIAAvmIPmAAIAAPmg");
 	this.shape.setTransform(50,50);
@@ -126,6 +126,17 @@ p.nominalBounds = new cjs.Rectangle(-2.5,-2.5,43.5,43.4);
 p.nominalBounds = new cjs.Rectangle(-75,-77.1,150.1,154.3);
 
 
+(lib.TextPlaceholder = function() {
+	this.initialize();
+
+	// Layer 1
+	this.instance = new lib.TextPlaceholderBackground();
+
+	this.addChild(this.instance);
+}).prototype = p = new cjs.Container();
+p.nominalBounds = new cjs.Rectangle(0,0,100,100);
+
+
 (lib.Pointer = function(mode,startPosition,loop) {
 if (loop == null) { loop = false; }	this.initialize(mode,startPosition,loop,{"Up":0,"Over":1,"Down":2,Out:3});
 
@@ -143,33 +154,13 @@ p.nominalBounds = new cjs.Rectangle(-11.4,-28.1,22.8,28.2);
 
 
 (lib.Button = function(mode,startPosition,loop) {
-if (loop == null) { loop = false; }	this.initialize(mode,startPosition,loop,{"Over":1,"Up":7,"Down":12,"Hit":13});
+if (loop == null) { loop = false; }	this.initialize(mode,startPosition,loop,{});
 
-	// timeline functions:
-	this.frame_0 = function() {
-		this.stop();
-	}
-	this.frame_6 = function() {
-		this.stop();
-	}
-	this.frame_11 = function() {
-		this.gotoAndStop(1);
-	}
-	this.frame_12 = function() {
-		this.stop();
-	}
-	this.frame_13 = function() {
-		this.stop ();
-	}
-
-	// actions tween:
-	this.timeline.addTween(cjs.Tween.get(this).call(this.frame_0).wait(6).call(this.frame_6).wait(5).call(this.frame_11).wait(1).call(this.frame_12).wait(1).call(this.frame_13).wait(1));
-
-	// Layer 4
+	// Laag 2
 	this.text = new lib.TextPlaceholder();
-	this.text.setTransform(10.5,13.6,1.806,0.495);
+	this.text.setTransform(5.7,13.7,1.886,0.494,0.4,0,0,0.1,0.8);
 
-	this.timeline.addTween(cjs.Tween.get(this.text).wait(1).to({regX:87.2,regY:23.4,scaleX:1.85,scaleY:0.5,x:175.3,y:25.8},0).wait(1).to({regX:50,regY:50,scaleX:1.85,scaleY:0.5,rotation:1.9,x:104.5,y:39},0).wait(1).to({scaleX:1.86,scaleY:0.51,rotation:3.4,x:103},0).wait(1).to({scaleX:1.86,scaleY:0.51,rotation:4.4,x:102},0).wait(1).to({scaleX:1.86,scaleY:0.51,rotation:5.1,x:101.4,y:38.9},0).wait(1).to({regX:87.2,regY:23.4,scaleY:0.52,rotation:5.3,x:171.4,y:31.6},0).wait(1).to({regX:87.1,regY:23.1,scaleX:2.03,scaleY:0.54,rotation:6.2,x:180.3,y:32.7},0).to({regX:87.2,regY:23.4,scaleX:1.78,scaleY:0.49,rotation:0,x:169.3,y:27.5},4).wait(1).to({regX:87.1,scaleX:1.78,scaleY:0.52,x:168.1,y:26.2},0).wait(1).to({regX:87.2,scaleX:1.7,scaleY:0.48,x:165.2,y:26.1},0).wait(1));
+	this.timeline.addTween(cjs.Tween.get(this.text).wait(1).to({scaleY:0.57,rotation:5.4,x:8.7,y:1.7},5).to({scaleY:0.54,rotation:5.2,x:8.4,y:2},1).to({scaleY:0.49,rotation:0.4,x:5.7,y:13.7},4).wait(1).to({rotation:0.4},0).wait(2));
 
 	// Layer 3
 	this.shape = new cjs.Shape();
