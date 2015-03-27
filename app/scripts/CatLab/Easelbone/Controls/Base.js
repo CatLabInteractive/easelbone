@@ -12,33 +12,55 @@ define (
 
 		_.extend (Base, Backbone.Events);
 
-		Base.prototype.activate = function () {
+		Base.prototype.activate = function (animate) {
 			this.active = true;
-			this.update ();
+			this.update (animate);
 		};
 
-		Base.prototype.deactivate = function () {
+		Base.prototype.deactivate = function (animate) {
 			this.active = false;
-			this.update ();
+			this.update (animate);
 		};
 
-		Base.prototype.update = function () {
+		Base.prototype.update = function (animate) {
+
+			if (typeof (animate) === 'undefined') {
+				animate = true;
+			}
+
 			if (this.active) {
 				if (this.checked) {
-					this.element.gotoAndPlay ('Hit');
+					this.gotoWithAnimate ('Hit', animate);
 				}
 				else {
-					this.element.gotoAndPlay ('Over');
+					this.gotoWithAnimate ('Over', animate);
 				}
 			}
 			else {
 				if (this.checked) {
-					this.element.gotoAndPlay ('Down');
+					this.gotoWithAnimate ('Down', animate);
 				}
 				else {
-					this.element.gotoAndPlay ('Up');
+					this.gotoWithAnimate ('Up', animate);
 				}
 			}
+		};
+
+		/**
+		 * Check if there is a NoAnim framename and use that if animate is set to false.
+		 * @param frame
+		 * @param animate
+		 */
+		Base.prototype.gotoWithAnimate = function (frame, animate) {
+
+			if (!animate) {
+				if (this.element.timeline.resolve (frame + '-NoAnim')) {
+					this.element.gotoAndPlay (frame + '-NoAnim');
+					return;
+				}
+			}
+
+			this.element.gotoAndPlay (frame);
 		};
 
 		return Base;

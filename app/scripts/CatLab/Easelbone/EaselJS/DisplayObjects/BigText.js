@@ -6,7 +6,9 @@ define (
 	{
 		var width;
 		var height;
-		var debug = true;
+		var debug = false;
+		var hash;
+		var hasChanged = false;
 
 		var BigText = function (aTextstring, aFont, aColor)
 		{
@@ -17,6 +19,8 @@ define (
 			this.initialize ();
 			this.initialized = false;
 			this.limits = null;
+
+			this.debug = debug;
 		};
 
 		var p = BigText.prototype = new createjs.Container ();
@@ -114,12 +118,30 @@ define (
 
 		p.Container_draw = p.draw;
 
+		p.getLocationHash = function () {
+			hash = this.getAvailableSpace ();
+			return hash.width + ':' + hash.height;
+		};
+
+		/**
+		 * Determine if the dimensions have changed since last frame.
+		 * @returns {boolean}
+		 */
+		p.hasChanged = function () {
+			hash = this.getLocationHash ();
+			hasChanged = this.lastHash != hash;
+			this.lastHash = hash;
+
+			return hasChanged;
+		};
+
 		p.draw = function (ctx, ignoreCache)
 		{
-			if (this.initialized)
+			if (this.initialized && !this.hasChanged ())
 			{
 				return this.Container_draw (ctx, ignoreCache);
 			}
+
 			this.initialized = true;
 
 			this.removeAllChildren ();

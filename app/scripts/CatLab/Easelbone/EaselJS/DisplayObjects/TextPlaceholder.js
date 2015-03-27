@@ -6,47 +6,57 @@ define (
 	{
 		var TextPlaceholder = function (element) {
 
+			var innerPlaceholder = this;
+
 			/**
 			 * Initialize the element
 			 */
 			this.initialize ();
 
-			/**
-			 * Turn the scaled dimensions into visible pixel dimensions
-			 * @type {{width: number, height: number}}
-			 */
-			var dimensions = {
-				'width': element.scaleX * 100,
-				'height': element.scaleY * 100
-			};
-
-			// Set the bounds on this local container
-			this.setBounds (
-				0, 0,
-				dimensions.width,
-				dimensions.height
-			);
-
-			// Scale the original element back to it's original proportions
-			element.scaleX = 1;
-			element.scaleY = 1;
-
 			element.original_draw = element.draw;
+
+			// Override the draw method of the original placeholder.
 			element.draw = function (ctx, ignoreCache) {
-				element.scaleX = 1;
-				element.scaleY = 1;
+
+				this.updateBounds ();
 				return element.original_draw (ctx, ignoreCache);
 			};
 
+			element.updateBounds = function () {
+				// Set the bounds on this local container
+				innerPlaceholder.setBounds (
+					0, 0,
+					Math.ceil (this.scaleX * 100),
+					Math.ceil (this.scaleY * 100)
+				);
+
+				innerPlaceholder.x = this.x;
+				innerPlaceholder.y = this.y;
+
+				innerPlaceholder.rotation = this.rotation;
+
+				/*
+				this.scaleX = 1;
+				this.scaleY = 1;
+				*/
+			};
+
 			// Remove everything
-			element.removeAllChildren ();
+			//element.removeAllChildren ();
+			for (var i = 0; i < element.children.length; i ++) {
+				element.children[i].visible = false;
+			}
+
+			//element.visible = false;
 
 			// And add ourselves
-			element.addChild (this);
+			element.addEventListener ('added', function () {
+				element.parent.addChild (innerPlaceholder);
+			});
+
 		};
 
 		var p = TextPlaceholder.prototype = new createjs.Container ();
-
 
 		return TextPlaceholder;
 	}

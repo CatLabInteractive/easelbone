@@ -12,7 +12,9 @@ define (
 
 		'CatLab/Easelbone/EaselJS/DisplayObjects/BigText',
 
-		'CatLab/Easelbone/Utilities/GlobalProperties'
+		'CatLab/Easelbone/Utilities/GlobalProperties',
+
+		'CatLab/FakeWebremote/Models/KeyboardUser'
 	],
 	function (
 		Loader,
@@ -27,7 +29,9 @@ define (
 
 		BigText,
 
-		GlobalProperties
+		GlobalProperties,
+
+		KeyboardUser
 	) {
 
 
@@ -58,6 +62,10 @@ define (
 
 			'EaselJS' : {
 				'BigText' : BigText
+			},
+
+			'FakeWebremote' : {
+				'KeyboardUser' : KeyboardUser
 			},
 
 			'Loader' : new Loader ()
