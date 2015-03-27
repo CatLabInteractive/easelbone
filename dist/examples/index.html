@@ -43,15 +43,16 @@
 				require ([
 					'backbone',
 					'EaselJS',
-					'assets',
-					'CatLab/FakeWebremote/Models/KeyboardUser'
+					'assets'
 				],
 				function (
 					backbone,
 					createjs,
-					assets,
-					KeyboardUser
+					assets
 				) {
+
+					createjs.Ticker.timingMode = createjs.Ticker.TIMEOUT;
+					createjs.Ticker.setFPS (24);
 
 					var rootView = new easelbone.Views.Root ({'container': document.getElementById ('container') });
 
@@ -59,14 +60,15 @@
 					easelbone.setProperties (assets.properties);
 
 					// Ticker
-					createjs.Ticker.setFPS (assets.properties.fps);
+					//createjs.Ticker.setFPS (assets.properties.fps);
+
 
 					// Load assets
 					easelbone.Loader.loadAssets (assets, '../examples/assets/');
 
 					// Prepare our "users"
 					var users = [
-						new KeyboardUser ()
+						new easelbone.FakeWebremote.KeyboardUser ()
 					];
 
 					// And actually do load them.
@@ -106,6 +108,8 @@
 								var button2 = new easelbone.Controls.Button (this.view.button2);
 								button2.setText ("Rather long text for demonstration purposes. Don't try to put too much text in a small space though, it might ruin your user experience.", "sans-serif", "white");
 								this.addControl (button2);
+
+								console.log (button2);
 							},
 
 							'render' : function () {
