@@ -63,6 +63,48 @@ p.nominalBounds = new cjs.Rectangle(-44,-14.7,44.1,29.4);
 p.nominalBounds = new cjs.Rectangle(-44,-14.6,44.1,29.4);
 
 
+(lib.SelectboxArrow = function(mode,startPosition,loop) {
+if (loop == null) { loop = false; }	this.initialize(mode,startPosition,loop,{});
+
+	// timeline functions:
+	this.frame_0 = function() {
+		this.stop();
+	}
+	this.frame_1 = function() {
+		this.gotoAndStop(1);
+	}
+	this.frame_2 = function() {
+		this.stop();
+	}
+	this.frame_3 = function() {
+		this.gotoAndStop(3);
+	}
+
+	// actions tween:
+	this.timeline.addTween(cjs.Tween.get(this).call(this.frame_0).wait(1).call(this.frame_1).wait(1).call(this.frame_2).wait(1).call(this.frame_3).wait(1));
+
+	// Layer 1
+	this.shape = new cjs.Shape();
+	this.shape.graphics.f("#FF873E").s().p("AhiA3IBdhtIBoBtg");
+	this.shape.setTransform(33.6,18.9,1.97,1.97);
+
+	this.shape_1 = new cjs.Shape();
+	this.shape_1.graphics.f("#FF6000").s().p("AhiA3IBdhtIBoBtg");
+	this.shape_1.setTransform(33.6,18.9,1.97,1.97);
+
+	this.timeline.addTween(cjs.Tween.get({}).to({state:[{t:this.shape}]}).to({state:[]},1).to({state:[{t:this.shape_1}]},1).to({state:[]},1).wait(1));
+
+	// Layer 2
+	this.shape_2 = new cjs.Shape();
+	this.shape_2.graphics.f("rgba(89,34,48,0)").s().p("AlTCvIAAldIKnAAIAAFdg");
+	this.shape_2.setTransform(34,17.5);
+
+	this.timeline.addTween(cjs.Tween.get(this.shape_2).to({_off:true},1).wait(3));
+
+}).prototype = p = new cjs.MovieClip();
+p.nominalBounds = new cjs.Rectangle(0,0,68,35);
+
+
 (lib.Checkbox = function(mode,startPosition,loop) {
 if (loop == null) { loop = false; }	this.initialize(mode,startPosition,loop,{Up:0,Over:1,Down:2,Hit:3});
 
@@ -151,6 +193,54 @@ if (loop == null) { loop = false; }	this.initialize(mode,startPosition,loop,{"Up
 
 }).prototype = p = new cjs.MovieClip();
 p.nominalBounds = new cjs.Rectangle(-11.4,-28.1,22.8,28.2);
+
+
+(lib.SelectboxButton = function(mode,startPosition,loop) {
+if (loop == null) { loop = false; }	this.initialize(mode,startPosition,loop,{});
+
+	// Layer 1
+	this.spnDown = new lib.SelectboxArrow();
+	this.spnDown.setTransform(68.1,74.6,1,1,-180);
+
+	this.spnUp = new lib.SelectboxArrow();
+	this.spnUp.setTransform(20.7,11.6,1,1,0,0,0,19.6,10.9);
+
+	this.shape = new cjs.Shape();
+	this.shape.graphics.f().s("#592230").ss(5).p("AiuC+IAAl6IFdAAIAAF6g");
+	this.shape.setTransform(34.6,37.4,1.97,1.97);
+
+	this.shape_1 = new cjs.Shape();
+	this.shape_1.graphics.f("#8B504F").s().p("AitC9IAAl6IFcAAIAAF6g");
+	this.shape_1.setTransform(34.6,37.4,1.97,1.97);
+
+	this.timeline.addTween(cjs.Tween.get({}).to({state:[{t:this.shape_1,p:{scaleX:1.97,scaleY:1.97,skewX:0,skewY:0,x:34.6,y:37.4}},{t:this.shape,p:{scaleX:1.97,scaleY:1.97,skewX:0,skewY:0,x:34.6,y:37.4}},{t:this.spnUp,p:{scaleX:1,scaleY:1,skewX:0,skewY:0,x:20.7,y:11.6}},{t:this.spnDown,p:{scaleX:1,scaleY:1,rotation:-180,skewX:0,skewY:0,x:68.1,y:74.6}}]}).to({state:[{t:this.shape_1,p:{scaleX:2.291,scaleY:2.255,skewX:3,skewY:3,x:36.2,y:39.8}},{t:this.shape,p:{scaleX:2.291,scaleY:2.255,skewX:3,skewY:3,x:36.2,y:39.8}},{t:this.spnUp,p:{scaleX:1.05,scaleY:1.05,skewX:4,skewY:3.8,x:23,y:8.4}},{t:this.spnDown,p:{scaleX:1.099,scaleY:1.1,rotation:0,skewX:-176,skewY:-176.2,x:70.7,y:79.8}}]},1).wait(1));
+
+}).prototype = p = new cjs.MovieClip();
+p.nominalBounds = new cjs.Rectangle(-2.4,-2.5,74,79.9);
+
+
+(lib.SelectBox = function() {
+	this.initialize();
+
+	// Layer 1
+	this.spnButton = new lib.SelectboxButton();
+	this.spnButton.setTransform(263.2,37.4,1,1,0,0,0,34.5,37.4);
+	new cjs.ButtonHelper(this.spnButton, 0, 1, 1);
+
+	this.txtValue = new cjs.Text("Value", "50px 'Arial'", "#FFFFFF");
+	this.txtValue.name = "txtValue";
+	this.txtValue.textAlign = "center";
+	this.txtValue.lineHeight = 61;
+	this.txtValue.lineWidth = 216;
+	this.txtValue.setTransform(108,8);
+
+	this.shape = new cjs.Shape();
+	this.shape.graphics.rf(["#320B1F","#190412"],[0.004,1],0,0,0,0,0,20.3).s().p("AjVC+IAAl7IGsAAIAAF7g");
+	this.shape.setTransform(114.9,39.5,5.348,1.789);
+
+	this.addChild(this.shape,this.txtValue,this.spnButton);
+}).prototype = p = new cjs.Container();
+p.nominalBounds = new cjs.Rectangle(-0.1,-7.6,310,94.9);
 
 
 (lib.Button = function(mode,startPosition,loop) {
@@ -397,8 +487,11 @@ p.nominalBounds = new cjs.Rectangle(0,10.9,379.1,30.1);
 	this.initialize();
 
 	// Layer 1
-	this.instance = new lib.Cog();
-	this.instance.setTransform(753.2,44.1,0.466,0.466,0,0,0,75,77.2);
+	this.instance = new lib.SelectBox();
+	this.instance.setTransform(432.1,295.2,1,1,0,0,0,154.8,39.8);
+
+	this.instance_1 = new lib.Cog();
+	this.instance_1.setTransform(753.2,44.1,0.466,0.466,0,0,0,75,77.2);
 
 	this.text = new cjs.Text("This is another checkbox.", "20px 'Times New Roman'");
 	this.text.lineHeight = 22;
@@ -417,10 +510,10 @@ p.nominalBounds = new cjs.Rectangle(0,10.9,379.1,30.1);
 	this.checkbox1.setTransform(49.7,161.8,1,1,0,0,0,13.9,19.2);
 
 	this.button2 = new lib.Button();
-	this.button2.setTransform(472.4,313,1,1,0,0,0,108.6,39.4);
+	this.button2.setTransform(413.1,393,1,1,0,0,0,108.6,39.4);
 
 	this.button1 = new lib.Button();
-	this.button1.setTransform(140.1,313,1,1,0,0,0,108.6,39.4);
+	this.button1.setTransform(152.1,393,1,1,0,0,0,108.6,39.4);
 
 	this.text_2 = new cjs.Text("Slider 2", "20px 'Times New Roman'", "#320B1F");
 	this.text_2.lineHeight = 22;
@@ -438,9 +531,9 @@ p.nominalBounds = new cjs.Rectangle(0,10.9,379.1,30.1);
 	this.slider1 = new lib.Slider();
 	this.slider1.setTransform(417,52,1,1,0,0,0,189.6,22.9);
 
-	this.addChild(this.slider1,this.text_3,this.slider2,this.text_2,this.button1,this.button2,this.checkbox1,this.checkbox2,this.text_1,this.text,this.instance);
+	this.addChild(this.slider1,this.text_3,this.slider2,this.text_2,this.button1,this.button2,this.checkbox1,this.checkbox2,this.text_1,this.text,this.instance_1,this.instance);
 }).prototype = p = new cjs.Container();
-p.nominalBounds = new cjs.Rectangle(29.6,8.1,758.6,344.3);
+p.nominalBounds = new cjs.Rectangle(33.3,8.1,754.9,424.4);
 
 
 // stage content:
@@ -456,7 +549,7 @@ p.nominalBounds = new cjs.Rectangle(29.6,8.1,758.6,344.3);
 
 	this.addChild(this.instance);
 }).prototype = p = new cjs.Container();
-p.nominalBounds = new cjs.Rectangle(430.5,308.1,758.6,344.3);
+p.nominalBounds = new cjs.Rectangle(434.2,308.1,754.9,424.4);
 
 })(lib = lib||{}, images = images||{}, createjs = createjs||{});
 var lib, images, createjs;
