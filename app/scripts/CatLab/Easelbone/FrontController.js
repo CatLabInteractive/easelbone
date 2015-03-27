@@ -9,6 +9,7 @@ define (
 		'CatLab/Easelbone/Controls/Slider',
 		'CatLab/Easelbone/Controls/Checkbox',
 		'CatLab/Easelbone/Controls/Button',
+		'CatLab/Easelbone/Controls/Selectbox',
 
 		'CatLab/Easelbone/EaselJS/DisplayObjects/BigText',
 
@@ -26,6 +27,7 @@ define (
 		SliderControl,
 		CheckboxControl,
 		ButtonControl,
+		SelectboxControl,
 
 		BigText,
 
@@ -57,7 +59,8 @@ define (
 			'Controls' : {
 				'Slider' : SliderControl,
 				'Checkbox' : CheckboxControl,
-				'Button' : ButtonControl
+				'Button' : ButtonControl,
+				'Selectbox' : SelectboxControl
 			},
 
 			'EaselJS' : {

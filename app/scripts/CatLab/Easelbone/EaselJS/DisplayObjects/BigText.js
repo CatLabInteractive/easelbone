@@ -1,8 +1,9 @@
 define (
 	[
-		'EaselJS'
+		'EaselJS',
+		'CatLab/Easelbone/Utilities/GlobalProperties'
 	],
-	function (createjs)
+	function (createjs, GlobalProperties)
 	{
 		var width;
 		var height;
@@ -13,8 +14,8 @@ define (
 		var BigText = function (aTextstring, aFont, aColor)
 		{
 			this.textstring = aTextstring;
-			this.font = aFont;
-			this.color = aColor;
+			this.font = GlobalProperties.ifUndefined (aFont, GlobalProperties.getDefaultFont ());
+			this.color = GlobalProperties.ifUndefined (aColor, GlobalProperties.getDefaultTextColor ());
 
 			this.initialize ();
 			this.initialized = false;
