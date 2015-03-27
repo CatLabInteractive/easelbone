@@ -8,9 +8,9 @@ define (
 		var Base = function () {
 			this.checked = false;
 			this.active = false;
-		};
 
-		_.extend (Base, Backbone.Events);
+			_.extend (this, Backbone.Events);
+		};
 
 		Base.prototype.activate = function (animate) {
 			this.active = true;

@@ -41,7 +41,7 @@ define (
 			switch (input) {
 				case 'a':
 
-					this.trigger ('button:clicked');
+					this.trigger ('click');
 
 				break;
 			}
