@@ -13,7 +13,7 @@ define (
 					'width': 800,
 					'height' : 600,
 					'font' : 'sans-serif',
-					'text-color' : 'white'
+					'textColor' : 'white'
 				});
 
 			},
@@ -31,11 +31,11 @@ define (
 			},
 
 			'getDefaultTextColor' : function () {
-				return this.get ('text-color');
+				return this.get ('textColor');
 			},
 
 			'ifUndefined' : function (value, defaultValue) {
-				if (typeof (value) !== 'undefined') {
+				if (typeof (value) !== 'undefined' && value !== null) {
 					return value;
 				}
 				return defaultValue;
