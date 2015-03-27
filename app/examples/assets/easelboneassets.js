@@ -239,10 +239,10 @@ if (loop == null) { loop = false; }	this.initialize(mode,startPosition,loop,{"Up
 	this.timeline.addTween(cjs.Tween.get(this).call(this.frame_0).wait(1).call(this.frame_1).wait(1).call(this.frame_2).wait(1).call(this.frame_3).wait(1));
 
 	// Text
-	this.text = new lib.TextPlaceholder();
-	this.text.setTransform(1.1,7.1,2.24,0.677,0,0,0,0.5,1.1);
+	this.value = new lib.TextPlaceholder();
+	this.value.setTransform(1.1,7.1,2.24,0.677,0,0,0,0.5,1.1);
 
-	this.timeline.addTween(cjs.Tween.get(this.text).wait(4));
+	this.timeline.addTween(cjs.Tween.get(this.value).wait(4));
 
 	// Layer 1
 	this.spnButton = new lib.SelectboxButton();
