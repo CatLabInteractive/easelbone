@@ -26,6 +26,8 @@ define (
 
 			'initializeNavigatable' : function (options)
 			{
+				options = options || {};
+
 				if (typeof (options.orientation) !== 'undefined') {
 
 					if (options.orientation == 'vertical') {
