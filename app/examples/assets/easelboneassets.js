@@ -154,9 +154,26 @@ p.nominalBounds = new cjs.Rectangle(-11.4,-28.1,22.8,28.2);
 
 
 (lib.Button = function(mode,startPosition,loop) {
-if (loop == null) { loop = false; }	this.initialize(mode,startPosition,loop,{});
+if (loop == null) { loop = false; }	this.initialize(mode,startPosition,loop,{"Over":1,"Over-NoAnim":6,"Up":7,"Up-NoAnim":11,"Down":12,"Hit":13});
 
-	// Laag 2
+	// timeline functions:
+	this.frame_6 = function() {
+		this.stop ();
+	}
+	this.frame_11 = function() {
+		this.stop ();
+	}
+	this.frame_12 = function() {
+		this.stop ();
+	}
+	this.frame_13 = function() {
+		this.stop ();
+	}
+
+	// actions tween:
+	this.timeline.addTween(cjs.Tween.get(this).wait(6).call(this.frame_6).wait(5).call(this.frame_11).wait(1).call(this.frame_12).wait(1).call(this.frame_13).wait(1));
+
+	// TextLabel
 	this.text = new lib.TextPlaceholder();
 	this.text.setTransform(5.7,13.7,1.886,0.494,0.4,0,0,0.1,0.8);
 
