@@ -511,11 +511,11 @@ p.nominalBounds = new cjs.Rectangle(0,10.9,379.1,30.1);
 	this.initialize();
 
 	// Layer 1
-	this.instance = new lib.SelectBox();
-	this.instance.setTransform(432.1,295.2,1,1,0,0,0,154.8,39.8);
+	this.selectbox = new lib.SelectBox();
+	this.selectbox.setTransform(432.1,295.2,1,1,0,0,0,154.8,39.8);
 
-	this.instance_1 = new lib.Cog();
-	this.instance_1.setTransform(753.2,44.1,0.466,0.466,0,0,0,75,77.2);
+	this.instance = new lib.Cog();
+	this.instance.setTransform(753.2,44.1,0.466,0.466,0,0,0,75,77.2);
 
 	this.text = new cjs.Text("This is another checkbox.", "20px 'Times New Roman'");
 	this.text.lineHeight = 22;
@@ -555,7 +555,7 @@ p.nominalBounds = new cjs.Rectangle(0,10.9,379.1,30.1);
 	this.slider1 = new lib.Slider();
 	this.slider1.setTransform(417,52,1,1,0,0,0,189.6,22.9);
 
-	this.addChild(this.slider1,this.text_3,this.slider2,this.text_2,this.button1,this.button2,this.checkbox1,this.checkbox2,this.text_1,this.text,this.instance_1,this.instance);
+	this.addChild(this.slider1,this.text_3,this.slider2,this.text_2,this.button1,this.button2,this.checkbox1,this.checkbox2,this.text_1,this.text,this.instance,this.selectbox);
 }).prototype = p = new cjs.Container();
 p.nominalBounds = new cjs.Rectangle(33.3,8.1,754.9,424.4);
 
