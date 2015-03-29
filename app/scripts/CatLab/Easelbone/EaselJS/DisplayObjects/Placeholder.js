@@ -6,12 +6,21 @@ define (
 	{
 		var Placeholder = function (element) {
 
-			var innerPlaceholder = this;
+			if (typeof (element) != 'undefined') {
 
-			/**
-			 * Initialize the element
-			 */
-			this.initialize ();
+				this.initialize ();
+				this.initializePlaceholder (element);
+			}
+
+		};
+
+		var p = Placeholder.prototype = new createjs.Container ();
+
+		p.initializePlaceholder = function (element) {
+
+			var innerPlaceholder = this;
+			var boundHash = '0:0';
+			var oldBoundHash = '0:0';
 
 			element.original_draw = element.draw;
 
@@ -22,7 +31,21 @@ define (
 				return element.original_draw (ctx, ignoreCache);
 			};
 
+			this.getBoundsHash = function () {
+				boundHash = this.getBounds ().width + ':' + this.getBounds ().height;
+				return boundHash;
+			};
+
+			this.hasBoundsChanged = function () {
+
+				if (this.getBoundsHash () != oldBoundHash) {
+					oldBoundHash = boundHash;
+					return true;
+				}
+			};
+
 			element.updateBounds = function () {
+
 				// Set the bounds on this local container
 				innerPlaceholder.setBounds (
 					0, 0,
@@ -35,10 +58,10 @@ define (
 
 				innerPlaceholder.rotation = this.rotation;
 
-				/*
-				this.scaleX = 1;
-				this.scaleY = 1;
-				*/
+				if (innerPlaceholder.hasBoundsChanged ()) {
+					var event = new createjs.Event ('bounds:change');
+					innerPlaceholder.dispatchEvent (event);
+				}
 			};
 
 			// Remove everything
@@ -50,13 +73,18 @@ define (
 			//element.visible = false;
 
 			// And add ourselves
-			element.addEventListener ('added', function () {
+			if (typeof (element.parent) != 'undefined') {
 				element.parent.addChild (innerPlaceholder);
-			});
-
+				innerPlaceholder.dispatchEvent ('initialized');
+			}
+			else {
+				element.addEventListener ('added', function () {
+					element.parent.addChild (innerPlaceholder);
+					innerPlaceholder.dispatchEvent ('initialized');
+				});
+			}
 		};
 
-		var p = Placeholder.prototype = new createjs.Container ();
 
 		return Placeholder;
 	}
