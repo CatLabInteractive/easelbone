@@ -245,9 +245,9 @@ if (loop == null) { loop = false; }	this.initialize(mode,startPosition,loop,{"Up
 	this.timeline.addTween(cjs.Tween.get(this.value).wait(4));
 
 	// Layer 1
-	this.spnButton = new lib.SelectboxButton();
-	this.spnButton.setTransform(263.2,37.4,1,1,0,0,0,34.5,37.4);
-	new cjs.ButtonHelper(this.spnButton, 0, 1, 1);
+	this.buttons = new lib.SelectboxButton();
+	this.buttons.setTransform(263.2,37.4,1,1,0,0,0,34.5,37.4);
+	new cjs.ButtonHelper(this.buttons, 0, 1, 1);
 
 	this.shape = new cjs.Shape();
 	this.shape.graphics.rf(["#320B1F","#190412"],[0.004,1],0,0,0,0,0,20.3).s().p("AjVC+IAAl7IGsAAIAAF7g");
@@ -261,7 +261,7 @@ if (loop == null) { loop = false; }	this.initialize(mode,startPosition,loop,{"Up
 	this.shape_2.graphics.rf(["#32933C","#190412"],[0.004,1],0,0,0,0,0,20.3).s().p("AjVC+IAAl7IGsAAIAAF7g");
 	this.shape_2.setTransform(114.9,39.5,5.348,1.789);
 
-	this.timeline.addTween(cjs.Tween.get({}).to({state:[{t:this.shape},{t:this.spnButton}]}).to({state:[{t:this.shape_1},{t:this.spnButton}]},1).to({state:[{t:this.shape},{t:this.spnButton}]},1).to({state:[{t:this.shape_2},{t:this.spnButton}]},1).wait(1));
+	this.timeline.addTween(cjs.Tween.get({}).to({state:[{t:this.shape},{t:this.buttons}]}).to({state:[{t:this.shape_1},{t:this.buttons}]},1).to({state:[{t:this.shape},{t:this.buttons}]},1).to({state:[{t:this.shape_2},{t:this.buttons}]},1).wait(1));
 
 }).prototype = p = new cjs.MovieClip();
 p.nominalBounds = new cjs.Rectangle(-0.1,-2.5,300.4,79.9);
