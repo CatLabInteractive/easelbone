@@ -63,22 +63,17 @@ p.nominalBounds = new cjs.Rectangle(-44,-14.7,44.1,29.4);
 p.nominalBounds = new cjs.Rectangle(-44,-14.6,44.1,29.4);
 
 
-(lib.SelectboxArrow = function() {
+(lib.SelectBoxArrow = function() {
 	this.initialize();
 
-	// Layer 1
+	// Laag 1
 	this.shape = new cjs.Shape();
 	this.shape.graphics.f("#FF873E").s().p("AjDBtIC4jZIDPDZg");
-	this.shape.setTransform(33.6,18.9);
+	this.shape.setTransform(20,11.1);
 
-	// Layer 2
-	this.shape_1 = new cjs.Shape();
-	this.shape_1.graphics.f("rgba(89,34,48,0)").s().p("AlTCvIAAldIKnAAIAAFdg");
-	this.shape_1.setTransform(34,17.5);
-
-	this.addChild(this.shape_1,this.shape);
+	this.addChild(this.shape);
 }).prototype = p = new cjs.Container();
-p.nominalBounds = new cjs.Rectangle(0,0,68,35);
+p.nominalBounds = new cjs.Rectangle(0.4,0.2,39.3,21.9);
 
 
 (lib.Checkbox = function(mode,startPosition,loop) {
@@ -175,11 +170,11 @@ p.nominalBounds = new cjs.Rectangle(-11.4,-28.1,22.8,28.2);
 	this.initialize();
 
 	// Layer 1
-	this.down = new lib.SelectboxArrow();
-	this.down.setTransform(68.1,74.6,1,1,-180);
+	this.down = new lib.SelectBoxArrow();
+	this.down.setTransform(55.1,66,1,1,-180);
 
-	this.up = new lib.SelectboxArrow();
-	this.up.setTransform(20.7,11.6,1,1,0,0,0,19.6,10.9);
+	this.up = new lib.SelectBoxArrow();
+	this.up.setTransform(34.7,18.6,1,1,0,0,0,19.6,10.9);
 
 	this.shape = new cjs.Shape();
 	this.shape.graphics.f().s("#592230").ss(5).p("AiuC+IAAl6IFdAAIAAF6g");
