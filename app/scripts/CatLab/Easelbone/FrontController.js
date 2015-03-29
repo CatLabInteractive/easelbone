@@ -11,6 +11,9 @@ define (
 		'CatLab/Easelbone/Controls/Button',
 		'CatLab/Easelbone/Controls/Selectbox',
 
+		'CatLab/Easelbone/Controls/ScrollBar',
+		'CatLab/Easelbone/Controls/ScrollArea',
+
 		'CatLab/Easelbone/EaselJS/DisplayObjects/BigText',
 
 		'CatLab/Easelbone/Utilities/GlobalProperties',
@@ -28,6 +31,9 @@ define (
 		CheckboxControl,
 		ButtonControl,
 		SelectboxControl,
+
+		ScrollBar,
+		ScrollArea,
 
 		BigText,
 
@@ -60,7 +66,9 @@ define (
 				'Slider' : SliderControl,
 				'Checkbox' : CheckboxControl,
 				'Button' : ButtonControl,
-				'Selectbox' : SelectboxControl
+				'Selectbox' : SelectboxControl,
+				'ScrollBar' : ScrollBar,
+				'ScrollArea' : ScrollArea
 			},
 
 			'EaselJS' : {
