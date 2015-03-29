@@ -108,15 +108,13 @@
 								var button1 = new easelbone.Controls.Button (this.view.button1);
 								button1.setText ("Short text", "sans-serif", "white");
 								button1.on ('click', function () {
-									alert ('Yes');
+									alert ('Short text clicked');
 								});
 								this.addControl (button1);
 
 								var button2 = new easelbone.Controls.Button (this.view.button2);
 								button2.setText ("Rather long text for demonstration purposes. Don't try to put too much text in a small space though, it might ruin your user experience.", "sans-serif", "white");
 								this.addControl (button2);
-
-								console.log (button2);
 							},
 
 							'render' : function () {
