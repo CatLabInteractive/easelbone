@@ -76,9 +76,15 @@ scripts/CatLab/Easelbone/Utilities/Path.js
 scripts/CatLab/Easelbone/Controls/Slider.js
 scripts/CatLab/Easelbone/Controls/Checkbox.js
 scripts/CatLab/Easelbone/EaselJS/DisplayObjects/BigText.js
+scripts/CatLab/Easelbone/EaselJS/DisplayObjects/Placeholder.js
 scripts/CatLab/Easelbone/EaselJS/DisplayObjects/TextPlaceholder.js
 scripts/CatLab/Easelbone/Controls/Button.js
 scripts/CatLab/Easelbone/Controls/Selectbox.js
+scripts/CatLab/Easelbone/Controls/ScrollBar.js
+scripts/CatLab/Easelbone/EaselJS/DisplayObjects/ScrollArea.js
+scripts/CatLab/Easelbone/Controls/ScrollArea.js
+scripts/CatLab/Easelbone/Controls/ListElement.js
+scripts/CatLab/Easelbone/Controls/List.js
 scripts/CatLab/FakeWebremote/Models/User.js
 scripts/CatLab/FakeWebremote/Models/Control.js
 scripts/CatLab/FakeWebremote/Models/ControlUser.js
