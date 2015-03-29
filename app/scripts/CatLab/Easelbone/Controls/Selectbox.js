@@ -33,12 +33,17 @@ define (
 				throw "All selectboxes must have a buttons object";
 			}
 
-			this.element.buttons.up.addEventListener ('click', function (evt) {
-				self.next ();
-			});
+			this.element.buttons.on ('click', function (evt) {
 
-			this.element.buttons.down.addEventListener ('click', function (evt) {
-				self.previous ();
+				// @TODO fix this, I don't know what's going on here...
+				var local = self.element.buttons.globalToLocal (evt.stageX, evt.stageY);
+				if (local.y > 40) {
+					self.previous ();
+				}
+				else {
+					self.next ();
+				}
+
 			});
 
 			this.convertText ();

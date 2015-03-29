@@ -61,7 +61,7 @@ define (
 
 			this.on = function (event, callback)
 			{
-				this.log ('Setting trigger ' + event);
+				//this.log ('Setting trigger ' + event);
 				if (typeof (listeners[event]) == 'undefined')
 				{
 					listeners[event] = [];
@@ -72,13 +72,13 @@ define (
 
 			this.trigger = function (event)
 			{
-				this.log ("Triggering " + event);
+				//this.log ("Triggering " + event);
 
 				var todo = [];
 
 				if (typeof (listeners[event]) != 'undefined')
 				{
-					this.log ("Found " + listeners[event].length + " events");
+					//this.log ("Found " + listeners[event].length + " events");
 
 					for (i = 0; i < listeners[event].length; i ++)
 					{
@@ -107,7 +107,7 @@ define (
 
 			this.clearEvents = function ()
 			{
-				this.log ('Clearing events');
+				//this.log ('Clearing events');
 
 				listeners = {};
 				return this;
