@@ -311,10 +311,10 @@ p.nominalBounds = new cjs.Rectangle(-1,-1,34,442);
 
 	// Layer 1
 	this.maximum = new lib.Marker();
-	this.maximum.setTransform(10.1,287,1,1,0,0,0,-8.8,-15);
+	this.maximum.setTransform(20,319,1,1,0,0,0,0.1,0);
 
 	this.minimum = new lib.Marker();
-	this.minimum.setTransform(18.5,67.7);
+	this.minimum.setTransform(20,45);
 
 	this.indicator = new lib.scrollBar();
 	this.indicator.setTransform(20,88.2,0.813,0.386,0,0,0,15.9,0.3);
