@@ -544,6 +544,12 @@ p.nominalBounds = new cjs.Rectangle(0,0,150.2,154.3);
 	this.initialize();
 
 	// Laag 1
+	this.text = new cjs.Text("TextLabel", "20px 'Verdana'", "#990000");
+	this.text.name = "text";
+	this.text.lineHeight = 31;
+	this.text.lineWidth = 178;
+	this.text.setTransform(5.3,15.4);
+
 	this.boundary = new lib.Marker();
 	this.boundary.setTransform(220,65);
 
@@ -555,7 +561,7 @@ p.nominalBounds = new cjs.Rectangle(0,0,150.2,154.3);
 	this.shape_1.graphics.f("#FFFF00").s().p("AwTD+IAAgEIAAn3ISBAAIOnAAIAAH7g");
 	this.shape_1.setTransform(109.5,32.5);
 
-	this.addChild(this.shape_1,this.shape,this.boundary);
+	this.addChild(this.shape_1,this.shape,this.boundary,this.text);
 }).prototype = p = new cjs.Container();
 p.nominalBounds = new cjs.Rectangle(3.5,5.5,210.5,53);
 
