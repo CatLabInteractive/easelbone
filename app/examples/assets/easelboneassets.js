@@ -174,7 +174,7 @@ p.nominalBounds = new cjs.Rectangle(-11.4,-28.1,22.8,28.2);
 	this.down.setTransform(55.1,66,1,1,-180);
 
 	this.up = new lib.SelectBoxArrow();
-	this.up.setTransform(34.7,18.6,1,1,0,0,0,19.6,10.9);
+	this.up.setTransform(34.7,22.6,1,1,0,0,0,19.6,10.9);
 
 	this.shape = new cjs.Shape();
 	this.shape.graphics.f().s("#592230").ss(5).p("AiuC+IAAl6IFdAAIAAF6g");
