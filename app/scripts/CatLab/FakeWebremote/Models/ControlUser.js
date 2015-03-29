@@ -44,7 +44,7 @@ define (
 
 		WebcontrolUser.prototype.clearEvents = function ()
 		{
-			this.log ('Clearing events');
+			//this.log ('Clearing events');
 			for (this.tmpid in this.controls)
 			{
 				if (this.controls.hasOwnProperty (this.tmpid))

@@ -33,11 +33,11 @@ define (
 				throw "All selectboxes must have a buttons object";
 			}
 
-			this.element.buttons.up.addEventListener ('click', function (evt) {
+			this.element.buttons.up.on ('click', function (evt) {
 				self.next ();
 			});
 
-			this.element.buttons.down.addEventListener ('click', function (evt) {
+			this.element.buttons.down.on ('click', function (evt) {
 				self.previous ();
 			});
 
