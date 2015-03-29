@@ -556,10 +556,10 @@ p.nominalBounds = new cjs.Rectangle(0,0,150.2,154.3);
 	this.initialize();
 
 	// Laag 1
-	this.instance = new lib.Scrollarea();
-	this.instance.setTransform(249.8,131.5,1,1,0,0,0,261.1,136.9);
+	this.scrollcontent = new lib.Scrollarea();
+	this.scrollcontent.setTransform(249.8,131.5,1,1,0,0,0,261.1,136.9);
 
-	this.addChild(this.instance);
+	this.addChild(this.scrollcontent);
 }).prototype = p = new cjs.Container();
 p.nominalBounds = new cjs.Rectangle(-0.3,-2.1,395.2,267.3);
 
