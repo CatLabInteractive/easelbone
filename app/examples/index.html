@@ -101,8 +101,15 @@
 								checkbox2.checked = false;
 								this.addControl (checkbox2);
 
+								var selectbox = new easelbone.Controls.Selectbox (this.view.selectbox);
+								selectbox.setValues ([ "One", "Two", "Three" ]);
+								this.addControl (selectbox);
+
 								var button1 = new easelbone.Controls.Button (this.view.button1);
 								button1.setText ("Short text", "sans-serif", "white");
+								button1.on ('click', function () {
+									alert ('Short text clicked');
+								});
 								this.addControl (button1);
 
 								var button2 = new easelbone.Controls.Button (this.view.button2);

@@ -26,6 +26,8 @@ define (
 
 			'initializeNavigatable' : function (options)
 			{
+				options = options || {};
+
 				if (typeof (options.orientation) !== 'undefined') {
 
 					if (options.orientation == 'vertical') {
@@ -62,12 +64,10 @@ define (
 
 					// A or start.
 					user.control (this._controls.toggle).click (function () { self.keyInput ('a'); });
-					//user.control ('b').click (function () { self.keyInput ('b'); });
+					user.control (this._controls.toggle).click (function () { self.keyInput ('b'); });
 
 					user.control (this._controls.manipulation[0]).click (function () { self.keyInput ('down'); });
 					user.control (this._controls.manipulation[1]).click (function () { self.keyInput ('up'); });
-
-					//Webcontrol.getUsers ()[i].control ('start').click (function () { self.callCurrentOption (); });
 				}
 
 			},

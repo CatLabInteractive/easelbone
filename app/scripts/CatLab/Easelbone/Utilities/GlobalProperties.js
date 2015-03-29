@@ -11,7 +11,9 @@ define (
 
 				this.set ({
 					'width': 800,
-					'height' : 600
+					'height' : 600,
+					'font' : 'sans-serif',
+					'textColor' : 'white'
 				});
 
 			},
@@ -22,7 +24,23 @@ define (
 
 			'getHeight' : function () {
 				return this.get ('height');
+			},
+
+			'getDefaultFont' : function () {
+				return this.get ('font');
+			},
+
+			'getDefaultTextColor' : function () {
+				return this.get ('textColor');
+			},
+
+			'ifUndefined' : function (value, defaultValue) {
+				if (typeof (value) !== 'undefined' && value !== null) {
+					return value;
+				}
+				return defaultValue;
 			}
+
 
 		});
 

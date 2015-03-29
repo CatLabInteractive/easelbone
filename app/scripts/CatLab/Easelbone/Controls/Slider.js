@@ -11,6 +11,7 @@ define (
 		var Slider = function (element) {
 
 			this.element = element;
+			this.step = 0.1;
 
 			this.path = new Path (this.element.minimum, this.element.maximum);
 			this.setValue (0.5);
@@ -39,11 +40,11 @@ define (
 
 			switch (input) {
 				case 'up':
-					this.value = Math.min (1, this.value + 0.1);
+					this.value = Math.min (1, this.value + this.step);
 				break;
 
 				case 'down':
-					this.value = Math.max (0, this.value - 0.1);
+					this.value = Math.max (0, this.value - this.step);
 				break;
 			}
 
