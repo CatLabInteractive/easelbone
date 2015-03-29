@@ -10,7 +10,9 @@ define (
 
 		var p = ListElement.prototype;
 
-
+		p.focus = function () {
+			this.dispatchEvent ('focus');
+		};
 
 		return ListElement;
 
