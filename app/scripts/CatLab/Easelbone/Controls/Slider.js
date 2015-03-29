@@ -10,11 +10,29 @@ define (
 
 		var Slider = function (element) {
 
+			var self = this;
+			var position;
+
 			this.element = element;
 			this.step = 0.1;
 
 			this.path = new Path (this.element.minimum, this.element.maximum);
 			this.setValue (0.5);
+
+			// Mouse events
+			this.element.pointer.on ('pressmove', function (evt) {
+				position = self.element.globalToLocal (evt.stageX, evt.stageY);
+				self.setValue (self.path.getValue (position.x, position.y));
+			});
+
+			this.element.pointer.on ('click', function (evt) {
+				evt.stopPropagation ();
+			});
+
+			this.element.on ('click', function (evt) {
+				position = self.element.globalToLocal (evt.stageX, evt.stageY);
+				self.setValue (self.path.getValue (position.x, position.y));
+			});
 
 		};
 

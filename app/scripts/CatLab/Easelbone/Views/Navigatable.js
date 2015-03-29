@@ -7,7 +7,7 @@ define (
 		return BaseView.extend ({
 
 			'_users' : [],
-			'_currentIndex' : null,
+			'_currentIndex' : -1,
 			'_current' : null,
 			'_options' : [],
 
@@ -100,6 +100,8 @@ define (
 				var self = this;
 
 				this._options.push (control);
+
+				/*
 				if (this._options.length === 1) {
 					// First control added? Activate that one.
 					setTimeout (function ()
@@ -109,12 +111,14 @@ define (
 
 				}
 				else {
+				*/
 					control.deactivate (false);
-				}
+				//}
 			},
 
 			'activate' : function (index) {
-				if (this._currentIndex !== null) {
+
+				if (this._currentIndex !== -1 && this._currentIndex !== null) {
 					this._options[this._currentIndex].deactivate ();
 				}
 

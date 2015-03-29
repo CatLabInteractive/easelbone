@@ -12,6 +12,8 @@ define (
 
 		var Selectbox = function (element) {
 
+			var self = this;
+
 			this.element = element;
 			this.checked = false;
 
@@ -24,8 +26,20 @@ define (
 
 			// Check for text placeholder.
 			if (!this.element.value) {
-				throw "All buttons should have a text placeholder.";
+				throw "All selectboxes should have a text placeholder.";
 			}
+
+			if (!this.element.buttons) {
+				throw "All selectboxes must have a buttons object";
+			}
+
+			this.element.buttons.up.addEventListener ('click', function (evt) {
+				self.next ();
+			});
+
+			this.element.buttons.down.addEventListener ('click', function (evt) {
+				self.previous ();
+			});
 
 			this.convertText ();
 
