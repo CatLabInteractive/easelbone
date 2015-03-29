@@ -340,8 +340,8 @@ p.nominalBounds = new cjs.Rectangle(-2.6,-2.4,44.7,373.8);
 	this.initialize();
 
 	// Laag 1
-	this.instance = new lib.Scrollbar();
-	this.instance.setTransform(385,196,1,1,0,0,0,19.7,184.4);
+	this.scrollbar = new lib.Scrollbar();
+	this.scrollbar.setTransform(385,196,1,1,0,0,0,19.7,184.4);
 
 	this.content = new lib.Placeholder();
 	this.content.setTransform(18,20,3.27,2.36);
@@ -350,7 +350,7 @@ p.nominalBounds = new cjs.Rectangle(-2.6,-2.4,44.7,373.8);
 	this.shape.graphics.f("#CCFFCC").s().p("A6oTsMAAAgnXMA1QAAAMAAAAnXg");
 	this.shape.setTransform(181.5,138.1);
 
-	this.addChild(this.shape,this.content,this.instance);
+	this.addChild(this.shape,this.content,this.scrollbar);
 }).prototype = p = new cjs.Container();
 p.nominalBounds = new cjs.Rectangle(11,9.2,396.2,373.8);
 
