@@ -16,11 +16,11 @@ define (
 		var p = ScrollArea.prototype;
 
 		p.up = function () {
-			alert ('up');
+			this.content.up (25);
 		};
 
 		p.down = function () {
-			alert ('down');
+			this.content.down (25);
 		};
 
 		return ScrollArea;

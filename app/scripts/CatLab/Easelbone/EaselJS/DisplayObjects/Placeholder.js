@@ -73,7 +73,7 @@ define (
 			//element.visible = false;
 
 			// And add ourselves
-			if (typeof (element.parent) != 'undefined') {
+			if (element.parent != null) {
 				element.parent.addChild (innerPlaceholder);
 				innerPlaceholder.dispatchEvent ('initialized');
 			}

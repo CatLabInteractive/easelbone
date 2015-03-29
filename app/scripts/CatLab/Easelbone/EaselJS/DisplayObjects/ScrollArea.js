@@ -26,7 +26,31 @@ define (
 
 		var p = ScrollArea.prototype = new Placeholder ();
 
+		p.setScroll = function (y) {
 
+			if (y < 0) {
+				return;
+			}
+
+			if (y > (this.getBounds ().height - this.parent.getBounds ().height)) {
+				return;
+			}
+
+			this.y = 0 - y;
+			return this;
+		};
+
+		p.getScroll = function () {
+			return 0 - this.y;
+		};
+
+		p.down = function (amount) {
+			return this.setScroll (this.getScroll () + amount);
+		};
+
+		p.up = function (amount) {
+			return this.setScroll (this.getScroll () - amount);
+		};
 
 		return ScrollArea;
 	}
