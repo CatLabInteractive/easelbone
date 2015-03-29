@@ -88,8 +88,17 @@
 								// Now set the view
 								this.view = new assets.ExampleScrollArea ();
 
+								this.list = new easelbone.Controls.List (assets.ExampleListElement);
 								this.scroll = new easelbone.Controls.ScrollArea (this.view.scrollcontent);
+								this.scroll.content.addChild (this.list);
 
+								this.list.createElement ();
+								this.list.createElement ();
+								this.list.createElement ();
+								this.list.createElement ();
+								this.list.createElement ();
+								this.list.createElement ();
+								this.list.createElement ();
 
 							},
 
