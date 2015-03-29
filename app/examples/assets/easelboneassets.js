@@ -348,25 +348,6 @@ p.nominalBounds = new cjs.Rectangle(-3.9,-3,47.3,513.4);
 p.nominalBounds = new cjs.Rectangle(-2.4,-1.3,44.3,267.3);
 
 
-(lib.Scrollarea = function() {
-	this.initialize();
-
-	// Laag 1
-	this.content = new lib.Placeholder();
-	this.content.setTransform(18,20,3.27,2.36);
-
-	this.scrollbar = new lib.Scrollbar();
-	this.scrollbar.setTransform(511.3,110.6,1,1,0,0,0,147,105.9);
-
-	this.shape = new cjs.Shape();
-	this.shape.graphics.f("#CCFFCC").s().p("A6oTsMAAAgnXMA1QAAAMAAAAnXg");
-	this.shape.setTransform(181.5,138.1);
-
-	this.addChild(this.shape,this.scrollbar,this.content);
-}).prototype = p = new cjs.Container();
-p.nominalBounds = new cjs.Rectangle(11,3.3,395.2,267.3);
-
-
 (lib.Button = function(mode,startPosition,loop) {
 if (loop == null) { loop = false; }	this.initialize(mode,startPosition,loop,{"Over":1,"Over-NoAnim":6,"Up":7,"Up-NoAnim":11,"Down":12,"Hit":13});
 
@@ -552,6 +533,25 @@ if (loop == null) { loop = false; }	this.initialize(mode,startPosition,loop,{});
 p.nominalBounds = new cjs.Rectangle(0,0,150.2,154.3);
 
 
+(lib.ExampleScrollArea = function() {
+	this.initialize();
+
+	// Laag 1
+	this.content = new lib.Placeholder();
+	this.content.setTransform(18,20,3.27,2.36);
+
+	this.scrollbar = new lib.Scrollbar();
+	this.scrollbar.setTransform(511.3,110.6,1,1,0,0,0,147,105.9);
+
+	this.shape = new cjs.Shape();
+	this.shape.graphics.f("#CCFFCC").s().p("A6oTsMAAAgnXMA1QAAAMAAAAnXg");
+	this.shape.setTransform(181.5,138.1);
+
+	this.addChild(this.shape,this.scrollbar,this.content);
+}).prototype = p = new cjs.Container();
+p.nominalBounds = new cjs.Rectangle(11,3.3,395.2,267.3);
+
+
 (lib.Slider = function(mode,startPosition,loop) {
 if (loop == null) { loop = false; }	this.initialize(mode,startPosition,loop,{"Up":0,"Over":1,"Down":2,"Hit":3});
 
@@ -668,7 +668,7 @@ p.nominalBounds = new cjs.Rectangle(33.3,8.1,754.9,424.4);
 	this.initialize();
 
 	// Layer 1
-	this.instance = new lib.Scrollarea();
+	this.instance = new lib.ExampleScrollArea();
 	this.instance.setTransform(281.8,186.5,1,1,0,0,0,261.1,136.9);
 
 	this.addChild(this.instance);
