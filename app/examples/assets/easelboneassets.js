@@ -63,45 +63,21 @@ p.nominalBounds = new cjs.Rectangle(-44,-14.7,44.1,29.4);
 p.nominalBounds = new cjs.Rectangle(-44,-14.6,44.1,29.4);
 
 
-(lib.SelectboxArrow = function(mode,startPosition,loop) {
-if (loop == null) { loop = false; }	this.initialize(mode,startPosition,loop,{});
-
-	// timeline functions:
-	this.frame_0 = function() {
-		this.stop();
-	}
-	this.frame_1 = function() {
-		this.gotoAndStop(1);
-	}
-	this.frame_2 = function() {
-		this.stop();
-	}
-	this.frame_3 = function() {
-		this.gotoAndStop(3);
-	}
-
-	// actions tween:
-	this.timeline.addTween(cjs.Tween.get(this).call(this.frame_0).wait(1).call(this.frame_1).wait(1).call(this.frame_2).wait(1).call(this.frame_3).wait(1));
+(lib.SelectboxArrow = function() {
+	this.initialize();
 
 	// Layer 1
 	this.shape = new cjs.Shape();
 	this.shape.graphics.f("#FF873E").s().p("AhiA3IBdhtIBoBtg");
 	this.shape.setTransform(33.6,18.9,1.97,1.97);
 
-	this.shape_1 = new cjs.Shape();
-	this.shape_1.graphics.f("#FF6000").s().p("AhiA3IBdhtIBoBtg");
-	this.shape_1.setTransform(33.6,18.9,1.97,1.97);
-
-	this.timeline.addTween(cjs.Tween.get({}).to({state:[{t:this.shape}]}).to({state:[]},1).to({state:[{t:this.shape_1}]},1).to({state:[]},1).wait(1));
-
 	// Layer 2
-	this.shape_2 = new cjs.Shape();
-	this.shape_2.graphics.f("rgba(89,34,48,0)").s().p("AlTCvIAAldIKnAAIAAFdg");
-	this.shape_2.setTransform(34,17.5);
+	this.shape_1 = new cjs.Shape();
+	this.shape_1.graphics.f("rgba(89,34,48,0)").s().p("AlTCvIAAldIKnAAIAAFdg");
+	this.shape_1.setTransform(34,17.5);
 
-	this.timeline.addTween(cjs.Tween.get(this.shape_2).to({_off:true},1).wait(3));
-
-}).prototype = p = new cjs.MovieClip();
+	this.addChild(this.shape_1,this.shape);
+}).prototype = p = new cjs.Container();
 p.nominalBounds = new cjs.Rectangle(0,0,68,35);
 
 
