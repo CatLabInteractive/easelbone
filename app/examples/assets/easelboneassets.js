@@ -540,6 +540,26 @@ if (loop == null) { loop = false; }	this.initialize(mode,startPosition,loop,{});
 p.nominalBounds = new cjs.Rectangle(0,0,150.2,154.3);
 
 
+(lib.ExampleListElement = function() {
+	this.initialize();
+
+	// Laag 1
+	this.boundary = new lib.Marker();
+	this.boundary.setTransform(220,65);
+
+	this.shape = new cjs.Shape();
+	this.shape.graphics.f().s("#000000").ss(1,1,1).p("Ao+D/IgFAAIAAn9ISHAAIAAAF");
+	this.shape.setTransform(62.5,32);
+
+	this.shape_1 = new cjs.Shape();
+	this.shape_1.graphics.f("#FFFF00").s().p("AwTD+IAAgEIAAn3ISBAAIOnAAIAAH7g");
+	this.shape_1.setTransform(109.5,32.5);
+
+	this.addChild(this.shape_1,this.shape,this.boundary);
+}).prototype = p = new cjs.Container();
+p.nominalBounds = new cjs.Rectangle(3.5,5.5,210.5,53);
+
+
 (lib.ExampleScrollArea = function() {
 	this.initialize();
 
