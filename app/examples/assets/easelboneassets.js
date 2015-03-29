@@ -76,23 +76,6 @@ p.nominalBounds = new cjs.Rectangle(-44,-14.6,44.1,29.4);
 p.nominalBounds = new cjs.Rectangle(0.4,0.2,39.3,21.9);
 
 
-(lib.scrollBar = function() {
-	this.initialize();
-
-	// Layer 1
-	this.shape = new cjs.Shape();
-	this.shape.graphics.f().s("rgba(89,34,48,0)").ss(0.1).p("ACffhIk9AAMAAAg/BIE9AAg");
-	this.shape.setTransform(16,220,1,1.091);
-
-	this.shape_1 = new cjs.Shape();
-	this.shape_1.graphics.f("#8B504F").s().p("AiefhMAAAg/BIE9AAMAAAA/Bg");
-	this.shape_1.setTransform(16,220,1,1.091);
-
-	this.addChild(this.shape_1,this.shape);
-}).prototype = p = new cjs.Container();
-p.nominalBounds = new cjs.Rectangle(-1,-1,34,442);
-
-
 (lib.btnScrollUp = function() {
 	this.initialize();
 
@@ -298,6 +281,29 @@ if (loop == null) { loop = false; }	this.initialize(mode,startPosition,loop,{"Up
 
 }).prototype = p = new cjs.MovieClip();
 p.nominalBounds = new cjs.Rectangle(-0.1,-2.9,301.6,79.9);
+
+
+(lib.scrollBar = function() {
+	this.initialize();
+
+	// Layer 1
+	this.bottom = new lib.Marker();
+	this.bottom.setTransform(10.6,440);
+
+	this.top = new lib.Marker();
+	this.top.setTransform(11.3,0);
+
+	this.shape = new cjs.Shape();
+	this.shape.graphics.f().s("rgba(89,34,48,0)").ss(0.1).p("ACffhIk9AAMAAAg/BIE9AAg");
+	this.shape.setTransform(16,220,1,1.091);
+
+	this.shape_1 = new cjs.Shape();
+	this.shape_1.graphics.f("#8B504F").s().p("AiefhMAAAg/BIE9AAMAAAA/Bg");
+	this.shape_1.setTransform(16,220,1,1.091);
+
+	this.addChild(this.shape_1,this.shape,this.top,this.bottom);
+}).prototype = p = new cjs.Container();
+p.nominalBounds = new cjs.Rectangle(-1,-1,34,442);
 
 
 (lib.Scrollbar = function() {
