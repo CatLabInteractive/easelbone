@@ -76,6 +76,65 @@ p.nominalBounds = new cjs.Rectangle(-44,-14.6,44.1,29.4);
 p.nominalBounds = new cjs.Rectangle(0.4,0.2,39.3,21.9);
 
 
+(lib.scrollBar = function() {
+	this.initialize();
+
+	// Layer 1
+	this.shape = new cjs.Shape();
+	this.shape.graphics.f().s("rgba(89,34,48,0)").ss(0.1).p("ACffhIk9AAMAAAg/BIE9AAg");
+	this.shape.setTransform(16,220,1,1.091);
+
+	this.shape_1 = new cjs.Shape();
+	this.shape_1.graphics.f("#8B504F").s().p("AiefhMAAAg/BIE9AAMAAAA/Bg");
+	this.shape_1.setTransform(16,220,1,1.091);
+
+	this.addChild(this.shape_1,this.shape);
+}).prototype = p = new cjs.Container();
+p.nominalBounds = new cjs.Rectangle(-1,-1,34,442);
+
+
+(lib.btnScrollUp = function() {
+	this.initialize();
+
+	// Layer 1
+	this.shape = new cjs.Shape();
+	this.shape.graphics.f("#592230").s().p("AiKBcICDi3ICSC3g");
+	this.shape.setTransform(20.3,13.5);
+
+	this.shape_1 = new cjs.Shape();
+	this.shape_1.graphics.f().s("#592230").ss(4).p("ACffhIk9AAMAAAg/BIE9AAg");
+	this.shape_1.setTransform(19.7,15.5,1.232,0.077);
+
+	this.shape_2 = new cjs.Shape();
+	this.shape_2.graphics.f("#8B504F").s().p("AiefhMAAAg/BIE9AAMAAAA/Bg");
+	this.shape_2.setTransform(19.7,15.5,1.232,0.077);
+
+	this.addChild(this.shape_2,this.shape_1,this.shape);
+}).prototype = p = new cjs.Container();
+p.nominalBounds = new cjs.Rectangle(-2,-2,43.4,35);
+
+
+(lib.btnScrollDown = function() {
+	this.initialize();
+
+	// Layer 1
+	this.shape = new cjs.Shape();
+	this.shape.graphics.f("#592230").s().p("Ahvg9IDfAAIh2B7g");
+	this.shape.setTransform(18.3,15.3,1.067,1.213);
+
+	this.shape_1 = new cjs.Shape();
+	this.shape_1.graphics.f().s("#592230").ss(4).p("ACffhIk9AAMAAAg/BIE9AAg");
+	this.shape_1.setTransform(19.7,13.5,1.232,0.067,180);
+
+	this.shape_2 = new cjs.Shape();
+	this.shape_2.graphics.f("#8B504F").s().p("AiefhMAAAg/BIE9AAMAAAA/Bg");
+	this.shape_2.setTransform(19.7,13.5,1.232,0.067,180);
+
+	this.addChild(this.shape_2,this.shape_1,this.shape);
+}).prototype = p = new cjs.Container();
+p.nominalBounds = new cjs.Rectangle(-2,-2,43.4,31);
+
+
 (lib.Checkbox = function(mode,startPosition,loop) {
 if (loop == null) { loop = false; }	this.initialize(mode,startPosition,loop,{Up:0,Over:1,Down:2,Hit:3});
 
@@ -139,7 +198,7 @@ p.nominalBounds = new cjs.Rectangle(-2.5,-2.5,43.5,43.4);
 p.nominalBounds = new cjs.Rectangle(-75,-77.1,150.1,154.3);
 
 
-(lib.TextPlaceholder = function() {
+(lib.Placeholder = function() {
 	this.initialize();
 
 	// Layer 1
@@ -210,7 +269,7 @@ if (loop == null) { loop = false; }	this.initialize(mode,startPosition,loop,{"Up
 	this.timeline.addTween(cjs.Tween.get(this).call(this.frame_0).wait(1).call(this.frame_1).wait(1).call(this.frame_2).wait(1).call(this.frame_3).wait(1));
 
 	// Text
-	this.value = new lib.TextPlaceholder();
+	this.value = new lib.Placeholder();
 	this.value.setTransform(7.1,14.9,2.14,0.507,0,0,0,0.5,1.1);
 
 	this.timeline.addTween(cjs.Tween.get(this.value).wait(4));
@@ -241,6 +300,73 @@ if (loop == null) { loop = false; }	this.initialize(mode,startPosition,loop,{"Up
 p.nominalBounds = new cjs.Rectangle(-0.1,-2.9,301.6,79.9);
 
 
+(lib.scrollbar = function() {
+	this.initialize();
+
+	// Layer 1
+	this.maximum = new lib.Marker();
+	this.maximum.setTransform(16.9,420.2);
+
+	this.minimum = new lib.Marker();
+	this.minimum.setTransform(18.5,67.7);
+
+	this.indicator = new lib.scrollBar();
+	this.indicator.setTransform(20.1,88.2,0.813,0.488,0,0,0,16,0.2);
+	new cjs.ButtonHelper(this.indicator, 0, 1, 1);
+
+	this.down = new lib.btnScrollDown();
+	this.down.setTransform(19.8,470.1,1,2.596,0,0,0,19.7,13.5);
+	new cjs.ButtonHelper(this.down, 0, 1, 1);
+
+	this.up = new lib.btnScrollUp();
+	this.up.setTransform(19.7,30.3,1,1.903,0,0,0,19.7,15.5);
+	new cjs.ButtonHelper(this.up, 0, 1, 1);
+
+	// Layer 2
+	this.shape = new cjs.Shape();
+	this.shape.graphics.f().s("#592230").ss(5).p("EgDDgnaIGHAAMAAABO1ImHAAg");
+	this.shape.setTransform(19.7,252.6);
+
+	this.shape_1 = new cjs.Shape();
+	this.shape_1.graphics.f("#592230").s().p("EgDDAnbMAAAhO1IGHAAMAAABO1g");
+	this.shape_1.setTransform(19.7,252.6);
+
+	this.addChild(this.shape_1,this.shape,this.up,this.down,this.indicator,this.minimum,this.maximum);
+}).prototype = p = new cjs.Container();
+p.nominalBounds = new cjs.Rectangle(-3.9,-3,47.3,513.4);
+
+
+(lib.Scrollbar = function() {
+	this.initialize();
+
+	// Laag 1
+	this.scrollBar = new lib.scrollbar();
+	this.scrollBar.setTransform(-1,-1,1,0.521,0,0,0,-1,-2.4);
+
+	this.addChild(this.scrollBar);
+}).prototype = p = new cjs.Container();
+p.nominalBounds = new cjs.Rectangle(-2.4,-1.3,44.3,267.3);
+
+
+(lib.Scrollarea = function() {
+	this.initialize();
+
+	// Laag 1
+	this.content = new lib.Placeholder();
+	this.content.setTransform(18,20,3.27,2.36);
+
+	this.scrollbar = new lib.Scrollbar();
+	this.scrollbar.setTransform(511.3,110.6,1,1,0,0,0,147,105.9);
+
+	this.shape = new cjs.Shape();
+	this.shape.graphics.f("#CCFFCC").s().p("A6oTsMAAAgnXMA1QAAAMAAAAnXg");
+	this.shape.setTransform(181.5,138.1);
+
+	this.addChild(this.shape,this.scrollbar,this.content);
+}).prototype = p = new cjs.Container();
+p.nominalBounds = new cjs.Rectangle(11,3.3,395.2,267.3);
+
+
 (lib.Button = function(mode,startPosition,loop) {
 if (loop == null) { loop = false; }	this.initialize(mode,startPosition,loop,{"Over":1,"Over-NoAnim":6,"Up":7,"Up-NoAnim":11,"Down":12,"Hit":13});
 
@@ -265,7 +391,7 @@ if (loop == null) { loop = false; }	this.initialize(mode,startPosition,loop,{"Ov
 	this.timeline.addTween(cjs.Tween.get(this).call(this.frame_0).wait(6).call(this.frame_6).wait(5).call(this.frame_11).wait(1).call(this.frame_12).wait(1).call(this.frame_13).wait(1));
 
 	// TextLabel
-	this.text = new lib.TextPlaceholder();
+	this.text = new lib.Placeholder();
 	this.text.setTransform(13.7,13.7,1.739,0.494,0,0.4,0.5,0.1,0.8);
 
 	this.timeline.addTween(cjs.Tween.get(this.text).wait(1).to({scaleX:1.89,rotation:0.4,skewX:0,skewY:0,x:5.7},0).to({scaleY:0.57,rotation:5.4,x:8.7,y:1.7},5).to({scaleY:0.54,rotation:5.2,x:8.4,y:2},1).to({scaleY:0.49,rotation:0.4,x:5.7,y:13.7},4).wait(1).to({rotation:0.4},0).wait(2));
@@ -542,12 +668,12 @@ p.nominalBounds = new cjs.Rectangle(33.3,8.1,754.9,424.4);
 	this.initialize();
 
 	// Layer 1
-	this.instance = new lib.ExampleSettingsView();
-	this.instance.setTransform(297,43,1,1,0,0,0,296.1,43);
+	this.instance = new lib.Scrollarea();
+	this.instance.setTransform(281.8,186.5,1,1,0,0,0,261.1,136.9);
 
 	this.addChild(this.instance);
 }).prototype = p = new cjs.Container();
-p.nominalBounds = new cjs.Rectangle(434.2,308.1,754.9,424.4);
+p.nominalBounds = new cjs.Rectangle(431.7,352.9,395.2,267.3);
 
 })(lib = lib||{}, images = images||{}, createjs = createjs||{});
 var lib, images, createjs;
