@@ -12,6 +12,8 @@ define (
 
 		var Button = function (element) {
 
+			var self = this;
+
 			this.element = element;
 			this.checked = false;
 
@@ -21,6 +23,11 @@ define (
 			}
 
 			this.convertText ();
+
+			// Listen to click event
+			this.element.addEventListener ('click', function () {
+				self.trigger ('click');
+			});
 
 		};
 
