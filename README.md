@@ -3,6 +3,8 @@ GUI engine combining easeljs and backbonejs. Developed to be used with flash cc 
 
 Example available at
 
-* Control elements: https://rawgit.com/CatLabInteractive/easelbone/master/app/examples/controls.html
+* Control elements: 
+https://rawgit.com/CatLabInteractive/easelbone/master/app/examples/controls.html
 
-* Scrollable areas: https://rawgit.com/CatLabInteractive/easelbone/master/app/examples/scroll.html
+* Scrollable areas: 
+https://rawgit.com/CatLabInteractive/easelbone/master/app/examples/scroll.html
