@@ -68,8 +68,8 @@ p.nominalBounds = new cjs.Rectangle(-44,-14.6,44.1,29.4);
 
 	// Layer 1
 	this.shape = new cjs.Shape();
-	this.shape.graphics.f("#FF873E").s().p("AhiA3IBdhtIBoBtg");
-	this.shape.setTransform(33.6,18.9,1.97,1.97);
+	this.shape.graphics.f("#FF873E").s().p("AjDBtIC4jZIDPDZg");
+	this.shape.setTransform(33.6,18.9);
 
 	// Layer 2
 	this.shape_1 = new cjs.Shape();
