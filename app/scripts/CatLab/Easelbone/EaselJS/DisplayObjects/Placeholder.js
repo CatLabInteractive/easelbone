@@ -21,6 +21,7 @@ define (
 			var innerPlaceholder = this;
 			var boundHash = '0:0';
 			var oldBoundHash = '0:0';
+			var event;
 
 			element.original_draw = element.draw;
 
@@ -59,7 +60,7 @@ define (
 				innerPlaceholder.rotation = this.rotation;
 
 				if (innerPlaceholder.hasBoundsChanged ()) {
-					var event = new createjs.Event ('bounds:change');
+					event = new createjs.Event ('bounds:change');
 					innerPlaceholder.dispatchEvent (event);
 				}
 			};
