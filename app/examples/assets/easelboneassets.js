@@ -294,12 +294,12 @@ p.nominalBounds = new cjs.Rectangle(-0.1,-2.9,301.6,79.9);
 	this.top.setTransform(11.3,0);
 
 	this.shape = new cjs.Shape();
-	this.shape.graphics.f().s("rgba(89,34,48,0)").ss(0.1).p("ACffhIk9AAMAAAg/BIE9AAg");
-	this.shape.setTransform(16,220,1,1.091);
+	this.shape.graphics.f().s("rgba(89,34,48,0)").ss(0.1).p("EACfAiXIk9AAMAAAhEtIE9AAg");
+	this.shape.setTransform(16,220);
 
 	this.shape_1 = new cjs.Shape();
-	this.shape_1.graphics.f("#8B504F").s().p("AiefhMAAAg/BIE9AAMAAAA/Bg");
-	this.shape_1.setTransform(16,220,1,1.091);
+	this.shape_1.graphics.f("#8B504F").s().p("EgCeAiXMAAAhEtIE9AAMAAABEtg");
+	this.shape_1.setTransform(16,220);
 
 	this.addChild(this.shape_1,this.shape,this.top,this.bottom);
 }).prototype = p = new cjs.Container();
@@ -318,7 +318,6 @@ p.nominalBounds = new cjs.Rectangle(-1,-1,34,442);
 
 	this.indicator = new lib.scrollBar();
 	this.indicator.setTransform(20,88.2,0.813,0.386,0,0,0,15.9,0.3);
-	new cjs.ButtonHelper(this.indicator, 0, 1, 1);
 
 	this.down = new lib.btnScrollDown();
 	this.down.setTransform(18,342,1,1.611,0,0,0,17.9,10.8);
