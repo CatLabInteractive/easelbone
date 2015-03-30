@@ -346,18 +346,18 @@ p.nominalBounds = new cjs.Rectangle(-2.6,-2.4,44.7,373.8);
 
 	// Laag 1
 	this.scrollbar = new lib.Scrollbar();
-	this.scrollbar.setTransform(385,196,1,1,0,0,0,19.7,184.4);
+	this.scrollbar.setTransform(574,196,1,1,0,0,0,19.7,184.4);
 
 	this.content = new lib.Placeholder();
-	this.content.setTransform(18,20,3.27,2.36);
+	this.content.setTransform(10,22,5.27,3.39);
 
 	this.shape = new cjs.Shape();
-	this.shape.graphics.f("#CCFFCC").s().p("A6oTsMAAAgnXMA1QAAAMAAAAnXg");
-	this.shape.setTransform(181.5,138.1);
+	this.shape.graphics.f("#CCFFCC").s().p("EgqaAcHMAAAg4NMBU1AAAMAAAA4Ng");
+	this.shape.setTransform(274.5,192.1);
 
 	this.addChild(this.shape,this.content,this.scrollbar);
 }).prototype = p = new cjs.Container();
-p.nominalBounds = new cjs.Rectangle(11,9.2,396.2,373.8);
+p.nominalBounds = new cjs.Rectangle(3,9.2,593.2,373.8);
 
 
 (lib.Button = function(mode,startPosition,loop) {
@@ -580,7 +580,7 @@ p.nominalBounds = new cjs.Rectangle(3.5,5.5,210.5,53);
 
 	this.addChild(this.scrollcontent);
 }).prototype = p = new cjs.Container();
-p.nominalBounds = new cjs.Rectangle(-0.3,3.8,396.2,373.8);
+p.nominalBounds = new cjs.Rectangle(-8.3,3.8,593.2,373.8);
 
 
 (lib.Slider = function(mode,startPosition,loop) {
@@ -701,7 +701,7 @@ p.nominalBounds = new cjs.Rectangle(33.3,8.1,754.9,424.4);
 
 	this.addChild(this.instance);
 }).prototype = p = new cjs.Container();
-p.nominalBounds = new cjs.Rectangle(431.7,358.8,396.2,373.8);
+p.nominalBounds = new cjs.Rectangle(423.7,358.8,593.2,373.8);
 
 })(lib = lib||{}, images = images||{}, createjs = createjs||{});
 var lib, images, createjs;
