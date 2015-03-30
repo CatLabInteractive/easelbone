@@ -31,7 +31,7 @@ define (
 		p.enableScrollMouse = function () {
 			var self = this;
 			Mousewheel.listen (function (iv) {
-				self.scroll (iv.y > 0 ? 20 : - 20);
+				self.scroll (iv.y > 0 ? 50 : - 50);
 			});
 		};
 
