@@ -14,6 +14,7 @@ define (
 		'CatLab/Easelbone/Controls/ScrollBar',
 		'CatLab/Easelbone/Controls/ScrollArea',
 		'CatLab/Easelbone/Controls/List',
+		'CatLab/Easelbone/Controls/FloatContainer',
 
 		'CatLab/Easelbone/EaselJS/DisplayObjects/BigText',
 
@@ -36,6 +37,7 @@ define (
 		ScrollBar,
 		ScrollArea,
 		ListControl,
+		FloatContainer,
 
 		BigText,
 
@@ -71,7 +73,8 @@ define (
 				'Selectbox' : SelectboxControl,
 				'ScrollBar' : ScrollBar,
 				'ScrollArea' : ScrollArea,
-				'List' : ListControl
+				'List' : ListControl,
+				'FloatContainer' : FloatContainer
 			},
 
 			'EaselJS' : {

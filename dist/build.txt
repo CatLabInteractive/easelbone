@@ -86,6 +86,7 @@ scripts/CatLab/Easelbone/Utilities/Mousewheel.js
 scripts/CatLab/Easelbone/Controls/ScrollArea.js
 scripts/CatLab/Easelbone/Controls/ListElement.js
 scripts/CatLab/Easelbone/Controls/List.js
+scripts/CatLab/Easelbone/Controls/FloatContainer.js
 scripts/CatLab/FakeWebremote/Models/User.js
 scripts/CatLab/FakeWebremote/Models/Control.js
 scripts/CatLab/FakeWebremote/Models/ControlUser.js

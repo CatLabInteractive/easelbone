@@ -40,6 +40,7 @@ define (
 		};
 
 		p.onScroll = function (evt) {
+
 			this.trigger ('scroll', 				{
 				'percentage' : this.content.getPercentage (),
 				'contentHeight' : this.content.getBounds ().height,

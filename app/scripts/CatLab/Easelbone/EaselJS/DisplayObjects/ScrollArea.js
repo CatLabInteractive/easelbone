@@ -38,6 +38,10 @@ define (
 				this.y = 0;
 			}
 
+			else if (this.getBounds ().height - this.parent.getBounds ().height < 0) {
+				this.y = 0;
+			}
+
 			else if (y > (this.getBounds ().height - this.parent.getBounds ().height)) {
 				this.y = 0 - (this.getBounds ().height - this.parent.getBounds ().height);
 			}
