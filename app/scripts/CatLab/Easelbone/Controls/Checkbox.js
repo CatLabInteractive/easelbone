@@ -27,6 +27,16 @@ define (
 			this.update ();
 		};
 
+		Checkbox.prototype.check = function () {
+			this.checked = true;
+			this.update ();
+		};
+
+		Checkbox.prototype.uncheck = function () {
+			this.checked = false;
+			this.update ();
+		};
+
 		Checkbox.prototype.keyInput = function (input) {
 
 			switch (input) {
