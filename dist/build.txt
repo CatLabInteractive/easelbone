@@ -82,6 +82,7 @@ scripts/CatLab/Easelbone/Controls/Button.js
 scripts/CatLab/Easelbone/Controls/Selectbox.js
 scripts/CatLab/Easelbone/Controls/ScrollBar.js
 scripts/CatLab/Easelbone/EaselJS/DisplayObjects/ScrollArea.js
+scripts/CatLab/Easelbone/Utilities/Mousewheel.js
 scripts/CatLab/Easelbone/Controls/ScrollArea.js
 scripts/CatLab/Easelbone/Controls/ListElement.js
 scripts/CatLab/Easelbone/Controls/List.js
