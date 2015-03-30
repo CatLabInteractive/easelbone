@@ -22,21 +22,31 @@ define (
 			});
 
 			parent.addChild (this);
+
+			// Also scroll.
+			setTimeout (function () {
+				self.setScroll (0);
+			}, 1);
 		};
 
 		var p = ScrollArea.prototype = new Placeholder ();
+		var event;
 
 		p.setScroll = function (y) {
 
 			if (y < 0) {
-				return;
+				this.y = 0;
 			}
 
-			if (y > (this.getBounds ().height - this.parent.getBounds ().height)) {
-				return;
+			else if (y > (this.getBounds ().height - this.parent.getBounds ().height)) {
+				this.y = 0 - (this.getBounds ().height - this.parent.getBounds ().height);
 			}
 
-			this.y = 0 - y;
+			else {
+				this.y = 0 - y;
+			}
+
+			this.onScroll ();
 			return this;
 		};
 
@@ -50,6 +60,20 @@ define (
 
 		p.up = function (amount) {
 			return this.setScroll (this.getScroll () - amount);
+		};
+
+		p.getPercentage = function () {
+			return this.getScroll () / (this.getBounds ().height - this.parent.getBounds ().height);
+		};
+
+		p.scrollTo = function (percentage) {
+			this.setScroll (percentage * (this.getBounds ().height - this.parent.getBounds ().height));
+		};
+
+		p.onScroll = function () {
+
+			event = new createjs.Event ('scroll');
+			this.dispatchEvent (event);
 		};
 
 		return ScrollArea;
