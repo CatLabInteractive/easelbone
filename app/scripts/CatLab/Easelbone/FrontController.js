@@ -17,6 +17,7 @@ define (
 		'CatLab/Easelbone/Controls/FloatContainer',
 
 		'CatLab/Easelbone/EaselJS/DisplayObjects/BigText',
+		'CatLab/Easelbone/EaselJS/DisabledButtonHelper',
 
 		'CatLab/Easelbone/Utilities/GlobalProperties',
 
@@ -40,6 +41,7 @@ define (
 		FloatContainer,
 
 		BigText,
+		DisableButtonHelper,
 
 		GlobalProperties,
 
@@ -78,7 +80,8 @@ define (
 			},
 
 			'EaselJS' : {
-				'BigText' : BigText
+				'BigText' : BigText,
+				'DisabledButtonHelper' : DisabledButtonHelper
 			},
 
 			'FakeWebremote' : {
