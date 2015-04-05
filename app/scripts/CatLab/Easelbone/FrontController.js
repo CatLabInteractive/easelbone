@@ -41,7 +41,7 @@ define (
 		FloatContainer,
 
 		BigText,
-		DisableButtonHelper,
+		DisabledButtonHelper,
 
 		GlobalProperties,
 
