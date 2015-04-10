@@ -20,9 +20,9 @@ define (
 			this.repeat = false;
 			this.textcontainer = BigText;
 
-			this.index = 0;
-			this.value = null;
-			this.values = [];
+			this.selectedIndex = 0;
+			this.selectedValue = null;
+			this.allValues = [];
 
 			// Check for text placeholder.
 			if (!this.element.value) {
@@ -55,12 +55,12 @@ define (
 
 		Selectbox.prototype.setText = function (text, font, color) {
 			var bigtext = new this.textcontainer (text, font, color);
-			this.text.removeAllChildren ();
-			this.text.addChild (bigtext);
+			this.textElement.removeAllChildren ();
+			this.textElement.addChild (bigtext);
 		};
 
 		Selectbox.prototype.convertText = function (){
-			this.text = new TextPlaceholder (this.element.value);
+			this.textElement = new TextPlaceholder (this.element.value);
 		};
 
 		Selectbox.prototype.setValues = function (values) {
@@ -76,7 +76,7 @@ define (
 				values = tmp;
 			}
 
-			this.values = values;
+			this.allValues = values;
 			this.select (0);
 		};
 
@@ -89,15 +89,33 @@ define (
 			if (index < 0 || index > this.values.length - 1)
 				return;
 
-			this.index = index;
-			this.value = this.values[this.index];
+			this.selectedIndex = index;
+			this.selectedValue = this.values[this.selectedIndex];
 
-			this.setText (this.value.text);
+			this.setText (this.selectedValue.text);
+		};
+
+		Selectbox.prototype.getIndexFromText = function (value) {
+			for (var i = 0; i < this.allValues.length; i ++) {
+				if (this.allValues[i].text == value) {
+					return i;
+				}
+			}
+			return null;
+		};
+
+		Selectbox.prototype.getIndexFromValue = function (value) {
+			for (var i = 0; i < this.allValues.length; i ++) {
+				if (this.allValues[i].value == value) {
+					return i;
+				}
+			}
+			return null;
 		};
 
 		Selectbox.prototype.next = function () {
-			if (this.index < this.values.length - 1) {
-				this.select (this.index + 1);
+			if (this.selectedIndex < this.allValues.length - 1) {
+				this.select (this.selectedIndex + 1);
 			}
 			else if (this.repeat) {
 				this.select (0);
@@ -105,11 +123,11 @@ define (
 		};
 
 		Selectbox.prototype.previous = function () {
-			if (this.index > 0) {
-				this.select (this.index - 1);
+			if (this.selectedIndex > 0) {
+				this.select (this.selectedIndex - 1);
 			}
 			else if (this.repeat) {
-				this.select (this.values.length - 1);
+				this.select (this.allValues.length - 1);
 			}
 		};
 
@@ -126,6 +144,53 @@ define (
 			}
 
 		};
+
+		Object.defineProperty (Selectbox.prototype, "text", {
+			get: function () {
+				return this.selectedValue.text;
+			},
+			set: function (value) {
+				//alert (value);
+				//this.selectedValue = value;
+				var index = this.getIndexFromText (value);
+				if (index !== null) {
+					this.index = index;
+				}
+			}
+		});
+
+		Object.defineProperty (Selectbox.prototype, "value", {
+			get : function () {
+				return this.selectedValue.value;
+			},
+
+			set : function (value) {
+				var index = this.getIndexFromValue (value);
+				if (index !== null) {
+					this.index = index;
+				}
+			}
+		});
+
+		Object.defineProperty (Selectbox.prototype, "index", {
+			get : function () {
+				return this.selectedIndex;
+			},
+
+			set : function (value) {
+				this.select (value);
+			}
+		});
+
+		Object.defineProperty (Selectbox.prototype, "values", {
+			get : function () {
+				return this.allValues;
+			},
+
+			set : function (values) {
+				this.setValues (values);
+			}
+		});
 
 		return Selectbox;
 
