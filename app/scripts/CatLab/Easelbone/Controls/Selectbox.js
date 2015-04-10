@@ -65,18 +65,35 @@ define (
 
 		Selectbox.prototype.setValues = function (values) {
 
-			if (values instanceof Array) {
-				var tmp = [];
-				for (var i = 0; i < values.length; i ++) {
-					tmp.push ({
-						'text' : values[i],
-						'value' : values[i]
+			var tmp = [];
+			if (!(values instanceof Array)) {
+				// Check if array of objects, or array of strings
+				for (var ind in values) {
+					if (values.hasOwnProperty (ind)) {
+						var v = values[ind];
+						if (v instanceof Object) {
+							tmp.push(v);
+						}
+						else {
+							// 't is a map.
+							tmp.push({
+								'text': v,
+								'value': ind
+							});
+						}
+					}
+				}
+			} else {
+				for (var i = 0; i < values.length; i++) {
+					tmp.push({
+						'text': values[i],
+						'value': values[i]
 					});
 				}
 				values = tmp;
 			}
 
-			this.allValues = values;
+			this.allValues = tmp;
 			this.select (0);
 		};
 

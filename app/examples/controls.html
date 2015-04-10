@@ -102,9 +102,18 @@
 								this.addControl (checkbox2);
 
 								var selectbox = new easelbone.Controls.Selectbox (this.view.selectbox);
-								selectbox.setValues ([ "One", "Two", "Three" ]);
+								selectbox.setValues ({
+									1 : "One",
+									2 : "Two",
+									3 : "Three"
+								});
 
-								selectbox.value = 'Two';
+								selectbox.value = 2;
+
+								setTimeout (function () {
+									selectbox.text = "Three";
+								}, 1000);
+
 
 								this.addControl (selectbox);
 
