@@ -85,6 +85,8 @@ define (
 
 			'EaselJS' : {
 				'BigText' : BigText,
+				'Placeholder' : Placeholder,
+
 				'DisabledButtonHelper' : DisabledButtonHelper
 			},
 
