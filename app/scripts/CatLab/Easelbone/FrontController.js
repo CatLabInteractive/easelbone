@@ -17,6 +17,8 @@ define (
 		'CatLab/Easelbone/Controls/FloatContainer',
 
 		'CatLab/Easelbone/EaselJS/DisplayObjects/BigText',
+		'CatLab/Easelbone/EaselJS/DisplayObjects/Placeholder',
+
 		'CatLab/Easelbone/EaselJS/DisabledButtonHelper',
 
 		'CatLab/Easelbone/Utilities/GlobalProperties',
@@ -41,6 +43,8 @@ define (
 		FloatContainer,
 
 		BigText,
+		Placeholder,
+
 		DisabledButtonHelper,
 
 		GlobalProperties,
