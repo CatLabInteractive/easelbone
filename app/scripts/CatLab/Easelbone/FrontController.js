@@ -4,6 +4,7 @@ define (
 
 		'CatLab/Easelbone/Views/Root',
 		'CatLab/Easelbone/Views/Base',
+        'CatLab/Easelbone/Views/Layer',
 		'CatLab/Easelbone/Views/Navigatable',
 
 		'CatLab/Easelbone/Controls/Slider',
@@ -30,6 +31,7 @@ define (
 
 		RootView,
 		BaseView,
+        LayerView,
 		NavigatableView,
 
 		SliderControl,
@@ -69,6 +71,7 @@ define (
 			'Views' : {
 				'Root' : RootView,
 				'Base' : BaseView,
+                'Layer' : LayerView,
 				'Navigatable' : NavigatableView
 			},
 

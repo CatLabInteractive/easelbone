@@ -4,11 +4,20 @@ define (
 	],
 	function (createjs) {
 
-		var Layer = function () {
+		var Layer = function (options) {
 
-			this.container = new createjs.Container ();
+            if (typeof (options) == 'undefined') {
+                options = {};
+            }
+
+            if (typeof (options.container) != 'undefined') {
+                this.container = options.container;
+            }
+            else {
+                this.container = new createjs.Container ();
+            }
+
 			this.view = null;
-
 		};
 
 		Layer.prototype.setView = function (view) {
