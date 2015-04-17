@@ -40,7 +40,19 @@ define (
 		};
 
 		Button.prototype.convertText = function (){
-			this.text = new TextPlaceholder (this.element.text);
+
+            if (this.element.text instanceof createjs.Text) {
+
+                // Overwrite origal "bigtext" solution.
+                var self = this;
+                this.setText = function (text) {
+                    self.element.text.text = text;
+                };
+            }
+            else {
+                this.text = new TextPlaceholder (this.element.text);
+            }
+
 		};
 
 		Button.prototype.keyInput = function (input) {
