@@ -85,6 +85,17 @@ define (
 			return child;
 		};
 
+        p.removeAllChildren_container = p.removeAllChildren;
+
+        p.removeAllChildren = function () {
+
+            this.currentColumn = 0;
+            this.rows = 0;
+
+            this.removeAllChildren_container.apply (this, arguments);
+
+        };
+
 		return List;
 	}
 );
