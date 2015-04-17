@@ -19,6 +19,7 @@ define (
 
 		'CatLab/Easelbone/EaselJS/DisplayObjects/BigText',
 		'CatLab/Easelbone/EaselJS/DisplayObjects/Placeholder',
+		'CatLab/Easelbone/EaselJS/DisplayObjects/Background',
 
 		'CatLab/Easelbone/EaselJS/DisabledButtonHelper',
 
@@ -46,6 +47,7 @@ define (
 
 		BigText,
 		Placeholder,
+		Background,
 
 		DisabledButtonHelper,
 
@@ -89,6 +91,7 @@ define (
 			'EaselJS' : {
 				'BigText' : BigText,
 				'Placeholder' : Placeholder,
+				'Fill' : Background,
 
 				'DisabledButtonHelper' : DisabledButtonHelper
 			},
