@@ -58,6 +58,10 @@ define (
 				innerPlaceholder.y = this.y;
 
 				innerPlaceholder.rotation = this.rotation;
+				
+				if (this.mask) {
+					innerPlaceholder.mask = this.mask;
+				}
 
 				if (innerPlaceholder.hasBoundsChanged ()) {
 					event = new createjs.Event ('bounds:change');
