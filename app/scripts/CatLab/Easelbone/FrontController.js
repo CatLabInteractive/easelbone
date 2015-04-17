@@ -91,7 +91,7 @@ define (
 			'EaselJS' : {
 				'BigText' : BigText,
 				'Placeholder' : Placeholder,
-				'Background' : Background,
+				'Fill' : Background,
 
 				'DisabledButtonHelper' : DisabledButtonHelper
 			},
