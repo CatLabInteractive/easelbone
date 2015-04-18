@@ -39,7 +39,7 @@ define (
 			}
 			
 			// Check if the returned value is an object or a function.
-			var output = this.childElement ();
+			var output = this.childElement (options);
 			if (output instanceof Object) {
 				return output;
 			}
