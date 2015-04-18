@@ -33,11 +33,16 @@ define (
 			};
 		};
 
-		p.getChildElement = function () {
+		p.getChildElement = function (options) {
 			if (typeof (this.childElement) == 'undefined') {
 				throw "No child element set.";
 			}
-			return this.childElement;
+			
+			if (typeof (this.childElement) == 'function') {
+				return this.childElement (options);
+			}
+			
+			return new (this.childElement) ();
 		};
 
 		p.updateBounds = function () {
@@ -67,9 +72,9 @@ define (
 			return out;
 		};
 
-		p.createElement = function () {
+		p.createElement = function (options) {
 
-			var child = new ListElement (new (this.getChildElement ()) ());
+			var child = new ListElement (this.getChildElement (options));
 			this.listItems.push (child);
 
 			this.addChild (child.element);
