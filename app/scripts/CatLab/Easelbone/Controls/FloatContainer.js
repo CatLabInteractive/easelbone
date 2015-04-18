@@ -38,10 +38,13 @@ define (
 				throw "No child element set.";
 			}
 			
-			if (typeof (this.childElement) == 'function') {
-				return this.childElement (options);
+			// Check if the returned value is an object or a function.
+			var output = this.childElement ();
+			if (output instanceof Object) {
+				return output;
 			}
 			
+			// Just create one.
 			return new (this.childElement) ();
 		};
 
