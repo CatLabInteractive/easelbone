@@ -1,11 +1,15 @@
 define (
 	[
-		'EaselJS'
+		'EaselJS',
+		'underscore',
+		'backbone'
 	],
-	function (createjs) {
+	function (createjs, _, Backbone) {
 
 		var Layer = function (options) {
 
+			_.extend(this, Backbone.Events);
+			
             if (typeof (options) == 'undefined') {
                 options = {};
             }
@@ -44,7 +48,7 @@ define (
             var self = this;
 
             this.view.on ('all', function (event) {
-                self.dispatchEvent (new createjs.Event ("view:" + event));
+                self.trigger ("view:" + event);
             });
 
 			this.view.trigger ('stage:added');
