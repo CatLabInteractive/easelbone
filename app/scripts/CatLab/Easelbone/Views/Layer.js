@@ -44,7 +44,7 @@ define (
             var self = this;
 
             this.view.on ('all', function (event) {
-                this.dispatchEvent (new createjs.Event ("view:" + event));
+                self.dispatchEvent (new createjs.Event ("view:" + event));
             });
 
 			this.view.trigger ('stage:added');
