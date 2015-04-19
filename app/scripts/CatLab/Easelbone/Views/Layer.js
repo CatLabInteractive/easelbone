@@ -40,6 +40,13 @@ define (
 			// Add the container to the stage
 			this.container.addChild (container);
 
+            // Listen to all events and pass them trough.
+            var self = this;
+
+            this.view.on ('all', function (event) {
+                this.dispatchEvent (new createjs.Event ("view:" + event));
+            });
+
 			this.view.trigger ('stage:added');
 		};
 
