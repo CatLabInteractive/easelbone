@@ -10,9 +10,20 @@ define (
 		var hash;
 		var hasChanged = false;
 
-		var Background = function (aColor)
+		var Background = function (background)
 		{
-			this.color = aColor;
+			if (
+				background instanceof Image ||
+				background instanceof HTMLImageElement
+			) {
+				this.bitmap = new createjs.Bitmap (background);
+			}
+			else if (background instanceof createjs.Bitmap) {
+				this.bitmap = background;
+			}
+			else {
+				this.color = background;
+			}
 			
 			this.initialize ();
 			this.initialized = false;
@@ -95,15 +106,27 @@ define (
 
 			var space = this.getAvailableSpace ();
 
-			var border = new createjs.Shape();
-			
-			border.graphics.setStrokeStyle(0);
-			border.graphics.beginFill(this.color);
-			border.graphics.beginStroke(this.color);
-			border.snapToPixel = true;
-			border.graphics.drawRect(0, 0, space.width, space.height);
-			
-			this.addChild (border);
+			// Background color!
+			if (this.color) {
+				var border = new createjs.Shape();
+
+				border.graphics.setStrokeStyle(0);
+				border.graphics.beginFill(this.color);
+				border.graphics.beginStroke(this.color);
+				border.snapToPixel = true;
+				border.graphics.drawRect(0, 0, space.width, space.height);
+
+				this.addChild(border);
+			}
+			else if (this.bitmap) {
+
+				console.log (this.bitmap.getBounds ());
+				this.bitmap.scaleX = (space.width / this.bitmap.getBounds ().width);
+				this.bitmap.scaleY = (space.height / this.bitmap.getBounds ().height);
+
+				this.addChild (this.bitmap);
+
+			}
 	
 			return this.Container_draw (ctx, ignoreCache);
 		};
