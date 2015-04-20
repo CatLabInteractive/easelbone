@@ -120,7 +120,6 @@ define (
 			}
 			else if (this.bitmap) {
 
-				console.log (this.bitmap.getBounds ());
 				this.bitmap.scaleX = (space.width / this.bitmap.getBounds ().width);
 				this.bitmap.scaleY = (space.height / this.bitmap.getBounds ().height);
 
