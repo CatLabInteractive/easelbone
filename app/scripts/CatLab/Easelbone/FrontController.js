@@ -25,7 +25,7 @@ define (
 
 		'CatLab/Easelbone/Utilities/GlobalProperties',
 
-		'CatLab/Easelbone/Convertors/AlphaMaskFilter',
+		'CatLab/Easelbone/Hacks/AlphaMaskFilter',
 
 		'CatLab/FakeWebremote/Models/KeyboardUser'
 	],
@@ -100,7 +100,7 @@ define (
 				'DisabledButtonHelper' : DisabledButtonHelper
 			},
 
-			'Convertors' : {
+			'Hacks' : {
 				'AlphaMaskFilter' : AlphaMaskFilter
 			},
 

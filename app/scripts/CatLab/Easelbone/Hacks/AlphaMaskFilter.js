@@ -20,19 +20,15 @@ define (
 						if (mask) {
 
 							var self = this;
-							setTimeout (function () {
 
-								var filter = alphaMaskFilter.getFilterFromMask (mask, self);
+							var filter = alphaMaskFilter.getFilterFromMask (mask, self);
 
-								// Instead of assigning the mask, assign a filter.
-								self.filters = [
-									filter
-								];
+							// Instead of assigning the mask, assign a filter.
+							self.filters = [
+								filter
+							];
 
-								self.cache (0, 0, 1000, 1000);
-							}, 1);
-
-
+							self.cache (0, 0, 1000, 1000);
 						}
 					}
 				}
