@@ -18,7 +18,12 @@ define (
 				var maskShape = new createjs.Shape();
 				maskShape.graphics.drawRect (0, 0, this.getBounds ().width, this.getBounds ().height);
 
-				self.mask = maskShape;
+				if (typeof (self.setMask) != 'undefined') {
+					self.setMask (maskShape);
+				}
+				else {
+					self.mask = maskShape;
+				}
 			});
 
 			parent.addChild (this);
