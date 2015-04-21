@@ -1,11 +1,10 @@
 define (
 	[
-		'EaselJS'
 	],
-	function (createjs) {
+	function () {
 
 		// Convert all displayobject.mask shapes with alphafilters
-		var AlphaMaskFilter = function () {
+		var AlphaMaskFilter = function (createjs) {
 
 			var alphaMaskFilter = this;
 

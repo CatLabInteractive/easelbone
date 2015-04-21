@@ -41,7 +41,7 @@
 				});
 
 				// Convert ze assets.
-				new easelbone.Hacks.AlphaMaskFilter ();
+				new easelbone.Hacks.AlphaMaskFilter (createjs);
 
 				// We'll need backbone to define our view, and easeljs to handle our rendering.
 				// We'll also need the assets.
@@ -55,6 +55,8 @@
 					createjs,
 					assets
 				) {
+
+
 					createjs.Ticker.timingMode = createjs.Ticker.TIMEOUT;
 					createjs.Ticker.setFPS (24);
 
