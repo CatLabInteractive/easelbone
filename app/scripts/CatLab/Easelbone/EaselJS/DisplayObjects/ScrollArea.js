@@ -31,7 +31,7 @@ define (
 			// Also scroll.
 			setTimeout (function () {
 				self.setScroll (0);
-			}, 1);
+			}, 5);
 		};
 
 		var p = ScrollArea.prototype = new Placeholder ();
