@@ -33,8 +33,12 @@ define (
 			};
 
 			this.getBoundsHash = function () {
-				boundHash = this.getBounds ().width + ':' + this.getBounds ().height;
-				return boundHash;
+
+				if (this.getBounds ()) {
+					boundHash = this.getBounds ().width + ':' + this.getBounds ().height;
+					return boundHash;
+				}
+				return null;
 			};
 
 			this.hasBoundsChanged = function () {
@@ -54,16 +58,16 @@ define (
 					Math.ceil (this.scaleY * 100)
 				);
 
-				innerPlaceholder.x = this.x;
-				innerPlaceholder.y = this.y;
-
-				innerPlaceholder.rotation = this.rotation;
-				
-				if (this.mask) {
-					innerPlaceholder.mask = this.mask;
-				}
-
 				if (innerPlaceholder.hasBoundsChanged ()) {
+
+					innerPlaceholder.x = this.x;
+					innerPlaceholder.y = this.y;
+					innerPlaceholder.rotation = this.rotation;
+
+					if (this.mask) {
+						innerPlaceholder.mask = this.mask;
+					}
+
 					event = new createjs.Event ('bounds:change');
 					innerPlaceholder.dispatchEvent (event);
 				}
