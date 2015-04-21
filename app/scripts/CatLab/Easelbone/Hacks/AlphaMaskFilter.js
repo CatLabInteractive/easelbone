@@ -56,8 +56,6 @@ define (
 			var subcontainer = new createjs.Container();
 			subcontainer.addChild (mask);
 
-			console.log (parent);
-
 			subcontainer.scaleX = 1 / parent.scaleX;
 			subcontainer.scaleY = 1 / parent.scaleY;
 			subcontainer.y = 0-(parent.y / 2);
