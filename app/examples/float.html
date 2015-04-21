@@ -91,10 +91,11 @@
 								this.view = new assets.ExampleScrollArea ();
 
 								this.list = new easelbone.Controls.FloatContainer (assets.ExampleListElement, 2);
+								//this.list = new easelbone.Controls.FloatContainer (function () { return new assets.ExampleListElement () }, 2);
+
 								this.scroll = new easelbone.Controls.ScrollArea (this.view.scrollcontent);
 								this.scroll.content.addChild (this.list);
 
-								/*
 								this.list.createElement ().element.text.text = 'Item 1';
 								this.list.createElement ().element.text.text = 'Item 2';
 								this.list.createElement ().element.text.text = 'Item 3';
@@ -106,15 +107,18 @@
 								this.list.createElement ().element.text.text = 'Item 9';
 								this.list.createElement ().element.text.text = 'Item 10';
 								this.list.createElement ().element.text.text = 'Item 11';
-								*/
 
-								this.list.createElement ();
-								this.list.createElement ();
-								this.list.createElement ();
-								this.list.createElement ();
-								this.list.createElement ();
-								this.list.createElement ();
-								this.list.createElement ();
+								this.list.createElement ().element.text.text = 'Item 5';
+								this.list.createElement ().element.text.text = 'Item 6';
+								this.list.createElement ().element.text.text = 'Item 7';
+								this.list.createElement ().element.text.text = 'Item 8';
+								this.list.createElement ().element.text.text = 'Item 9';
+								this.list.createElement ().element.text.text = 'Item 10';
+								this.list.createElement ().element.text.text = 'Item 11';
+
+								//this.list.update ();
+
+								console.log (this.list);
 
 							},
 

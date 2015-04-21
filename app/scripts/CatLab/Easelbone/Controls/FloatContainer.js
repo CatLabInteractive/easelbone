@@ -26,7 +26,7 @@ define (
 		p.setChildElement = function (element) {
 			this.childElement = element;
 
-			var tmpElement = new element ();
+			var tmpElement = this.getChildElement ();
 			this.boundary = {
 				'x' : tmpElement.boundary.x,
 				'y' : tmpElement.boundary.y
@@ -37,15 +37,12 @@ define (
 			if (typeof (this.childElement) == 'undefined') {
 				throw "No child element set.";
 			}
-			
-			// Check if the returned value is an object or a function.
-			var output = this.childElement (options);
-			if (output instanceof Object) {
-				return output;
+
+			if (this.childElement.prototype instanceof createjs.DisplayObject) {
+				return new this.childElement ();
 			}
 			
-			// Just create one.
-			return new (this.childElement) ();
+			return this.childElement ();
 		};
 
 		p.updateBounds = function () {
