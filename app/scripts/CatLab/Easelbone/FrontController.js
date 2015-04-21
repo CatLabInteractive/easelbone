@@ -25,6 +25,8 @@ define (
 
 		'CatLab/Easelbone/Utilities/GlobalProperties',
 
+		'CatLab/Easelbone/Convertors/AlphaMaskFilter',
+
 		'CatLab/FakeWebremote/Models/KeyboardUser'
 	],
 	function (
@@ -52,6 +54,8 @@ define (
 		DisabledButtonHelper,
 
 		GlobalProperties,
+
+		AlphaMaskFilter,
 
 		KeyboardUser
 	) {
@@ -94,6 +98,10 @@ define (
 				'Fill' : Background,
 
 				'DisabledButtonHelper' : DisabledButtonHelper
+			},
+
+			'Convertors' : {
+				'AlphaMaskFilter' : AlphaMaskFilter
 			},
 
 			'FakeWebremote' : {
