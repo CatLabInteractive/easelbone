@@ -89,7 +89,6 @@ scripts/CatLab/Easelbone/Controls/List.js
 scripts/CatLab/Easelbone/Controls/FloatContainer.js
 scripts/CatLab/Easelbone/EaselJS/DisplayObjects/Background.js
 scripts/CatLab/Easelbone/EaselJS/DisabledButtonHelper.js
-scripts/CatLab/Easelbone/Hacks/AlphaMaskFilter.js
 scripts/CatLab/FakeWebremote/Models/User.js
 scripts/CatLab/FakeWebremote/Models/Control.js
 scripts/CatLab/FakeWebremote/Models/ControlUser.js

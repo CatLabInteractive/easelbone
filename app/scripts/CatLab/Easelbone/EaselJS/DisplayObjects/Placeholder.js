@@ -68,6 +68,12 @@ define (
 						innerPlaceholder.mask = this.mask;
 					}
 
+					else if (this.originalMask) {
+						innerPlaceholder.mask = this.originalMask;
+					}
+
+					this.mask = false;
+
 					event = new createjs.Event ('bounds:change');
 					innerPlaceholder.dispatchEvent (event);
 				}
