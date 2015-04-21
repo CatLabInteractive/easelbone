@@ -58,6 +58,10 @@ define (
 				innerPlaceholder.y = this.y;
 
 				innerPlaceholder.rotation = this.rotation;
+				
+				if (this.mask) {
+					innerPlaceholder.mask = this.mask;
+				}
 
 				if (innerPlaceholder.hasBoundsChanged ()) {
 					event = new createjs.Event ('bounds:change');
@@ -75,6 +79,23 @@ define (
 
 			// And add ourselves
 			if (element.parent != null) {
+				var index = element.parent.getChildIndex (element);
+
+				element.parent.addChildAt (innerPlaceholder, index + 1);
+				innerPlaceholder.dispatchEvent ('initialized');
+			}
+			else {
+				element.addEventListener ('added', function () {
+
+					var index = element.parent.getChildIndex (element);
+					element.parent.addChildAt (innerPlaceholder, index + 1);
+					innerPlaceholder.dispatchEvent ('initialized');
+				});
+			}
+
+			/*
+			// And add ourselves
+			if (element.parent != null) {
 				element.parent.addChild (innerPlaceholder);
 				innerPlaceholder.dispatchEvent ('initialized');
 			}
@@ -84,6 +105,7 @@ define (
 					innerPlaceholder.dispatchEvent ('initialized');
 				});
 			}
+			*/
 		};
 
 

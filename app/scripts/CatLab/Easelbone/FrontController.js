@@ -4,6 +4,7 @@ define (
 
 		'CatLab/Easelbone/Views/Root',
 		'CatLab/Easelbone/Views/Base',
+        'CatLab/Easelbone/Views/Layer',
 		'CatLab/Easelbone/Views/Navigatable',
 
 		'CatLab/Easelbone/Controls/Slider',
@@ -17,6 +18,9 @@ define (
 		'CatLab/Easelbone/Controls/FloatContainer',
 
 		'CatLab/Easelbone/EaselJS/DisplayObjects/BigText',
+		'CatLab/Easelbone/EaselJS/DisplayObjects/Placeholder',
+		'CatLab/Easelbone/EaselJS/DisplayObjects/Background',
+
 		'CatLab/Easelbone/EaselJS/DisabledButtonHelper',
 
 		'CatLab/Easelbone/Utilities/GlobalProperties',
@@ -28,6 +32,7 @@ define (
 
 		RootView,
 		BaseView,
+        LayerView,
 		NavigatableView,
 
 		SliderControl,
@@ -41,6 +46,9 @@ define (
 		FloatContainer,
 
 		BigText,
+		Placeholder,
+		Background,
+
 		DisabledButtonHelper,
 
 		GlobalProperties,
@@ -65,6 +73,7 @@ define (
 			'Views' : {
 				'Root' : RootView,
 				'Base' : BaseView,
+                'Layer' : LayerView,
 				'Navigatable' : NavigatableView
 			},
 
@@ -81,6 +90,9 @@ define (
 
 			'EaselJS' : {
 				'BigText' : BigText,
+				'Placeholder' : Placeholder,
+				'Fill' : Background,
+
 				'DisabledButtonHelper' : DisabledButtonHelper
 			},
 

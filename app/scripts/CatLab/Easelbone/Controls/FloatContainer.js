@@ -33,11 +33,19 @@ define (
 			};
 		};
 
-		p.getChildElement = function () {
+		p.getChildElement = function (options) {
 			if (typeof (this.childElement) == 'undefined') {
 				throw "No child element set.";
 			}
-			return this.childElement;
+			
+			// Check if the returned value is an object or a function.
+			var output = this.childElement (options);
+			if (output instanceof Object) {
+				return output;
+			}
+			
+			// Just create one.
+			return new (this.childElement) ();
 		};
 
 		p.updateBounds = function () {
@@ -67,9 +75,9 @@ define (
 			return out;
 		};
 
-		p.createElement = function () {
+		p.createElement = function (options) {
 
-			var child = new ListElement (new (this.getChildElement ()) ());
+			var child = new ListElement (this.getChildElement (options));
 			this.listItems.push (child);
 
 			this.addChild (child.element);
@@ -84,6 +92,17 @@ define (
 
 			return child;
 		};
+
+        p.removeAllChildren_container = p.removeAllChildren;
+
+        p.removeAllChildren = function () {
+
+            this.currentColumn = 0;
+            this.rows = 0;
+
+            this.removeAllChildren_container.apply (this, arguments);
+
+        };
 
 		return List;
 	}

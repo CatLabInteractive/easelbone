@@ -1,14 +1,27 @@
 define (
 	[
-		'EaselJS'
+		'EaselJS',
+		'underscore',
+		'backbone'
 	],
-	function (createjs) {
+	function (createjs, _, Backbone) {
 
-		var Layer = function () {
+		var Layer = function (options) {
 
-			this.container = new createjs.Container ();
+			_.extend(this, Backbone.Events);
+			
+            if (typeof (options) == 'undefined') {
+                options = {};
+            }
+
+            if (typeof (options.container) != 'undefined') {
+                this.container = options.container;
+            }
+            else {
+                this.container = new createjs.Container ();
+            }
+
 			this.view = null;
-
 		};
 
 		Layer.prototype.setView = function (view) {
@@ -30,6 +43,13 @@ define (
 
 			// Add the container to the stage
 			this.container.addChild (container);
+
+            // Listen to all events and pass them trough.
+            var self = this;
+
+            this.view.on ('all', function (event) {
+                self.trigger ("view:" + event);
+            });
 
 			this.view.trigger ('stage:added');
 		};
