@@ -28,10 +28,9 @@ define (
 
 			parent.addChild (this);
 
-			// Also scroll.
-			setTimeout (function () {
+			this.on ('tick', function () {
 				self.setScroll (0);
-			}, 5);
+			}, this, true)
 		};
 
 		var p = ScrollArea.prototype = new Placeholder ();
@@ -39,7 +38,11 @@ define (
 
 		p.setScroll = function (y) {
 
-			if (y < 0) {
+			if (!this.getBounds ()) {
+				this.y = 0;
+			}
+
+			else if (y < 0) {
 				this.y = 0;
 			}
 
@@ -76,6 +79,12 @@ define (
 		};
 
 		p.scrollTo = function (percentage) {
+
+			if (!this.getBounds ()) {
+				this.setScroll (0);
+				return;
+			}
+
 			this.setScroll (percentage * (this.getBounds ().height - this.parent.getBounds ().height));
 		};
 

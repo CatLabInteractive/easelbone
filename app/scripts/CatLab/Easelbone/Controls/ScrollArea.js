@@ -24,6 +24,9 @@ define (
 			this.element.on ('mouseover', this.enableScrollMouse, this);
 			this.element.on ('mouseout', this.disableScrollMouse, this);
 			this.element.on ('removed', this.disableScrollMouse, this);
+
+			//this.scrollTo (0);
+			this.element.on ('added', this.onAdd, this);
 		};
 
 		var p = ScrollArea.prototype = new Base ();
@@ -35,13 +38,18 @@ define (
 			});
 		};
 
+		p.onAdd = function () {
+			this.scrollTo (0);
+		};
+
 		p.disableScrollMouse = function () {
 			Mousewheel.stop ();
 		};
 
 		p.onScroll = function (evt) {
 
-			this.trigger ('scroll', 				{
+			this.trigger ('scroll',
+			{
 				'percentage' : this.content.getPercentage (),
 				'contentHeight' : this.content.getBounds ().height,
 				'containerHeight' : this.content.parent.getBounds ().height

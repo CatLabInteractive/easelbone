@@ -20,6 +20,10 @@ define (
 
 		Path.prototype.getPosition = function (progress) {
 
+			if (isNaN (progress)) {
+				progress = 0;
+			}
+
 			return {
 				'x' : this.start.x + ((this.distance.x - this.indicatorSize.x) * progress),
 				'y' : this.start.y + ((this.distance.y - this.indicatorSize.y) * progress)
