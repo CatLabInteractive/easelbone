@@ -42,7 +42,7 @@ define (
 				return new this.childElement ();
 			}
 			
-			return this.childElement ();
+			return this.childElement (options);
 		};
 
 		p.updateBounds = function () {
