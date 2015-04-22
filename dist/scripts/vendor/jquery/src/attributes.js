@@ -1,1 +1,3 @@
-define(["./core","./attributes/attr","./attributes/prop","./attributes/classes","./attributes/val"],function(e){return e});
+define(["./core","./attributes/attr","./attributes/prop","./attributes/classes","./attributes/val"],function(t){return t});
+//# sourceMappingURL=attributes.js
+//# sourceMappingURL=attributes.js.map

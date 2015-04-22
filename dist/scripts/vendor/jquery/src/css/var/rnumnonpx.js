@@ -1,1 +1,3 @@
-define(["../../var/pnum"],function(e){return new RegExp("^("+e+")(?!px)[a-z%]+$","i")});
+define(["../../var/pnum"],function(n){return new RegExp("^("+n+")(?!px)[a-z%]+$","i")});
+//# sourceMappingURL=rnumnonpx.js
+//# sourceMappingURL=rnumnonpx.js.map

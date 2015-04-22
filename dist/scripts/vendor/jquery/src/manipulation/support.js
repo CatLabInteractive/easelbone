@@ -1,1 +1,3 @@
-define(["../var/support"],function(e){return function(){var t=document.createDocumentFragment(),n=t.appendChild(document.createElement("div")),r=document.createElement("input");r.setAttribute("type","radio"),r.setAttribute("checked","checked"),r.setAttribute("name","t"),n.appendChild(r),e.checkClone=n.cloneNode(!0).cloneNode(!0).lastChild.checked,n.innerHTML="<textarea>x</textarea>",e.noCloneChecked=!!n.cloneNode(!0).lastChild.defaultValue}(),e});
+define(["../var/support"],function(e){return function(){var t=document.createDocumentFragment(),n=t.appendChild(document.createElement("div")),c=document.createElement("input");c.setAttribute("type","radio"),c.setAttribute("checked","checked"),c.setAttribute("name","t"),n.appendChild(c),e.checkClone=n.cloneNode(!0).cloneNode(!0).lastChild.checked,n.innerHTML="<textarea>x</textarea>",e.noCloneChecked=!!n.cloneNode(!0).lastChild.defaultValue}(),e});
+//# sourceMappingURL=support.js
+//# sourceMappingURL=support.js.map

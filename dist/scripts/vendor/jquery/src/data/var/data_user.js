@@ -1,1 +1,3 @@
-define(["../Data"],function(e){return new e});
+define(["../Data"],function(n){return new n});
+//# sourceMappingURL=data_user.js
+//# sourceMappingURL=data_user.js.map

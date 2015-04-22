@@ -1,1 +1,3 @@
-define(["../core"],function(e){typeof define=="function"&&define.amd&&define("jquery",[],function(){return e})});
+define(["../core"],function(e){"function"==typeof define&&define.amd&&define("jquery",[],function(){return e})});
+//# sourceMappingURL=amd.js
+//# sourceMappingURL=amd.js.map

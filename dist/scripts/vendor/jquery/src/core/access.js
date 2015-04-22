@@ -1,1 +1,3 @@
-define(["../core"],function(e){var t=e.access=function(t,n,r,i,s,o,u){var a=0,f=t.length,l=r==null;if(e.type(r)==="object"){s=!0;for(a in r)e.access(t,n,a,r[a],!0,o,u)}else if(i!==undefined){s=!0,e.isFunction(i)||(u=!0),l&&(u?(n.call(t,i),n=null):(l=n,n=function(t,n,r){return l.call(e(t),r)}));if(n)for(;a<f;a++)n(t[a],r,u?i:i.call(t[a],a,n(t[a],r)))}return s?t:l?n.call(t):f?n(t[0],r):o};return t});
+define(["../core"],function(n){var c=n.access=function(c,l,e,r,i,t,o){var u=0,a=c.length,f=null==e;if("object"===n.type(e)){i=!0;for(u in e)n.access(c,l,u,e[u],!0,t,o)}else if(void 0!==r&&(i=!0,n.isFunction(r)||(o=!0),f&&(o?(l.call(c,r),l=null):(f=l,l=function(c,l,e){return f.call(n(c),e)})),l))for(;a>u;u++)l(c[u],e,o?r:r.call(c[u],u,l(c[u],e)));return i?c:f?l.call(c):a?l(c[0],e):t};return c});
+//# sourceMappingURL=access.js
+//# sourceMappingURL=access.js.map

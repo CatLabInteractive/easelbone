@@ -1,1 +1,3 @@
-define(["../../core","../../selector"],function(e){return function(t,n){return t=n||t,e.css(t,"display")==="none"||!e.contains(t.ownerDocument,t)}});
+define(["../../core","../../selector"],function(n){return function(e,o){return e=o||e,"none"===n.css(e,"display")||!n.contains(e.ownerDocument,e)}});
+//# sourceMappingURL=isHidden.js
+//# sourceMappingURL=isHidden.js.map

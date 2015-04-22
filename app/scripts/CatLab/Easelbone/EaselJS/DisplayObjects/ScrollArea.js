@@ -36,10 +36,17 @@ define (
 		var p = ScrollArea.prototype = new Placeholder ();
 		var event;
 
+		p.isActive = function () {
+			return this.getBounds () != null &&
+				this.parent != null &&
+				this.parent.getBounds () != null;
+		};
+
 		p.setScroll = function (y) {
 
-			if (!this.getBounds ()) {
+			if (!this.isActive ()) {
 				this.y = 0;
+				return this;
 			}
 
 			else if (y < 0) {
@@ -75,6 +82,10 @@ define (
 		};
 
 		p.getPercentage = function () {
+			if (!this.getBounds ()) {
+				return 0;
+			}
+
 			return this.getScroll () / (this.getBounds ().height - this.parent.getBounds ().height);
 		};
 

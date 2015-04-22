@@ -1,1 +1,3 @@
-define(["../var/support"],function(e){return e.focusinBubbles="onfocusin"in window,e});
+define(["../var/support"],function(n){return n.focusinBubbles="onfocusin"in window,n});
+//# sourceMappingURL=support.js
+//# sourceMappingURL=support.js.map

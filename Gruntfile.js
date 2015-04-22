@@ -17,8 +17,11 @@ module.exports = function(grunt) {
 					dir: "dist/",
 					mainConfigFile: "app/scripts/main.js",
 					name: "easelbone",
+					optimize: 'uglify2',
 					optimizeCss: "standard",
 					removeCombined: true,
+					generateSourceMaps : true,
+					preserveLicenseComments : false,
 					exclude: [
 						'jquery',
 						'EaselJS',

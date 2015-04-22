@@ -1,1 +1,3 @@
-define(["../core","./var/rsingleTag","../manipulation"],function(e,t){return e.parseHTML=function(n,r,i){if(!n||typeof n!="string")return null;typeof r=="boolean"&&(i=r,r=!1),r=r||document;var s=t.exec(n),o=!i&&[];return s?[r.createElement(s[1])]:(s=e.buildFragment([n],r,o),o&&o.length&&e(o).remove(),e.merge([],s.childNodes))},e.parseHTML});
+define(["../core","./var/rsingleTag","../manipulation"],function(e,n){return e.parseHTML=function(r,t,o){if(!r||"string"!=typeof r)return null;"boolean"==typeof t&&(o=t,t=!1),t=t||document;var a=n.exec(r),i=!o&&[];return a?[t.createElement(a[1])]:(a=e.buildFragment([r],t,i),i&&i.length&&e(i).remove(),e.merge([],a.childNodes))},e.parseHTML});
+//# sourceMappingURL=parseHTML.js
+//# sourceMappingURL=parseHTML.js.map

@@ -1,1 +1,3 @@
-define(["../core","../event"],function(e){e.each(["ajaxStart","ajaxStop","ajaxComplete","ajaxError","ajaxSuccess","ajaxSend"],function(t,n){e.fn[n]=function(e){return this.on(n,e)}})});
+define(["../core","../event"],function(a){a.each(["ajaxStart","ajaxStop","ajaxComplete","ajaxError","ajaxSuccess","ajaxSend"],function(n,e){a.fn[e]=function(a){return this.on(e,a)}})});
+//# sourceMappingURL=ajax.js
+//# sourceMappingURL=ajax.js.map
