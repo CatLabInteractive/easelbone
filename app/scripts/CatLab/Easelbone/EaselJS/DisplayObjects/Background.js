@@ -9,17 +9,33 @@ define (
 		var debug = false;
 		var hash;
 		var hasChanged = false;
+		var zooms = {};
 
-		var Background = function (background)
+		var Background = function (background, options)
 		{
+			if (typeof (options) == 'undefined') {
+				options = {
+					'zoom' : 'stretch'
+				};
+			}
+
+			this.fillOptions = options;
+
+			console.log (background);
+
 			if (
 				background instanceof Image ||
 				background instanceof HTMLImageElement
 			) {
-				this.bitmap = new createjs.Bitmap (background);
+				this.displayobject = new createjs.Bitmap (background);
 			}
-			else if (background instanceof createjs.Bitmap) {
-				this.bitmap = background;
+			else if (background instanceof createjs.DisplayObject) {
+
+				if (!background.getBounds ()) {
+					throw "Objects to be filled must have bounds set.";
+				}
+
+				this.displayobject = background;
 			}
 			else {
 				this.color = background;
@@ -93,6 +109,17 @@ define (
 			return hasChanged;
 		};
 
+		// Center a displayobject.
+		p.center = function (space) {
+
+			if (!this.displayobject) {
+				return;
+			}
+
+			this.displayobject.x = (space.width - (this.displayobject.getBounds ().width * this.displayobject.scaleX)) / 2;
+			this.displayobject.y = (space.height - (this.displayobject.getBounds ().height * this.displayobject.scaleY)) / 2;
+		};
+
 		p.draw = function (ctx, ignoreCache)
 		{
 			if (this.initialized && !this.hasChanged ())
@@ -118,12 +145,33 @@ define (
 
 				this.addChild(border);
 			}
-			else if (this.bitmap) {
+			else if (this.displayobject) {
 
-				this.bitmap.scaleX = (space.width / this.bitmap.getBounds ().width);
-				this.bitmap.scaleY = (space.height / this.bitmap.getBounds ().height);
+				zooms = {
+					'x' : (space.width / this.displayobject.getBounds ().width),
+					'y' : (space.height / this.displayobject.getBounds ().height)
+				};
 
-				this.addChild (this.bitmap);
+				switch (this.fillOptions.zoom) {
+
+					case 'minimum':
+						this.displayobject.scaleX = this.displayobject.scaleY = Math.min (zooms.x, zooms.y);
+						this.center (space);
+					break;
+
+					case 'maximum':
+						this.displayobject.scaleX = this.displayobject.scaleY = Math.max (zooms.x, zooms.y);
+						this.center (space);
+					break;
+
+					case 'stretch':
+					case 'default':
+						this.displayobject.scaleX = zooms.x;
+						this.displayobject.scaleY = zooms.y;
+					break;
+				}
+
+				this.addChild (this.displayobject);
 
 			}
 	
