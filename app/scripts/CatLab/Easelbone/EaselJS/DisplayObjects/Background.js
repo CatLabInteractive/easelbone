@@ -21,8 +21,6 @@ define (
 
 			this.fillOptions = options;
 
-			console.log (background);
-
 			if (
 				background instanceof Image ||
 				background instanceof HTMLImageElement

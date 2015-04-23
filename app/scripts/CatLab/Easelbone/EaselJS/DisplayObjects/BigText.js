@@ -11,11 +11,12 @@ define (
 		var hash;
 		var hasChanged = false;
 
-		var BigText = function (aTextstring, aFont, aColor)
+		var BigText = function (aTextstring, aFont, aColor, align)
 		{
 			this.textstring = aTextstring;
 			this.font = GlobalProperties.ifUndefined (aFont, GlobalProperties.getDefaultFont ());
 			this.color = GlobalProperties.ifUndefined (aColor, GlobalProperties.getDefaultTextColor ());
+			this.align = typeof (align) == 'undefined' ? 'center' : align;
 
 			this.initialize ();
 			this.initialized = false;
@@ -166,7 +167,7 @@ define (
 			//console.log (text);
 
 			//text.textBaseline = 'top';
-			text.textAlign = 'center';
+			text.textAlign = this.align;
 
 			text.x = ((space.width - text.getBounds ().width) / 2) + text.getBounds ().width / 2;
 			text.y = (space.height - text.getBounds ().height) / 2;
