@@ -167,9 +167,20 @@ define (
 			//console.log (text);
 
 			//text.textBaseline = 'top';
-			text.textAlign = this.align;
+			text.textAlign = 'center';
 
-			text.x = ((space.width - text.getBounds ().width) / 2) + text.getBounds ().width / 2;
+			if (this.align == 'center') {
+				text.x = ((space.width - text.getBounds ().width) / 2) + text.getBounds ().width / 2;
+			}
+			else if (this.align == 'left') {
+				text.x = text.getBounds ().width / 2;
+			}
+
+			else if (this.align == 'right') {
+				//text.x = ((space.width - text.getBounds ().width)) + text.getBounds ().width;
+				text.x = space.width - text.getBounds ().width;
+			}
+
 			text.y = (space.height - text.getBounds ().height) / 2;
 
 			this.addChild (text);
