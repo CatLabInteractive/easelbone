@@ -1,7 +1,8 @@
 define (
 	[
 		'EaselJS',
-		'CatLab/Easelbone/EaselJS/DisplayObjects/Placeholder'
+		'CatLab/Easelbone/EaselJS/DisplayObjects/Placeholder',
+		'jquery'
 	],
 	function (createjs, Placeholder)
 	{
@@ -30,7 +31,16 @@ define (
 
 			this.on ('tick', function () {
 				self.setScroll (0);
-			}, this, true)
+			}, this, true);
+
+			Object.defineProperty (this, 'scroll', {
+				'set' : function (value) {
+					this.setScroll (value);
+				},
+				'get' : function () {
+					return this.getScroll ();
+				}
+			})
 		};
 
 		var p = ScrollArea.prototype = new Placeholder ();
@@ -42,31 +52,43 @@ define (
 				this.parent.getBounds () != null;
 		};
 
-		p.setScroll = function (y) {
+		p.getFinalDestination = function (y) {
 
 			if (!this.isActive ()) {
-				this.y = 0;
-				return this;
+				return 0;
 			}
 
 			else if (y < 0) {
-				this.y = 0;
+				return 0;
 			}
 
 			else if (this.getBounds ().height - this.parent.getBounds ().height < 0) {
-				this.y = 0;
+				return 0;
 			}
 
 			else if (y > (this.getBounds ().height - this.parent.getBounds ().height)) {
-				this.y = 0 - (this.getBounds ().height - this.parent.getBounds ().height);
+				return 0 - (this.getBounds ().height - this.parent.getBounds ().height);
 			}
 
 			else {
-				this.y = 0 - y;
+				return 0 - y;
+			}
+		};
+
+		p.setScroll = function (y) {
+
+			this.oldY = this.y;
+			this.y = this.getFinalDestination (y);
+
+			if (this.oldY != this.y) {
+				this.onScroll();
 			}
 
-			this.onScroll ();
 			return this;
+		};
+
+		p.getDistance = function (y) {
+			return Math.abs (this.y - this.getFinalDestination (y));
 		};
 
 		p.getScroll = function () {
@@ -87,6 +109,47 @@ define (
 			}
 
 			return this.getScroll () / (this.getBounds ().height - this.parent.getBounds ().height);
+		};
+
+		p.focus = function (element, delay, ease) {
+
+			var deffered = new jQuery.Deferred ();
+
+			if (!this.parent.getBounds ()) {
+				deffered.resolve ();
+				return deffered;
+			}
+
+			if (typeof (delay) == 'undefined')
+				delay = 0;
+
+			var y = element.y;
+			//this.setScroll (y);
+
+			// Center around this y position.
+			var height = 0;
+			if (element.getBounds ()) {
+				height = element.getBounds ().height;
+			}
+
+			// y should be in the middle of the screen, so...
+			if (height < this.parent.getBounds ().height)
+				y -= (this.parent.getBounds ().height / 2) - (height / 2);
+
+			if (this.getDistance () == 0.0001) {
+				// Do nothing.
+				deffered.resolve ();
+			}
+
+			else if (delay > 0) {
+				createjs.Tween.get (this).to ({ 'scroll' : y }, delay, ease).call (deffered.resolve);
+			}
+			else {
+				this.scroll = y;
+				deffered.resolve ();
+			}
+
+			return deffered;
 		};
 
 		p.scrollTo = function (percentage) {

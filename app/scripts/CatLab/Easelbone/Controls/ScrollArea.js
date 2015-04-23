@@ -48,12 +48,13 @@ define (
 
 		p.onScroll = function (evt) {
 
-			this.trigger ('scroll',
-			{
+			var perc = {
 				'percentage' : this.content.getPercentage (),
 				'contentHeight' : this.content.getBounds ().height,
 				'containerHeight' : this.content.parent.getBounds ().height
-			});
+			};
+
+			this.trigger ('scroll', perc);
 		};
 
 		p.scrollTo = function (percentage) {
@@ -70,6 +71,10 @@ define (
 
 		p.down = function () {
 			this.content.down (25);
+		};
+
+		p.focus = function (element, delay, ease) {
+			return this.content.focus (element, delay, ease);
 		};
 
 		return ScrollArea;
