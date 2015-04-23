@@ -36,6 +36,7 @@ define (
 
 				if (this.getBounds ()) {
 					boundHash = this.getBounds ().width + ':' + this.getBounds ().height;
+
 					return boundHash;
 				}
 				return null;
@@ -58,11 +59,12 @@ define (
 					Math.ceil (this.scaleY * 100)
 				);
 
-				if (innerPlaceholder.hasBoundsChanged ()) {
+				innerPlaceholder.x = this.x;
+				innerPlaceholder.y = this.y;
 
-					innerPlaceholder.x = this.x;
-					innerPlaceholder.y = this.y;
-					innerPlaceholder.rotation = this.rotation;
+				innerPlaceholder.rotation = this.rotation;
+
+				if (innerPlaceholder.hasBoundsChanged ()) {
 
 					if (this.mask) {
 						innerPlaceholder.mask = this.mask;

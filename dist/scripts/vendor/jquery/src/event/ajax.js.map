@@ -1,0 +1,1 @@
+{"version":3,"file":"ajax.js","sources":["ajax.js.src.js"],"names":["define","jQuery","each","i","type","fn","this","on"],"mappings":"AAAAA,QACC,UACA,YACE,SAAUC,GAGbA,EAAOC,MAAQ,YAAa,WAAY,eAAgB,YAAa,cAAe,YAAc,SAAUC,EAAGC,GAC9GH,EAAOI,GAAID,GAAS,SAAUC,GAC7B,MAAOC,MAAKC,GAAIH,EAAMC"}
