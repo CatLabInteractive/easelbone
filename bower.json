@@ -29,10 +29,10 @@
   "dependencies": {
     "backbone": "1.*",
     "underscore": "1.*",
-    "EaselJS": "0.8.0",
-    "TweenJS": "0.6.0",
-    "PreloadJS": "0.6.0",
-    "SoundJS": "0.6.0",
+    "EaselJS": "0.8.1",
+    "TweenJS": "0.6.1",
+    "PreloadJS": "0.6.1",
+    "SoundJS": "0.6.1",
     "requirejs": null,
     "jquery": "2.1.*",
     "easelhacks": "*"
