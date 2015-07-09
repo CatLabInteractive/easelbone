@@ -1,3 +1,0 @@
-module.exports=function(t){var i=require("os");t.registerMultiTask("listips","Prints a list of active ips.",function(){var r=this.options({port:80}),n=r.port,s=r.label?"("+r.label+") ":"";n=80==n?"":":"+n;var o=i.networkInterfaces(),a=[];for(var e in o)for(var l in o[e]){var p=o[e][l];"IPv4"!=p.family||p.internal||a.push("http://"+p.address+n)}a.push("http://localhost"+n),t.log.subhead("\n"+s+"Listening on:\n	",a.join("\n	 "))})};
-//# sourceMappingURL=listips.js
-//# sourceMappingURL=listips.js.map

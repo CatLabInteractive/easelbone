@@ -1,3 +1,0 @@
-module.exports=function(n){function i(){return t.length?void o(t.shift(),function(o,t){if(o){var c=Array.isArray(e.configName)?e.configName:[e.configName];c.forEach(function(i){n.config.set(i,t)}),r()}else i()}):(n.option(_portName,-1),void r())}function o(n,i){var o=c.createServer();o.on("error",function(){i(!1,n)}),o.listen(n,function(){i(!0,n),o.close()})}var t,e,r,c=require("net");n.registerMultiTask("findopenport","Prints a list of active ips.",function(){e=this.options(),r=this.async(),t=e.ports||[80,8888,9e3,9999,9001],i()})};
-//# sourceMappingURL=findopenport.js
-//# sourceMappingURL=findopenport.js.map

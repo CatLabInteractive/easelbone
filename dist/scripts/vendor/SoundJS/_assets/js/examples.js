@@ -1,3 +1,0 @@
-!function(){function e(){window.top!=window&&(document.body.className+=" embedded")}document.body?e():document.addEventListener("DOMContentLoaded",e);var n=window.examples={};n.showDistractor=function(e){var n=e?document.getElementById(e):document.querySelector("div canvas").parentNode;n.className+=" loading"},n.hideDistractor=function(){var e=document.querySelector(".loading");e.className=e.className.replace(/\bloading\b/)}}();
-//# sourceMappingURL=examples.js
-//# sourceMappingURL=examples.js.map

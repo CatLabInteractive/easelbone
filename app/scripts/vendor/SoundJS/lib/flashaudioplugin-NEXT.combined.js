@@ -844,6 +844,9 @@ this.createjs = this.createjs || {};
 	}
 	var p = createjs.extend(Loader, createjs.AbstractLoader);
 
+	// TODO: deprecated
+	// p.initialize = function() {}; // searchable for devs wondering where it is. REMOVED. See docs for details.
+
 
 // Static Properties
 	var s = Loader;
@@ -976,6 +979,10 @@ this.createjs = this.createjs || {};
 	};
 	var p = createjs.extend(FlashAudioSoundInstance, createjs.AbstractSoundInstance);
 
+	// TODO: deprecated
+	// p.initialize = function() {}; // searchable for devs wondering where it is. REMOVED. See docs for details.
+
+
 // Static Propeties
 	var s = FlashAudioSoundInstance;
 	/**
@@ -1009,23 +1016,20 @@ this.createjs = this.createjs || {};
 
 
 // Public Methods
+	// TODO change flash.setLoop to mimic remove and add??
+	p.setLoop = function (value) {
+		if(this.flashId!= null) {
+			s._flash.setLoop(this.flashId, value);
+		}
+		this._loop = value;
+	};
+
 	p.toString = function () {
 		return "[FlashAudioSoundInstance]"
 	};
 
 
 // Private Methods
-	// TODO change flash.setLoop to mimic remove and add??
-	p._removeLooping = function () {
-		if (this.flashId == null) { return; }
-		s._flash.setLoop(this.flashId, this._loop);
-	};
-
-	p._addLooping = function () {
-		if (this.flashId == null) { return; }
-		s._flash.setLoop(this.flashId, this._loop);
-	};
-
 	p._updateVolume = function() {
 		if (this.flashId == null) { return; }
 		s._flash.setVolume(this.flashId, this._volume)
@@ -1053,13 +1057,17 @@ this.createjs = this.createjs || {};
 		this.flashId = null;
 	};
 
-	p._beginPlaying = function (offset, loop, volume, pan) {
+	p._beginPlaying = function (playProps) {
 		if (s._flash == null) { return false; }
 
-		this.setPosition(offset);
-		this.setLoop(loop);
-		this.setVolume(volume);
-		this.setPan(pan);
+		this.setPosition(playProps.offset);
+		this.setLoop(playProps.loop);
+		this.setVolume(playProps.volume);
+		this.setPan(playProps.pan);
+		if (playProps.startTime != null) {
+			this.setStartTime(playProps.startTime);
+			this.setDuration(playProps.duration);
+		}
 		this._paused = false;
 
 		this.flashId = s._flash.playSound(this.src, this._position, this._loop, this._volume, this._pan, this._startTime, this._duration);
@@ -1140,12 +1148,6 @@ this.createjs = this.createjs || {};
 (function () {
 
 	"use strict";
-
-	/**
-	 * FlashPlugin has been renamed to {{#crossLink "FlashAudioPlugin"}}{{/crossLink}}.
-	 * @class FlashPlugin
-	 * @deprecated
-	 */
 
 	/**
 	 * Play sounds using a Flash instance. This plugin is not used by default, and must be registered manually in
@@ -1256,17 +1258,6 @@ this.createjs = this.createjs || {};
 		this._flashPreloadInstances = {};
 		//TODO consider combining _flashInstances and _flashPreloadInstances into a single hash
 
-		// TODO remove _queuedInstances
-		/**
-		 * An array of Sound Preload instances that are waiting to preload. Once Flash is initialized, the queued
-		 * instances are preloaded.
-		 * @property _queuedInstances
-		 * @type {Object}
-		 * @protected
-		 */
-		this._queuedInstances = [];
-
-
 		this._capabilities = s._capabilities;
 
 		this._loaderClass = createjs.FlashAudioLoader;
@@ -1295,6 +1286,9 @@ this.createjs = this.createjs || {};
 
 	var p = createjs.extend(FlashAudioPlugin, createjs.AbstractPlugin);
 	var s = FlashAudioPlugin;
+
+	// TODO: deprecated
+	// p.initialize = function() {}; // searchable for devs wondering where it is. REMOVED. See docs for details.
 
 
 // Static properties
@@ -1385,25 +1379,13 @@ this.createjs = this.createjs || {};
 
 //public methods
 	p.register = function (src, instances) {
-		if (!this.flashReady) {
-			this._queuedInstances.push(src);
-		}
 		var loader = this.AbstractPlugin_register(src, instances);
 		loader.addEventListener(s._REG_FLASHID, createjs.proxy(this.registerPreloadInstance, this));
 		loader.addEventListener(s._UNREG_FLASHID, createjs.proxy(this.unregisterPreloadInstance, this));
 		return loader;
 	};
 
-	p.removeSound = function (src) {
-		var i = createjs.indexOf(this._queuedInstances, src);
-		if(i != -1) {this._queuedInstances.splice(i,1);}
-		// NOTE sound cannot be removed from a swf
-
-		this.AbstractPlugin_removeSound(src);
-	};
-
 	p.removeAllSounds = function () {
-		this._queuedInstances.length = 0;
 		this._flashInstances = {};
 		this._flashPreloadInstances = {};
 		// NOTE sound cannot be removed from a swf
@@ -1445,13 +1427,6 @@ this.createjs = this.createjs || {};
 
 		this._loaderClass.setFlash(this._flash);
 		this._soundInstanceClass.setFlash(this._flash);
-
-		// Anything that needed to be preloaded, can now do so.
-		for (var i = 0, l = this._queuedInstances.length; i < l; i++) {
-			this._flash.register(this._queuedInstances[i]);  // NOTE this flash function currently does nothing
-		}
-		this._queuedInstances.length = 0;
-
 	};
 
 	/**
@@ -1596,7 +1571,6 @@ this.createjs = this.createjs || {};
 	};
 
 	createjs.FlashAudioPlugin = createjs.promote(FlashAudioPlugin, "AbstractPlugin");
-	createjs.FlashPlugin = createjs.FlashAudioPlugin;		// TODO remove deprecated
 }());
 
 //##############################################################################
@@ -1611,7 +1585,7 @@ this.createjs = this.createjs || {};
 
 	/**
 	 * The version string for this release.
-	 * @for FlashPlugin
+	 * @for FlashAudioPlugin
 	 * @property version
 	 * @type String
 	 * @static
@@ -1620,11 +1594,11 @@ this.createjs = this.createjs || {};
 
 	/**
 	 * The build date for this release in UTC format.
-	 * @for FlashPlugin
+	 * @for FlashAudioPlugin
 	 * @property buildDate
 	 * @type String
 	 * @static
 	 **/
-	s.buildDate = /*=date*/"Thu, 11 Dec 2014 23:16:15 GMT"; // injected by build process
+	s.buildDate = /*=date*/"Wed, 27 May 2015 18:12:38 GMT"; // injected by build process
 
 })();

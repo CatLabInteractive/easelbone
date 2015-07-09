@@ -4,7 +4,7 @@
     "Thijs Van der Schaeghe <thijs@catlab.be>"
   ],
   "description": "EaselJS hacks.",
-  "main": "dist/scripts/easeljs-hacks.js",
+  "main": "dist/scripts/easelhacks.js",
   "moduleType": [
     "amd"
   ],
@@ -29,11 +29,11 @@
   "devDependencies": {
     "requirejs": null
   },
-  "_release": "7c07d9e076",
+  "_release": "5f77d04445",
   "_resolution": {
     "type": "branch",
     "branch": "master",
-    "commit": "7c07d9e07666f598d1ba857a7cc8232f05166abc"
+    "commit": "5f77d04445a3482593490cb6997a45e0fff0512a"
   },
   "_source": "git://github.com/CatLabInteractive/EaselJS-hacks.git",
   "_target": "*",

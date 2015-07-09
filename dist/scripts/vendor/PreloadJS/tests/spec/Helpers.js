@@ -1,3 +1,0 @@
-beforeEach(function(){this.baseAssetsPath="../_assets/",this.getFilePath=function(s){return"string"==typeof s?this.baseAssetsPath+s:this.baseAssetsPath+s.src},this.findClass=function(s){for(var t=document.styleSheets.length-1;t>=0;t--)for(var e=document.styleSheets[t].cssRules||document.styleSheets[t].rules||[],n=0;n<e.length;n++)if(e[n].selectorText===s)return!0;return!1}});
-//# sourceMappingURL=Helpers.js
-//# sourceMappingURL=Helpers.js.map
