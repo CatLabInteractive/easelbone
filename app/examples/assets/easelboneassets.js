@@ -588,19 +588,19 @@ p.nominalBounds = new cjs.Rectangle(-8.3,3.8,593.2,373.8);
 
 	// Laag 1
 	this.placeholder = new lib.Placeholder();
-	this.placeholder.setTransform(7.6,14,1.739,1,-4.5,0,0,0.1,0);
+	this.placeholder.setTransform(16.6,32,1.739,1,-4.5,0,0,0.1,0);
 
 	this.shape = new cjs.Shape();
-	this.shape.graphics.f().s("#000000").ss(1,1,1).p("AOSoXIANAAIAxHBAOfoXIAZAAAO4H5IAABEAuMnVIAeg1At4I9IgmAAIAAnCAO3JcIqygwAuJnVINSiGAvPleIARge");
-	this.shape.setTransform(97.3,56.1);
+	this.shape.graphics.f().s("#000000").ss(1,1,1).p("AOSoXIANAAIAZAAAOfoXIAxHBAO4H5IAABEAvPleIARgeAuMnUIAeg2At4I9IgmAAIAAnCAuJnVINSiGAO3JcIqygw");
+	this.shape.setTransform(106.3,74.1);
 
 	this.shape_1 = new cjs.Shape();
-	this.shape_1.graphics.f("#0066CC").s().p("AuEIrIhHu6IgGhUIA5gEIACAAIAqgDQM8gqOwhZIAFBEIBNQNIgnADIqyAyIx4BVg");
-	this.shape_1.setTransform(98.5,58);
+	this.shape_1.graphics.f("#0066CC").s().p("AuEIrIhGu5IgHhVIA5gEIADAAIApgDQM8gqOwhZIAFBEIBNQNIgnADIqyAzIx4BUg");
+	this.shape_1.setTransform(107.5,76);
 
 	this.addChild(this.shape_1,this.shape,this.placeholder);
 }).prototype = p = new cjs.Container();
-p.nominalBounds = new cjs.Rectangle(-1.4,-5.3,197.8,125.5);
+p.nominalBounds = new cjs.Rectangle(7.6,12.7,197.8,125.5);
 
 
 (lib.Slider = function(mode,startPosition,loop) {
