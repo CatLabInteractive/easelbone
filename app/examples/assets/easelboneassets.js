@@ -1,4 +1,4 @@
-(function (lib, img, cjs) {
+(function (lib, img, cjs, ss) {
 
 var p; // shortcut to reference prototypes
 
@@ -583,6 +583,26 @@ p.nominalBounds = new cjs.Rectangle(3.5,5.5,210.5,53);
 p.nominalBounds = new cjs.Rectangle(-8.3,3.8,593.2,373.8);
 
 
+(lib.ExamplePlaceholder = function() {
+	this.initialize();
+
+	// Laag 1
+	this.placeholder = new lib.Placeholder();
+	this.placeholder.setTransform(7.6,14,1.739,1,-4.5,0,0,0.1,0);
+
+	this.shape = new cjs.Shape();
+	this.shape.graphics.f().s("#000000").ss(1,1,1).p("AOSoXIANAAIAxHBAOfoXIAZAAAO4H5IAABEAuMnVIAeg1At4I9IgmAAIAAnCAO3JcIqygwAuJnVINSiGAvPleIARge");
+	this.shape.setTransform(97.3,56.1);
+
+	this.shape_1 = new cjs.Shape();
+	this.shape_1.graphics.f("#0066CC").s().p("AuEIrIhHu6IgGhUIA5gEIACAAIAqgDQM8gqOwhZIAFBEIBNQNIgnADIqyAyIx4BVg");
+	this.shape_1.setTransform(98.5,58);
+
+	this.addChild(this.shape_1,this.shape,this.placeholder);
+}).prototype = p = new cjs.Container();
+p.nominalBounds = new cjs.Rectangle(-1.4,-5.3,197.8,125.5);
+
+
 (lib.Slider = function(mode,startPosition,loop) {
 if (loop == null) { loop = false; }	this.initialize(mode,startPosition,loop,{"Up":0,"Over":1,"Down":2,"Hit":3});
 
@@ -703,5 +723,5 @@ p.nominalBounds = new cjs.Rectangle(33.3,8.1,754.9,424.4);
 }).prototype = p = new cjs.Container();
 p.nominalBounds = new cjs.Rectangle(423.7,358.8,593.2,373.8);
 
-})(lib = lib||{}, images = images||{}, createjs = createjs||{});
-var lib, images, createjs;
+})(lib = lib||{}, images = images||{}, createjs = createjs||{}, ss = ss||{});
+var lib, images, createjs, ss;
