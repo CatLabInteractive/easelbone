@@ -120,8 +120,7 @@ define (
 
 		p.draw = function (ctx, ignoreCache)
 		{
-			if (this.initialized && !this.hasChanged ())
-			{
+			if (this.initialized && !this.hasChanged ()) {
 				return this.Container_draw (ctx, ignoreCache);
 			}
 
@@ -144,6 +143,11 @@ define (
 				this.addChild(border);
 			}
 			else if (this.displayobject) {
+
+				if (!this.displayobject.getBounds ()) {
+					this.initialized = false;
+					return;
+				}
 
 				zooms = {
 					'x' : (space.width / this.displayobject.getBounds ().width),
