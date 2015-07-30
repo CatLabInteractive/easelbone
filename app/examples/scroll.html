@@ -1,99 +1,54 @@
 <!DOCTYPE html>
 <html>
-	<head lang="en">
+<head lang="en">
 
-	</head>
+</head>
 
-	<body>
+<body>
 
-		<!-- Ze canvas -->
-		<div id="container" style="width: 1024px; height: 768px;"></div>
+<!-- Ze canvas -->
+<div id="container" style="width: 1024px; height: 768px;"></div>
 
-		<!-- Ze requirejs -->
-		<script src="../scripts/vendor/requirejs/require.js"></script>
+<!-- Ze requirejs -->
+<script src="../scripts/vendor/requirejs/require.js"></script>
 
-		<!-- Ze game code -->
-		<script>
+<!-- Ze game code -->
+<script>
 
+	require.config ({
+		'baseUrl' : '../scripts/',
+		'urlArgs' : 'bust=v2'
+	});
 
-			require.config ({
-				'baseUrl' : '../scripts/',
-				'urlArgs' : 'bust=v2',
+	require ([ 'main' ], function (easelbone)
+	{
+		// Some additional config to load the assets is required here.
+		require.config ({
+			'paths' : {
+				'assets' : '../examples/assets/easelboneassets'
+			},
 
-				paths: {
-					EaselJS: "vendor/EaselJS/lib/easeljs-0.8.0.combined",
-					Movieclip: "vendor/EaselJS/lib/movieclip-0.8.0.combined",
-					PreloadJS: "vendor/PreloadJS/lib/preloadjs-0.6.0.combined",
-					SoundJS: "vendor/SoundJS/lib/soundjs-0.6.0.combined",
-					TweenJS: "vendor/TweenJS/lib/tweenjs-0.6.0.combined",
-					jquery: "vendor/jquery/dist/jquery",
-					requirejs: "vendor/requirejs/require",
-					underscore: "vendor/underscore/underscore",
-					backbone: "vendor/backbone/backbone",
-					easelhacks: "vendor/easelhacks/dist/scripts/easelhacks"
-					//easelhacks : 'http://easelhacks.local/dist/scripts/easelhacks'
-				},
-				shim: {
-					EaselJS: {
-						deps: [
+			'shim' : {
+				assets: {
+					deps: [
+						"Movieclip"
+					],
+					exports: "lib"
+				}
+			}
+		});
 
-						],
-						exports: "createjs"
-					},
-					PreloadJS: {
-						deps: [
-							"EaselJS"
-						],
-						exports: "createjs"
-					},
-					Movieclip: {
-						deps: [
-							"EaselJS",
-							"TweenJS"
-						],
-						exports: "createjs"
-					},
-
-					'easelbone' : {
-						'deps' : [
-							'CatLab/Easelbone/Hacks'
-						]
-					}
-				},
-				packages: [
-
-				]
-			});
-
-			require ([ 'easelbone' ], function (easelbone)
-			{
-				// Some additional config to load the assets is required here.
-				require.config ({
-					'paths' : {
-						'assets' : '../examples/assets/easelboneassets'
-					},
-
-					'shim' : {
-						assets: {
-							deps: [
-								"Movieclip"
-							],
-							exports: "lib"
-						}
-					}
-				});
-
-				// We'll need backbone to define our view, and easeljs to handle our rendering.
-				// We'll also need the assets.
-				require ([
+		// We'll need backbone to define our view, and easeljs to handle our rendering.
+		// We'll also need the assets.
+		require ([
 					'backbone',
 					'EaselJS',
 					'assets'
 				],
 				function (
-					backbone,
-					createjs,
-					assets
+						backbone,
+						createjs,
+						assets
 				) {
 
 					createjs.Ticker.timingMode = createjs.Ticker.TIMEOUT;
@@ -137,6 +92,8 @@
 
 								this.list = new easelbone.Controls.List (assets.ExampleListElement, 2);
 								this.scroll = new easelbone.Controls.ScrollArea (this.view.scrollcontent);
+								var scroll = this.scroll;
+
 								this.scroll.content.addChild (this.list);
 
 								this.list.createElement ().element.text.text = 'Item 1';
@@ -147,6 +104,16 @@
 								this.list.createElement ().element.text.text = 'Item 6';
 								this.list.createElement ().element.text.text = 'Item 7';
 								this.list.createElement ().element.text.text = 'Item 8';
+								this.list.createElement ().element.text.text = 'Item 9';
+
+								var item10 = this.list.createElement ();
+								item10.element.text.text = 'Item 10';
+
+								setTimeout(function ()
+								{
+									scroll.focus(item10.element);
+								}, 1000);
+
 
 							},
 
@@ -164,9 +131,9 @@
 						rootView.setView (view);
 					});
 				});
-			});
+	});
 
-		</script>
+</script>
 
-	</body>
+</body>
 </html>

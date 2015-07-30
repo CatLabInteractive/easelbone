@@ -48,7 +48,7 @@ define (
 		p.updateBounds = function () {
 			this.setBounds (
 				0, 0,
-				this.boundary.x * this.columns, (this.boundary.y * this.rows)
+				this.boundary.x * this.columns, (this.boundary.y * (this.rows + 1))
 			);
 		};
 
