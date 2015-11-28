@@ -55,16 +55,15 @@ define (
 			{
 				return this.limits;
 			}
-
-			else if (this.parent)
-			{
-				width = this.parent.getBounds ().width;
-				height = this.parent.getBounds ().height
-			}
 			else if (this.getBounds ())
 			{
 				width = this.getBounds ().width;
 				height = this.getBounds ().height;
+			}
+			else if (this.parent)
+			{
+				width = this.parent.getBounds ().width;
+				height = this.parent.getBounds ().height
 			}
 			else
 			{
