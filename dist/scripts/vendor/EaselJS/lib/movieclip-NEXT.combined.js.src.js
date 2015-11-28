@@ -34,7 +34,7 @@
 this.createjs = this.createjs||{};
 
 (function() {
-	
+	"use strict";
 
 
 // constructor:
@@ -709,7 +709,7 @@ this.createjs = this.createjs||{};
 this.createjs = this.createjs || {};
 
 (function() {
-	
+	"use strict";
 
 	/**
 	 * Static class holding library specific information such as the version and buildDate of

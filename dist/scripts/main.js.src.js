@@ -1,10 +1,10 @@
 require.config ({
 	paths: {
-		EaselJS: "vendor/EaselJS/lib/easeljs-0.8.1.combined",
-		Movieclip: "vendor/EaselJS/lib/movieclip-0.8.1.combined",
-		PreloadJS: "vendor/PreloadJS/lib/preloadjs-0.6.1.combined",
-		SoundJS: "vendor/SoundJS/lib/soundjs-0.6.1.combined",
-		TweenJS: "vendor/TweenJS/lib/tweenjs-0.6.1.combined",
+		EaselJS: "vendor/EaselJS/lib/easeljs-NEXT.combined",
+		Movieclip: "vendor/EaselJS/lib/movieclip-NEXT.combined",
+		PreloadJS: "vendor/PreloadJS/lib/preloadjs-NEXT.combined",
+		SoundJS: "vendor/SoundJS/lib/soundjs-NEXT.combined",
+		TweenJS: "vendor/TweenJS/lib/tweenjs-NEXT.combined",
 		jquery: "vendor/jquery/dist/jquery",
 		requirejs: "vendor/requirejs/require",
 		underscore: "vendor/underscore/underscore",

@@ -151,7 +151,7 @@ define (
 			//console.log (space);
 
 			// Draw container size
-			if (debug)
+			if (this.debug)
 			{
 				var border = new createjs.Shape();
 				border.graphics.beginStroke("#FFA500");
@@ -174,7 +174,6 @@ define (
 			else if (this.align == 'left') {
 				text.x = text.getBounds ().width / 2;
 			}
-
 			else if (this.align == 'right') {
 				//text.x = ((space.width - text.getBounds ().width)) + text.getBounds ().width;
 				text.x = space.width - text.getBounds ().width;

@@ -816,7 +816,7 @@ var swfobject = function() {
 this.createjs = this.createjs || {};
 
 (function () {
-	
+	"use strict";
 
 	/**
 	 * Loader provides a mechanism to preload Flash content via PreloadJS or internally. Instances are returned to
@@ -946,7 +946,7 @@ this.createjs = this.createjs || {};
 this.createjs = this.createjs || {};
 
 (function () {
-	
+	"use strict";
 
 	/**
 	 * FlashAudioSoundInstance extends the base api of {{#crossLink "AbstractSoundInstance"}}{{/crossLink}} and is used by
@@ -1147,7 +1147,7 @@ this.createjs = this.createjs || {};
 
 (function () {
 
-	
+	"use strict";
 
 	/**
 	 * Play sounds using a Flash instance. This plugin is not used by default, and must be registered manually in

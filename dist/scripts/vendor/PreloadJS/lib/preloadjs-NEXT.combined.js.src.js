@@ -34,7 +34,7 @@
 this.createjs = this.createjs || {};
 
 (function () {
-	
+	"use strict";
 
 	/**
 	 * Static class holding library specific information such as the version and buildDate of the library.
@@ -89,7 +89,7 @@ this.createjs = this.createjs||{};
  * @return {Function} Returns the subclass's new prototype.
  */
 createjs.extend = function(subclass, superclass) {
-	
+	"use strict";
 
 	function o() { this.constructor = subclass; }
 	o.prototype = superclass.prototype;
@@ -144,7 +144,7 @@ this.createjs = this.createjs||{};
  * @return {Function} Returns the subclass.
  */
 createjs.promote = function(subclass, prefix) {
-	
+	"use strict";
 
 	var subP = subclass.prototype, supP = (Object.getPrototypeOf&&Object.getPrototypeOf(subP))||subP.__proto__;
 	if (supP) {
@@ -178,7 +178,7 @@ this.createjs = this.createjs||{};
  * @return {Number} The first index of searchElement in array.
  */
 createjs.indexOf = function (array, searchElement){
-	
+	"use strict";
 
 	for (var i = 0,l=array.length; i < l; i++) {
 		if (searchElement === array[i]) {
@@ -207,7 +207,7 @@ this.createjs = this.createjs||{};
  */
 
 (function() {
-	
+	"use strict";
 
 	/**
 	 * A function proxy for methods. By default, JavaScript methods do not maintain scope, so passing a method as a
@@ -250,7 +250,7 @@ this.createjs = this.createjs||{};
  * @class Utility Methods
  */
 (function() {
-	
+	"use strict";
 
 	/**
 	 * An object that determines the current browser, version, operating system, and other environment
@@ -298,7 +298,7 @@ this.createjs = this.createjs||{};
 this.createjs = this.createjs||{};
 
 (function() {
-	
+	"use strict";
 
 // constructor:
 	/**
@@ -525,7 +525,7 @@ this.createjs = this.createjs||{};
 this.createjs = this.createjs||{};
 
 (function() {
-	
+	"use strict";
 
 	/**
 	 * A general error {{#crossLink "Event"}}{{/crossLink}}, that describes an error that occurred, as well as any details.
@@ -577,7 +577,7 @@ this.createjs = this.createjs||{};
 this.createjs = this.createjs||{};
 
 (function() {
-	
+	"use strict";
 
 
 // constructor:
@@ -956,7 +956,7 @@ this.createjs = this.createjs||{};
 this.createjs = this.createjs || {};
 
 (function (scope) {
-	
+	"use strict";
 
 	// constructor
 	/**
@@ -2024,7 +2024,7 @@ this.createjs = this.createjs || {};
 this.createjs = this.createjs || {};
 
 (function () {
-	
+	"use strict";
 
 	/**
 	 * All loaders accept an item containing the properties defined in this class. If a raw object is passed instead,
@@ -2519,7 +2519,7 @@ this.createjs = this.createjs || {};
 this.createjs = this.createjs || {};
 
 (function () {
-	
+	"use strict";
 
 // constructor
 	/**
@@ -3216,7 +3216,7 @@ this.createjs = this.createjs || {};
 this.createjs = this.createjs || {};
 
 (function () {
-	
+	"use strict";
 
 	// constructor
 	/**
@@ -3299,7 +3299,7 @@ this.createjs = this.createjs || {};
 this.createjs = this.createjs || {};
 
 (function () {
-	
+	"use strict";
 
 	/**
 	 * A base class for actual data requests, such as {{#crossLink "XHRRequest"}}{{/crossLink}}, {{#crossLink "TagRequest"}}{{/crossLink}},
@@ -3345,7 +3345,7 @@ this.createjs = this.createjs || {};
 this.createjs = this.createjs || {};
 
 (function () {
-	
+	"use strict";
 
 	// constructor
 	/**
@@ -3532,7 +3532,7 @@ this.createjs = this.createjs || {};
 this.createjs = this.createjs || {};
 
 (function () {
-	
+	"use strict";
 
 	// constructor
 	/**
@@ -3624,7 +3624,7 @@ this.createjs = this.createjs || {};
 this.createjs = this.createjs || {};
 
 (function () {
-	
+	"use strict";
 
 // constructor
 	/**
@@ -4170,7 +4170,7 @@ this.createjs = this.createjs || {};
  */
 
 (function () {
-	
+	"use strict";
 
 // constructor
 	/**
@@ -6014,7 +6014,7 @@ this.createjs = this.createjs || {};
 this.createjs = this.createjs || {};
 
 (function () {
-	
+	"use strict";
 
 	// constructor
 	/**
@@ -6055,7 +6055,7 @@ this.createjs = this.createjs || {};
 this.createjs = this.createjs || {};
 
 (function () {
-	
+	"use strict";
 
 	// constructor
 	/**
@@ -6108,7 +6108,7 @@ this.createjs = this.createjs || {};
 this.createjs = this.createjs || {};
 
 (function () {
-	
+	"use strict";
 
 	// constructor
 	/**
@@ -6192,7 +6192,7 @@ this.createjs = this.createjs || {};
 this.createjs = this.createjs || {};
 
 (function () {
-	
+	"use strict";
 
 	// constructor
 	/**
@@ -6324,7 +6324,7 @@ this.createjs = this.createjs || {};
 this.createjs = this.createjs || {};
 
 (function () {
-	
+	"use strict";
 
 	// constructor
 	/**
@@ -6389,7 +6389,7 @@ this.createjs = this.createjs || {};
 this.createjs = this.createjs || {};
 
 (function () {
-	
+	"use strict";
 
 	// constructor
 	/**
@@ -6456,7 +6456,7 @@ this.createjs = this.createjs || {};
 this.createjs = this.createjs || {};
 
 (function () {
-	
+	"use strict";
 
 	// constructor
 	/**
@@ -6582,7 +6582,7 @@ this.createjs = this.createjs || {};
 this.createjs = this.createjs || {};
 
 (function () {
-	
+	"use strict";
 
 	// constructor
 	/**
@@ -6782,7 +6782,7 @@ this.createjs = this.createjs || {};
 this.createjs = this.createjs || {};
 
 (function () {
-	
+	"use strict";
 
 	// constructor
 	/**
@@ -6851,7 +6851,7 @@ this.createjs = this.createjs || {};
 this.createjs = this.createjs || {};
 
 (function () {
-	
+	"use strict";
 
 	// constructor
 	/**
@@ -6912,7 +6912,7 @@ this.createjs = this.createjs || {};
 this.createjs = this.createjs || {};
 
 (function () {
-	
+	"use strict";
 
 	// constructor
 	/**
@@ -7080,7 +7080,7 @@ this.createjs = this.createjs || {};
 this.createjs = this.createjs || {};
 
 (function () {
-	
+	"use strict";
 
 	// constructor
 	/**
@@ -7161,7 +7161,7 @@ this.createjs = this.createjs || {};
 this.createjs = this.createjs || {};
 
 (function () {
-	
+	"use strict";
 
 	// constructor
 	/**

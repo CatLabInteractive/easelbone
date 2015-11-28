@@ -56,7 +56,7 @@ this.createjs = this.createjs||{};
  * @return {Function} Returns the subclass's new prototype.
  */
 createjs.extend = function(subclass, superclass) {
-	
+	"use strict";
 
 	function o() { this.constructor = subclass; }
 	o.prototype = superclass.prototype;
@@ -111,7 +111,7 @@ this.createjs = this.createjs||{};
  * @return {Function} Returns the subclass.
  */
 createjs.promote = function(subclass, prefix) {
-	
+	"use strict";
 
 	var subP = subclass.prototype, supP = (Object.getPrototypeOf&&Object.getPrototypeOf(subP))||subP.__proto__;
 	if (supP) {
@@ -130,7 +130,7 @@ createjs.promote = function(subclass, prefix) {
 this.createjs = this.createjs||{};
 
 (function() {
-	
+	"use strict";
 
 // constructor:
 	/**
@@ -357,7 +357,7 @@ this.createjs = this.createjs||{};
 this.createjs = this.createjs||{};
 
 (function() {
-	
+	"use strict";
 
 
 // constructor:
@@ -736,7 +736,7 @@ this.createjs = this.createjs||{};
 this.createjs = this.createjs||{};
 
 (function() {
-	
+	"use strict";
 
 
 // constructor:
@@ -1348,7 +1348,7 @@ this.createjs = this.createjs||{};
 this.createjs = this.createjs||{};
 
 (function() {
-	
+	"use strict";
 
 
 // constructor
@@ -2223,7 +2223,7 @@ this.createjs = this.createjs||{};
 
 
 (function() {
-	
+	"use strict";
 	
 
 // constructor	
@@ -2638,7 +2638,7 @@ this.createjs = this.createjs||{};
 this.createjs = this.createjs||{};
 
 (function() {
-	
+	"use strict";
 
 	/**
 	 * The Ease class provides a collection of easing functions for use with TweenJS. It does not use the standard 4 param
@@ -3072,7 +3072,7 @@ this.createjs = this.createjs||{};
 this.createjs = this.createjs||{};
 
 (function() {
-	
+	"use strict";
 
 	/**
 	 * A TweenJS plugin for working with motion guides.
@@ -3375,7 +3375,7 @@ this.createjs = this.createjs||{};
 this.createjs = this.createjs || {};
 
 (function() {
-	
+	"use strict";
 
 	/**
 	 * Static class holding library specific information such as the version and buildDate of

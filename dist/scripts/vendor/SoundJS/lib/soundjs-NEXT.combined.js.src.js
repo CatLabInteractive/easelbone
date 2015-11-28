@@ -90,7 +90,7 @@ this.createjs = this.createjs||{};
  * @return {Function} Returns the subclass's new prototype.
  */
 createjs.extend = function(subclass, superclass) {
-	
+	"use strict";
 
 	function o() { this.constructor = subclass; }
 	o.prototype = superclass.prototype;
@@ -145,7 +145,7 @@ this.createjs = this.createjs||{};
  * @return {Function} Returns the subclass.
  */
 createjs.promote = function(subclass, prefix) {
-	
+	"use strict";
 
 	var subP = subclass.prototype, supP = (Object.getPrototypeOf&&Object.getPrototypeOf(subP))||subP.__proto__;
 	if (supP) {
@@ -179,7 +179,7 @@ this.createjs = this.createjs||{};
  * @return {Number} The first index of searchElement in array.
  */
 createjs.indexOf = function (array, searchElement){
-	
+	"use strict";
 
 	for (var i = 0,l=array.length; i < l; i++) {
 		if (searchElement === array[i]) {
@@ -208,7 +208,7 @@ this.createjs = this.createjs||{};
  */
 
 (function() {
-	
+	"use strict";
 
 	/**
 	 * A function proxy for methods. By default, JavaScript methods do not maintain scope, so passing a method as a
@@ -251,7 +251,7 @@ this.createjs = this.createjs||{};
  * @class Utility Methods
  */
 (function() {
-	
+	"use strict";
 
 	/**
 	 * An object that determines the current browser, version, operating system, and other environment
@@ -299,7 +299,7 @@ this.createjs = this.createjs||{};
 this.createjs = this.createjs||{};
 
 (function() {
-	
+	"use strict";
 
 
 // constructor:
@@ -678,7 +678,7 @@ this.createjs = this.createjs||{};
 this.createjs = this.createjs||{};
 
 (function() {
-	
+	"use strict";
 
 // constructor:
 	/**
@@ -905,7 +905,7 @@ this.createjs = this.createjs||{};
 this.createjs = this.createjs||{};
 
 (function() {
-	
+	"use strict";
 
 	/**
 	 * A general error {{#crossLink "Event"}}{{/crossLink}}, that describes an error that occurred, as well as any details.
@@ -957,7 +957,7 @@ this.createjs = this.createjs||{};
 this.createjs = this.createjs || {};
 
 (function (scope) {
-	
+	"use strict";
 
 	// constructor
 	/**
@@ -1018,7 +1018,7 @@ this.createjs = this.createjs || {};
 this.createjs = this.createjs || {};
 
 (function () {
-	
+	"use strict";
 
 	/**
 	 * All loaders accept an item containing the properties defined in this class. If a raw object is passed instead,
@@ -1513,7 +1513,7 @@ this.createjs = this.createjs || {};
 this.createjs = this.createjs || {};
 
 (function () {
-	
+	"use strict";
 
 // constructor
 	/**
@@ -2209,7 +2209,7 @@ this.createjs = this.createjs || {};
 this.createjs = this.createjs || {};
 
 (function () {
-	
+	"use strict";
 
 	// constructor
 	/**
@@ -2292,7 +2292,7 @@ this.createjs = this.createjs || {};
 this.createjs = this.createjs || {};
 
 (function () {
-	
+	"use strict";
 
 	/**
 	 * A base class for actual data requests, such as {{#crossLink "XHRRequest"}}{{/crossLink}}, {{#crossLink "TagRequest"}}{{/crossLink}},
@@ -2338,7 +2338,7 @@ this.createjs = this.createjs || {};
 this.createjs = this.createjs || {};
 
 (function () {
-	
+	"use strict";
 
 	// constructor
 	/**
@@ -2525,7 +2525,7 @@ this.createjs = this.createjs || {};
 this.createjs = this.createjs || {};
 
 (function () {
-	
+	"use strict";
 
 	// constructor
 	/**
@@ -2617,7 +2617,7 @@ this.createjs = this.createjs || {};
 this.createjs = this.createjs || {};
 
 (function () {
-	
+	"use strict";
 
 // constructor
 	/**
@@ -3105,7 +3105,7 @@ this.createjs = this.createjs || {};
 this.createjs = this.createjs || {};
 
 (function () {
-	
+	"use strict";
 
 	// constructor
 	/**
@@ -3244,7 +3244,7 @@ this.createjs = this.createjs || {};
 this.createjs = this.createjs || {};
 
 (function () {
-	
+	"use strict";
 	/**
 	 * A class to store the optional play properties passed in {{#crossLink "Sound/play"}}{{/crossLink}} and
 	 * {{#crossLink "AbstractSoundInstance/play"}}{{/crossLink}} calls.
@@ -3404,7 +3404,7 @@ this.createjs = this.createjs || {};
 
 
 (function () {
-	
+	"use strict";
 
 	/**
 	 * The Sound class is the public API for creating sounds, controlling the overall sound levels, and managing plugins.
@@ -5201,7 +5201,7 @@ this.createjs = this.createjs || {};
  */
 
 (function () {
-	
+	"use strict";
 
 
 // Constructor:
@@ -6065,7 +6065,7 @@ this.createjs = this.createjs || {};
 this.createjs = this.createjs || {};
 
 (function () {
-	
+	"use strict";
 
 
 // constructor:
@@ -6361,7 +6361,7 @@ this.createjs = this.createjs || {};
 this.createjs = this.createjs || {};
 
 (function () {
-	
+	"use strict";
 
 	/**
 	 * Loader provides a mechanism to preload Web Audio content via PreloadJS or internally. Instances are returned to
@@ -6446,7 +6446,7 @@ this.createjs = this.createjs || {};
  * @constructor
  */
 (function () {
-	
+	"use strict";
 
 	function WebAudioSoundInstance(src, startTime, duration, playbackResource) {
 		this.AbstractSoundInstance_constructor(src, startTime, duration, playbackResource);
@@ -6730,7 +6730,7 @@ this.createjs = this.createjs || {};
 
 (function () {
 
-	
+	"use strict";
 
 	/**
 	 * Play sounds using Web Audio in the browser. The WebAudioPlugin is currently the default plugin, and will be used
@@ -7050,7 +7050,7 @@ this.createjs = this.createjs || {};
 this.createjs = this.createjs || {};
 
 (function () {
-	
+	"use strict";
 
 	/**
 	 * HTMLAudioTagPool is an object pool for HTMLAudio tag instances.
@@ -7249,7 +7249,7 @@ this.createjs = this.createjs || {};
 this.createjs = this.createjs || {};
 
 (function () {
-	
+	"use strict";
 
 	/**
 	 * HTMLAudioSoundInstance extends the base api of {{#crossLink "AbstractSoundInstance"}}{{/crossLink}} and is used by
@@ -7499,7 +7499,7 @@ this.createjs = this.createjs || {};
 
 (function () {
 
-	
+	"use strict";
 
 	/**
 	 * Play sounds using HTML &lt;audio&gt; tags in the browser. This plugin is the second priority plugin installed

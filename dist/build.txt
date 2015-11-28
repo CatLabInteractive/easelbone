@@ -1,12 +1,4 @@
 
-scripts/vendor/SoundJS/tests/lib/jasmine-2.0.2/jasmine.css
-----------------
-scripts/vendor/SoundJS/tests/lib/jasmine-2.0.2/jasmine.css
-
-scripts/vendor/TweenJS/tests/lib/jasmine-2.0.2/jasmine.css
-----------------
-scripts/vendor/TweenJS/tests/lib/jasmine-2.0.2/jasmine.css
-
 scripts/easelbone.js
 ----------------
 scripts/CatLab/Easelbone/Utilities/Loader.js

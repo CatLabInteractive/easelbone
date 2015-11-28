@@ -1,1 +1,1 @@
-{"version":3,"file":"amd.js","sources":["amd.js.src.js"],"names":["define","jQuery","amd"],"mappings":"AAAAA,QACC,WACE,SAAUC,GAeU,kBAAXD,SAAyBA,OAAOE,KAC3CF,OAAQ,YAAc,WACrB,MAAOC"}
+{"version":3,"sources":["amd.js.src.js"],"names":["define","jQuery","amd"],"mappings":"AAAAA,QACC,WACE,SAAUC,GAeU,kBAAXD,SAAyBA,OAAOE,KAC3CF,OAAQ,YAAc,WACrB,MAAOC","file":"amd.js.map"}
