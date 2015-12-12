@@ -42,7 +42,10 @@ define (
 		{
 			this.initialized = false;
 			this.textstring = text;
-			this.textElement.text = text;
+
+			if (this.textElement) {
+				this.textElement.text = text;
+			}
 		};
 
 		p.setLimits = function (width, height)
