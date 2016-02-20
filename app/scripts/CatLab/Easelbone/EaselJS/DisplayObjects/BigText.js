@@ -217,7 +217,7 @@ define (
 				text.x = space.width - currentWidth;
 			}
 
-			text.y = ((space.height - currentHeight) / 2);
+			text.y = (space.height - currentHeight) / 2;
 
 			this.addChild (text);
 
