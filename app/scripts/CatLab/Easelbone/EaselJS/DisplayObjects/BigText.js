@@ -91,6 +91,10 @@ define (
 			var fontsize = 10;
 			var stable = new createjs.Text ("" + String(textstring), fontsize + "px " + this.font, this.color);
 
+            if (!stable.getBounds()) {
+                return stable;
+            }
+
 			var maxSteps = 500;
 
 			function bigger ()
@@ -107,8 +111,10 @@ define (
 				var text = new createjs.Text (textstring, fontsize + "px " + self.font, self.color);
 				text.lineWidth = availableWidth;
 
-				if (text.getBounds ().height < availableHeight && text.getBounds ().width <= availableWidth)
-				{
+				if (
+					text.getBounds().height < availableHeight &&
+                    text.getBounds().width <= availableWidth
+                ) {
 					stable = text;
 					fontsize ++;
 					return true;
