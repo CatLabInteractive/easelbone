@@ -20,6 +20,10 @@ define (
             'height' : 0
         };
 
+        var fontLineheightCache = {};
+
+        var fontOffsets = {};
+
 		var BigText = function (aTextstring, aFont, aColor, align)
 		{
 			this.textstring = aTextstring;
@@ -34,17 +38,71 @@ define (
 			this.debug = debug;
 		};
 
+        BigText.setFontOffset = function(font, x, y)
+        {
+            fontOffsets[font] = {
+                'x' : x,
+                'y' : y
+            };
+        };
+
         function updateCurrentSize(text)
         {
-            currentBounds = text.getBounds();
+            currentBounds = text.getMetrics();
 
-            currentSize.height = text.getMeasuredHeight();
+            currentSize.height = currentBounds.height;
             currentSize.width = currentBounds.width;
+        }
+
+        function measureLineHeight(text)
+        {
+            /*
+            fontSize = text.font.split(' ');
+            fontSize = parseInt(fontSize[0]);
+
+            return fontSize * 1.2;
+            */
+
+            return Math.max(
+                measureLetter(text, "M").width,
+                measureLetter(text, "m").width
+            ) * 1.2;
+        }
+
+        function measureLetter(text, letter)
+        {
+            var ctx = createjs.Text._workingContext;
+            ctx.save();
+            var size = text._prepContext(ctx).measureText(letter);
+            ctx.restore();
+            return size;
+        }
+
+        function getFontLineheight(text)
+        {
+            if (typeof(fontLineheightCache[text.font]) == 'undefined') {
+                fontLineheightCache[text.font] = measureLineHeight(text);
+            }
+
+            return fontLineheightCache[text.font];
         }
 
 		var p = BigText.prototype = new createjs.Container ();
 
 		p.Container_initialize = p.initialize;
+
+        p.getFontOffset = function(font)
+        {
+            var fontName = font.split(' ');
+            fontName.shift();
+            fontName.join(' ');
+
+            if (typeof(fontOffsets[fontName]) == 'undefined') {
+                return { 'x' : 0, 'y' : 0 };
+            } else {
+                return fontOffsets[fontName];
+            }
+        };
 
 		p.initialize = function() {
 			this.Container_initialize ();
@@ -72,22 +130,15 @@ define (
 
 		p.getAvailableSpace = function ()
 		{
-			if (this.limits !== null)
-			{
+			if (this.limits !== null) {
 				return this.limits;
-			}
-			else if (this.getBounds ())
-			{
+			} else if (this.getBounds ()) {
 				width = this.getBounds ().width;
 				height = this.getBounds ().height;
-			}
-			else if (this.parent)
-			{
+			} else if (this.parent) {
 				width = this.parent.getBounds ().width;
 				height = this.parent.getBounds ().height
-			}
-			else
-			{
+			} else {
 				width = 100;
 				height = 100;
 			}
@@ -105,7 +156,7 @@ define (
 		{
 			var self = this;
 
-			var fontsize = 10;
+			var fontsize = 5;
 			var stable = new createjs.Text(
                 "" + String(textstring),
                 fontsize + "px " + this.font,
@@ -126,10 +177,9 @@ define (
 					return false;
 				}
 
-				//console.log (fontsize + "px " + self.font);
-
 				var text = new createjs.Text (textstring, fontsize + "px " + self.font, self.color);
 				text.lineWidth = availableWidth;
+                text.lineHeight = getFontLineheight(text);
 
                 updateCurrentSize(text);
 
@@ -151,8 +201,9 @@ define (
 
 		p.Container_draw = p.draw;
 
-		p.getLocationHash = function () {
-			hash = this.getAvailableSpace ();
+		p.getLocationHash = function ()
+        {
+			hash = this.getAvailableSpace();
 			return hash.width + ':' + hash.height;
 		};
 
@@ -160,7 +211,8 @@ define (
 		 * Determine if the dimensions have changed since last frame.
 		 * @returns {boolean}
 		 */
-		p.hasChanged = function () {
+		p.hasChanged = function ()
+        {
 			hash = this.getLocationHash ();
 			hasChanged = this.lastHash != hash;
 			this.lastHash = hash;
@@ -170,8 +222,7 @@ define (
 
 		p.draw = function (ctx, ignoreCache)
 		{
-			if (this.initialized && !this.hasChanged ())
-			{
+			if (this.initialized && !this.hasChanged ()) {
 				return this.Container_draw (ctx, ignoreCache);
 			}
 
@@ -183,8 +234,7 @@ define (
 			//console.log (space);
 
 			// Draw container size
-			if (this.debug)
-			{
+			if (this.debug) {
 				var border = new createjs.Shape();
 				border.graphics.beginStroke("#FFA500");
 				border.graphics.setStrokeStyle(1);
@@ -217,10 +267,12 @@ define (
 				text.x = space.width - currentWidth;
 			}
 
-			text.y = (space.height - currentHeight) / 2;
+            currentBounds = text.getMetrics();
+
+            var offset = this.getFontOffset(text.font);
+			text.y = (text.lineHeight * offset.y) + ((space.height - currentHeight) / 2);
 
 			this.addChild (text);
-
 			return this.Container_draw (ctx, ignoreCache);
 		};
 

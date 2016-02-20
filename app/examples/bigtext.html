@@ -78,6 +78,9 @@
                     link.href = 'fonts/fonts.css';
                     document.body.appendChild(link);
 
+                    // Set font settings
+                    createjs.BigText.setFontOffset('Designers', 0, 0.15);
+
 					// And actually do load them.
 					easelbone.Loader.load (function () {
 
@@ -96,26 +99,54 @@
 
                                 var self = this;
 
-                                function printLine(x, y)
+                                function printLine(x, y, width, height)
                                 {
                                     var container = new createjs.Container ();
-                                    container.setBounds (0, 0, 400, 200);
+                                    container.setBounds (0, 0, width, height);
 
                                     container.x = x;
                                     container.y = y;
 
-                                    var text = new createjs.BigText ("Test message with multiple lines", "Designers", "#000000");
+                                    var text = new createjs.BigText (
+                                        "Test message with Multiple lines",
+                                        "Designers",
+                                        "#ff0000"
+                                    );
+
                                     text.debug = true;
                                     container.addChild (text);
 
                                     self.el.addChild (container);
                                 }
 
-                                printLine(0, 0);
+                                var posy = 0;
+                                var posx = 0;
+                                var height = 50;
 
-                                setTimeout(function() {
-                                    printLine(0, 300);
-                                }, 1000);
+                                var maxWidth = 1024;
+                                var maxHeight = 768;
+
+                                while (posy < maxHeight - 11) {
+                                    posx = 0;
+                                    height = Math.max(Math.random(), 0.5) * 200;
+
+                                    if ((posy + height) > maxHeight) {
+                                        height = maxHeight - posy - 1;
+                                    }
+
+                                    while (posx < maxWidth) {
+                                        var width = Math.max(0.2, Math.random()) * 3 * height;
+
+                                        if ((posx + width)  > maxWidth) {
+                                            width = maxWidth - posx - 1;
+                                        }
+
+                                        printLine(posx, posy, width, height);
+                                        posx += width + 10;
+                                    }
+
+                                    posy += height + 10;
+                                }
 
 							}
 
