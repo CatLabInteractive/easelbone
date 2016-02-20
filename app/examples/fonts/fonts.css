@@ -1,0 +1,24 @@
+@font-face {
+    font-family: 'Designers';
+    src: url('designers/desib___-webfont.eot');
+    src: url('designers/desib___-webfont.eot?#iefix') format('embedded-opentype'),
+    url('designers/desib___-webfont.woff2') format('woff2'),
+    url('designers/desib___-webfont.woff') format('woff'),
+    url('designers/desib___-webfont.ttf') format('truetype'),
+    url('designers/desib___-webfont.svg#desigersbold') format('svg');
+    font-weight: normal;
+    font-style: normal;
+
+}
+
+@font-face {
+    font-family: 'Life Savers';
+    font-style: normal;
+    font-weight: 700;
+    src: url(Life+Savers_700_normal.eot); /* {{embedded-opentype-gf-url}} */
+    src: local('☺'),
+        url(Life+Savers_700_normal.eot?#iefix) format('embedded-opentype'), /* {{embedded-opentype-gf-url}} */
+        url(Life+Savers_700_normal.woff) format('woff'), /* http://fonts.gstatic.com/s/lifesavers/v6/THQKqChyYUm97rNPVFdGGTqR_3kx9_hJXbbyU8S6IN0.woff */
+        url(Life+Savers_700_normal.ttf) format('truetype'), /* http://fonts.gstatic.com/s/lifesavers/v6/THQKqChyYUm97rNPVFdGGTdGNerWpg2Hn6A-BxWgZ_I.ttf */
+        url(Life+Savers_700_normal.svg#Life+Savers_700_normal) format('svg'); /* http://fonts.gstatic.com/l/font?kit=THQKqChyYUm97rNPVFdGGXtNmQEE9wZ6UZlmiISB1pg&skey=5d3096418c414e64#LifeSavers */
+}

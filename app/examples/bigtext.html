@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+
+</head>
+
+<body>
+
+<!-- Ze canvas -->
+<div id="container" style="width: 1024px; height: 768px;"></div>
+
+<!-- Ze requirejs -->
+<script src="../scripts/vendor/requirejs/require.js"></script>
+
+<!-- Ze game code -->
+<script>
+
+	require.config ({
+		'baseUrl' : '../scripts/',
+		'urlArgs' : 'bust=v2'
+	});
+
+	require ([ 'main' ], function (easelbone)
+	{
+		// Some additional config to load the assets is required here.
+		require.config ({
+			'paths' : {
+				'assets' : '../examples/assets/easelboneassets'
+			},
+
+			'shim' : {
+				assets: {
+					deps: [
+						"Movieclip"
+					],
+					exports: "lib"
+				}
+			}
+		});
+
+		// We'll need backbone to define our view, and easeljs to handle our rendering.
+		// We'll also need the assets.
+		require ([
+					'backbone',
+					'EaselJS',
+					'assets'
+				],
+				function (
+						backbone,
+						createjs,
+						assets
+				) {
+
+					createjs.Ticker.timingMode = createjs.Ticker.TIMEOUT;
+					createjs.Ticker.setFPS (24);
+
+					var rootView = new easelbone.Views.Root ({'container': document.getElementById ('container') });
+
+					rootView.stage.enableMouseOver(20);
+
+					// Set default properties
+					easelbone.setProperties (assets.properties);
+
+					// Ticker
+					//createjs.Ticker.setFPS (assets.properties.fps);
+
+
+					// Load assets
+					easelbone.Loader.loadAssets (assets, '../examples/assets/');
+
+					// Prepare our "users"
+					var users = [
+						new easelbone.FakeWebremote.KeyboardUser ()
+					];
+
+                    var link = document.createElement('link');
+                    link.rel = 'stylesheet';
+                    link.href = 'fonts/fonts.css';
+                    document.body.appendChild(link);
+
+					// And actually do load them.
+					easelbone.Loader.load (function () {
+
+						// NOW WE ARE READY FOR THE REAL SHIZZLE
+						// Create a view and add it to the root.
+
+						// An example settings view.slider1
+						var ExampleView = easelbone.Views.Navigatable.extend ({
+
+							'initialize' : function () {
+
+
+							},
+
+							'render' : function () {
+
+                                var self = this;
+
+                                function printLine(x, y)
+                                {
+                                    var container = new createjs.Container ();
+                                    container.setBounds (0, 0, 400, 200);
+
+                                    container.x = x;
+                                    container.y = y;
+
+                                    var text = new createjs.BigText ("Test message with multiple lines", "Designers", "#000000");
+                                    text.debug = true;
+                                    container.addChild (text);
+
+                                    self.el.addChild (container);
+                                }
+
+                                printLine(0, 0);
+
+                                setTimeout(function() {
+                                    printLine(0, 300);
+                                }, 1000);
+
+							}
+
+						});
+
+						var view = new ExampleView ();
+						view.setUsers (users);
+
+						rootView.setView (view);
+					});
+				});
+	});
+
+</script>
+
+</body>
+</html>

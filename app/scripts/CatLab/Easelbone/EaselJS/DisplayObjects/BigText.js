@@ -11,6 +11,15 @@ define (
 		var hash;
 		var hasChanged = false;
 
+        var currentHeight;
+        var currentWidth;
+
+        var currentBounds;
+        var currentSize = {
+            'width' : 0,
+            'height' : 0
+        };
+
 		var BigText = function (aTextstring, aFont, aColor, align)
 		{
 			this.textstring = aTextstring;
@@ -24,6 +33,14 @@ define (
 
 			this.debug = debug;
 		};
+
+        function updateCurrentSize(text)
+        {
+            currentBounds = text.getBounds();
+
+            currentSize.height = text.getMeasuredHeight();
+            currentSize.width = currentBounds.width;
+        }
 
 		var p = BigText.prototype = new createjs.Container ();
 
@@ -89,7 +106,11 @@ define (
 			var self = this;
 
 			var fontsize = 10;
-			var stable = new createjs.Text ("" + String(textstring), fontsize + "px " + this.font, this.color);
+			var stable = new createjs.Text(
+                "" + String(textstring),
+                fontsize + "px " + this.font,
+                this.color
+            );
 
             if (!stable.getBounds()) {
                 return stable;
@@ -101,8 +122,7 @@ define (
 			{
 				maxSteps --;
 
-				if (maxSteps < 0)
-				{
+				if (maxSteps < 0) {
 					return false;
 				}
 
@@ -111,9 +131,11 @@ define (
 				var text = new createjs.Text (textstring, fontsize + "px " + self.font, self.color);
 				text.lineWidth = availableWidth;
 
+                updateCurrentSize(text);
+
 				if (
-					text.getBounds().height < availableHeight &&
-                    text.getBounds().width <= availableWidth
+                    currentSize.height < availableHeight &&
+                    currentSize.width <= availableWidth
                 ) {
 					stable = text;
 					fontsize ++;
@@ -176,21 +198,26 @@ define (
 
 			//console.log (text);
 
-			//text.textBaseline = 'top';
+			text.textBaseline = 'top';
 			text.textAlign = 'center';
 
+            updateCurrentSize(text);
+
+            currentHeight = currentSize.height;
+            currentWidth = currentSize.width;
+
 			if (this.align == 'center') {
-				text.x = ((space.width - text.getBounds ().width) / 2) + text.getBounds ().width / 2;
+				text.x = ((space.width - currentWidth) / 2) + (currentWidth / 2);
 			}
 			else if (this.align == 'left') {
-				text.x = text.getBounds ().width / 2;
+				text.x = currentWidth / 2;
 			}
 			else if (this.align == 'right') {
 				//text.x = ((space.width - text.getBounds ().width)) + text.getBounds ().width;
-				text.x = space.width - text.getBounds ().width;
+				text.x = space.width - currentWidth;
 			}
 
-			text.y = (space.height - text.getBounds ().height) / 2;
+			text.y = ((space.height - currentHeight) / 2);
 
 			this.addChild (text);
 
