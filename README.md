@@ -8,3 +8,6 @@ https://rawgit.com/CatLabInteractive/easelbone/master/app/examples/controls.html
 
 * Scrollable areas: 
 https://rawgit.com/CatLabInteractive/easelbone/master/app/examples/scroll.html
+
+* Big Text: 
+https://rawgit.com/CatLabInteractive/easelbone/master/app/examples/bigtext.html
