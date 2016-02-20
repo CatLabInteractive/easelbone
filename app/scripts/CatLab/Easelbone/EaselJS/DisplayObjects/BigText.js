@@ -195,7 +195,7 @@ define (
 
 			var text = this.goBigOrGoHome (this.textstring, space.width, space.height);
 			this.textElement = text;
--
+
 			//console.log (text);
 
 			text.textBaseline = 'top';
