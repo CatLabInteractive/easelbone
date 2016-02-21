@@ -58,17 +58,10 @@ define (
 
         function measureLineHeight(text)
         {
-            fontSize = text.font.split(' ');
-            fontSize = parseInt(fontSize[0]);
-
-            return fontSize * 1.2;
-
-            /*
             return Math.max(
                 measureLetter(text, "M").width,
                 measureLetter(text, "m").width
             ) * 1.2;
-            */
         }
 
         function measureLetter(text, letter)
