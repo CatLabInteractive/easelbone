@@ -24,6 +24,8 @@ define (
 
         var fontOffsets = {};
 
+        var fontSize;
+
         var BigText = function (aTextstring, aFont, aColor, align)
         {
             this.textstring = aTextstring;
