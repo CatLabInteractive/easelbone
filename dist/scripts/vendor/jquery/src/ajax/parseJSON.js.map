@@ -1,1 +1,0 @@
-{"version":3,"sources":["parseJSON.js.src.js"],"names":["define","jQuery","parseJSON","data","JSON","parse"],"mappings":"AAAAA,QACC,WACE,SAAUC,GAQb,MAJAA,GAAOC,UAAY,SAAUC,GAC5B,MAAOC,MAAKC,MAAOF,EAAO,KAGpBF,EAAOC","file":"parseJSON.js.map"}
