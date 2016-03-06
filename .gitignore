@@ -1,4 +1,4 @@
 app/scripts/vendor/
-#dist/scripts/vendor/
+dist/scripts/vendor/
 .idea
 node_modules/
