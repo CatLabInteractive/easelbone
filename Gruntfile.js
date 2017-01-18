@@ -20,7 +20,7 @@ module.exports = function (grunt) {
                     },
                     include: [
                         //'vendor/almond/almond',
-                        'main'
+                        'easelbone'
                     ],
                     exclude: [
                         'jquery',
