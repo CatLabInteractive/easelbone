@@ -2,3 +2,5 @@ app/scripts/vendor/
 dist/scripts/vendor/
 .idea
 node_modules/
+dist/scripts/main.js
+dist/examples

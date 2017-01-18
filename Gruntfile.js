@@ -1,20 +1,13 @@
-module.exports = function(grunt) {
+module.exports = function (grunt) {
 
-	grunt.initConfig
-	({
+    grunt.initConfig
+    ({
+        'requirejs': {
+            'compile': {
+                'options': {
 
-		bowerRequirejs: {
-			target: {
-				rjsConfig: 'app/scripts/main.js'
-			}
-		},
-
-		'requirejs' : {
-			'compile' : {
-				'options' : {
-
-					baseUrl: 'app/scripts/',
-					paths: {
+                    baseUrl: 'app/scripts/',
+                    paths: {
                         EaselJS: "vendor/EaselJS/lib/easeljs-NEXT.combined",
                         PreloadJS: "vendor/PreloadJS/lib/preloadjs-NEXT.combined",
                         SoundJS: "vendor/SoundJS/lib/soundjs-NEXT.combined",
@@ -25,10 +18,11 @@ module.exports = function(grunt) {
                         backbone: "vendor/backbone/backbone",
                         easelhacks: "vendor/easelhacks/dist/scripts/easelhacks"
                     },
-					include : [
-						'main'
-					],
-					exclude : [
+                    include: [
+                        //'vendor/almond/almond',
+                        'main'
+                    ],
+                    exclude: [
                         'jquery',
                         'EaselJS',
                         'PreloadJS',
@@ -37,72 +31,61 @@ module.exports = function(grunt) {
                         'backbone',
                         'requirejs',
                         'underscore'
-					],
-					out: 'dist/scripts/easelbone.js'
+                    ],
+                    out: 'dist/scripts/easelbone.js',
+                    /*
+                    wrap: {
+                        "startFile": "wrapper/wrap.start",
+                        "endFile": "wrapper/wrap.end"
+                    }
+                    */
+                }
+            }
+        },
 
-					/*
-
-					appDir: "app/",
-					baseUrl: "scripts",
-					dir: "dist/",
-					mainConfigFile: "app/scripts/main.js",
-					name: "easelbone",
-					optimize: 'uglify2',
-					optimizeCss: "standard",
-					removeCombined: true,
-					generateSourceMaps : true,
-					preserveLicenseComments : false,
-					exclude: [
-						'jquery',
-						'EaselJS',
-						'PreloadJS',
-						'SoundJS',
-						'TweenJS',
-						'backbone',
-						'requirejs',
-						'underscore'
-					]
-					*/
-				}
-			}
-		},
-
-		'copy' : {
-			'main' : {
-				'files' : [
-					{
-						'expand' : true,
-						'src' : './package.json',
-						'dest' : 'dist'
-					},
+        'copy': {
+            'main': {
+                'files': [
+                    {
+                        'expand': true,
+                        'src': './package.json',
+                        'dest': 'dist'
+                    },
 
                     {
-                        'expand' : true,
-						'cwd' : './app/scripts/',
-                        'src' : 'main.js',
-                        'dest' : 'dist/scripts/'
+                        'expand': true,
+                        'cwd': './app/scripts/',
+                        'src': 'main.js',
+                        'dest': 'dist/scripts/'
+                    },
+
+                    {
+                        'expand': true,
+                        'cwd': './app/',
+                        'src': 'examples/**/*',
+                        'dest': 'dist/'
                     }
-				]
-			}
-		},
+                ]
+            }
+        },
 
-		'clean' : [
-			'dist/package.json',
-			'dist/scripts/CatLab/'
-		]
-	});
+        'clean': [
+            'dist/package.json',
+            'dist/scripts/CatLab/'
+        ]
+    });
 
-	// Requirejs
-	grunt.loadNpmTasks('grunt-contrib-requirejs');
+    // Requirejs
+    grunt.loadNpmTasks('grunt-contrib-requirejs');
 
 
-	// Cleaner
-	grunt.loadNpmTasks('grunt-contrib-clean');
+    // Cleaner
+    grunt.loadNpmTasks('grunt-contrib-clean');
 
-	// Copy
-	grunt.loadNpmTasks('grunt-contrib-copy');
+    // Copy
+    grunt.loadNpmTasks('grunt-contrib-copy');
 
-	grunt.loadNpmTasks('grunt-bower-requirejs');
+    grunt.loadNpmTasks('grunt-bower-requirejs');
 
-	grunt.registerTask('default', ['requirejs', 'copy', 'clean' ]);
+    grunt.registerTask('default', ['requirejs', 'copy', 'clean']);
 };

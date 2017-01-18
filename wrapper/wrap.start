@@ -6,4 +6,4 @@
     // Browser globals.
     root.easelbone = factory(root.easelbone);
   }
-}(this, function($) {
+}(this, function(easelbone) {

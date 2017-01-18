@@ -13,7 +13,7 @@ require.config ({
 	shim: {
 		EaselJS: {
 			deps: [
-				'TweenJS'
+				"TweenJS"
 			],
 			exports: "createjs"
 		},
