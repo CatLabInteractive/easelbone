@@ -25,7 +25,6 @@ module.exports = function(grunt) {
 					exclude: [
 						'jquery',
 						'EaselJS',
-						'Movieclip',
 						'PreloadJS',
 						'SoundJS',
 						'TweenJS',
