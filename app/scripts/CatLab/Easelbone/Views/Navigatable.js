@@ -1,132 +1,146 @@
 define (
-	[
-		'CatLab/Easelbone/Views/Base'
-	],
-	function (BaseView)
-	{
-		return BaseView.extend ({
+    [
+        'CatLab/Easelbone/Views/Base'
+    ],
+    function (BaseView)
+    {
+        return BaseView.extend ({
 
-			'_users' : [],
-			'_currentIndex' : -1,
-			'_current' : null,
-			'_options' : [],
+            '_users' : [],
+            '_currentIndex' : -1,
+            '_current' : null,
+            '_options' : [],
 
-			'_controls' : {
+            '_controls' : {
 
-				'navigation' : [ 'left' , 'right' ],
-				'toggle' : [ 'a' ],
-				'manipulation' : [ 'down', 'up' ]
+                'navigation' : [ 'left' , 'right' ],
+                'toggle' : [ 'start', 'a' ],
+                'manipulation' : [ 'down', 'up' ]
 
-			},
+            },
 
-			'initialize' : function (options)
-			{
-				this.initializeNavigatable (options);
-			},
+            'initialize' : function (options)
+            {
+                this.initializeNavigatable (options);
+            },
 
-			'initializeNavigatable' : function (options)
-			{
-				options = options || {};
+            'initializeNavigatable' : function (options)
+            {
+                options = options || {};
 
-				if (typeof (options.orientation) !== 'undefined') {
+                if (typeof (options.orientation) !== 'undefined') {
 
-					if (options.orientation == 'vertical') {
-						this._controls.navigation = [ 'up', 'down' ];
-						this._controls.manipulation = [ 'left' , 'right' ];
-					}
-				}
+                    if (options.orientation == 'vertical') {
+                        this._controls.navigation = [ 'up', 'down' ];
+                        this._controls.manipulation = [ 'left' , 'right' ];
+                    }
+                }
 
-				// Reset the options for Navigatable
-				this.resetOptions ();
-			},
+                // Reset the options for Navigatable
+                this.resetOptions ();
+            },
 
-			/**
-			 * To control the navigatable with keyboard, gamepad or smartphone,
-			 * set a user collection here.
-			 * @param users
-			 */
-			'setUsers' : function (users) {
+            /**
+             * To control the navigatable with keyboard, gamepad or smartphone,
+             * set a user collection here.
+             * @param users
+             */
+            'setUsers' : function (users) {
 
-				this._users = users;
+                this._users = users;
 
-				var self = this;
+                var self = this;
 
-				// Set the events for this controller.
-				for (var i = 0; i < this._users.length; i ++)
-				{
-					var user = this._users[i];
+                // Set the events for this controller.
+                for (var i = 0; i < this._users.length; i ++)
+                {
+                    var user = this._users[i];
+                    this.setWebremoteControls(user);
+                }
 
-					user.setView ("catlab-nes");
-					user.clearEvents ();
+            },
 
-					user.control (this._controls.navigation[0]).click (function () { self.previous (); });
-					user.control (this._controls.navigation[1]).click (function () { self.next (); });
+            setWebremoteControls : function(user)
+            {
+                user.setView ("catlab-nes");
+                user.clearEvents ();
 
-					// A or start.
-					user.control (this._controls.toggle).click (function () { self.keyInput ('a'); });
-					user.control (this._controls.toggle).click (function () { self.keyInput ('b'); });
+                // Focus next and previous
+                user.control(this._controls.navigation[0]).click(function () { this.previous(); }.bind(this));
+                user.control(this._controls.navigation[1]).click(function () { this.next(); }.bind(this));
 
-					user.control (this._controls.manipulation[0]).click (function () { self.keyInput ('down'); });
-					user.control (this._controls.manipulation[1]).click (function () { self.keyInput ('up'); });
-				}
+                // Toggle
+                for (var i = 0; i < this._controls.toggle.length; i ++ ) {
+                    (function(i) {
+                        user.control(this._controls.toggle[i]).click (function () {
 
-			},
+                            this.keyInput(this._controls.toggle[i]);
 
-			'next' : function () {
-				this.activate ((this._currentIndex + 1) % this._options.length);
-			},
+                        }.bind(this));
+                    }.bind(this))(i);
+                }
 
-			'previous' : function () {
-				var previous = this._currentIndex - 1;
-				if (previous < 0) {
-					previous = this._options.length - 1;
-				}
-				this.activate (previous);
-			},
+                // Increase or decreate
+                user.control(this._controls.manipulation[0]).click(function () { this.keyInput('down'); }.bind(this));
+                user.control(this._controls.manipulation[1]).click(function () { this.keyInput('up'); }.bind(this));
+            },
 
-			'keyInput' : function (button) {
-				if (this._current) {
-					this._current.keyInput (button);
-				}
-			},
+            next : function ()
+            {
+                this.activate ((this._currentIndex + 1) % this._options.length);
+            },
 
-			'resetOptions' : function ()
-			{
-				this._options = [];
-			},
+            previous : function () {
+                var previous = this._currentIndex - 1;
+                if (previous < 0) {
+                    previous = this._options.length - 1;
+                }
+                this.activate (previous);
+            },
 
-			'addControl' : function (control) {
+            keyInput : function (button) {
+                if (this._current) {
+                    this._current.keyInput(button);
+                }
+            },
 
-				var self = this;
+            'resetOptions' : function ()
+            {
+                this._options = [];
+            },
 
-				this._options.push (control);
+            'addControl' : function (control) {
 
-				/*
-				if (this._options.length === 1) {
-					// First control added? Activate that one.
-					setTimeout (function ()
-					{
-						self.activate (0);
-					}, 1);
+                var self = this;
 
-				}
-				else {
-				*/
-					control.deactivate (false);
-				//}
-			},
+                this._options.push (control);
 
-			'activate' : function (index) {
+                /*
+                if (this._options.length === 1) {
+                    // First control added? Activate that one.
+                    setTimeout (function ()
+                    {
+                        self.activate (0);
+                    }, 1);
 
-				if (this._currentIndex !== -1 && this._currentIndex !== null) {
-					this._options[this._currentIndex].deactivate ();
-				}
+                }
+                else {
+                */
+                    control.deactivate (false);
+                //}
+            },
 
-				this._currentIndex = index;
-				this._options[index].activate ();
-				this._current = this._options[index];
-			}
+            'activate' : function (index) {
 
-		});
-	}
+                if (this._currentIndex !== -1 && this._currentIndex !== null) {
+                    this._options[this._currentIndex].deactivate ();
+                }
+
+                this._currentIndex = index;
+                this._options[index].activate ();
+                this._current = this._options[index];
+            }
+
+        });
+    }
 );

@@ -37,16 +37,9 @@ define (
 			this.update ();
 		};
 
-		Checkbox.prototype.keyInput = function (input) {
-
-			switch (input) {
-				case 'a':
-
-					this.toggle ();
-
-				break;
-			}
-
+		Checkbox.prototype.keyInput = function (input)
+		{
+			this.toggle();
 		};
 
 		return Checkbox;

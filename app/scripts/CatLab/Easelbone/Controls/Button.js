@@ -56,15 +56,7 @@ define (
 		};
 
 		Button.prototype.keyInput = function (input) {
-
-			switch (input) {
-				case 'a':
-
-					this.trigger ('click');
-
-				break;
-			}
-
+			this.trigger ('click');
 		};
 
 		return Button;
