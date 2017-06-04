@@ -1,48 +1,52 @@
-define (
-	[
-		'CatLab/Easelbone/Controls/Base'
-	],
-	function (
-		Base
-	) {
+define(
+    [
+        'CatLab/Easelbone/Controls/Base'
+    ],
+    function (Base) {
 
-		var Checkbox = function (element) {
+        var Checkbox = function (element) {
 
-			var self = this;
+            var self = this;
 
-			this.element = element;
+            this.element = element;
 
-			// Listen to click event
-			this.element.addEventListener ('click', function () {
-				self.toggle ();
-			});
+            // Listen to click event
+            this.element.addEventListener('click', function () {
+                self.toggle();
+            });
 
-		};
+        };
 
-		// Extend base.
-		Checkbox.prototype = new Base ();
+        // Extend base.
+        Checkbox.prototype = new Base();
 
-		Checkbox.prototype.toggle = function () {
-			this.checked = !this.checked;
-			this.update ();
-		};
+        Checkbox.prototype.toggle = function () {
+            this.checked = !this.checked;
+            this.update();
+        };
 
-		Checkbox.prototype.check = function () {
-			this.checked = true;
-			this.update ();
-		};
+        Checkbox.prototype.check = function () {
+            this.checked = true;
+            this.update();
+        };
 
-		Checkbox.prototype.uncheck = function () {
-			this.checked = false;
-			this.update ();
-		};
+        Checkbox.prototype.uncheck = function () {
+            this.checked = false;
+            this.update();
+        };
 
-		Checkbox.prototype.keyInput = function (input)
-		{
-			this.toggle();
-		};
+        Checkbox.prototype.keyInput = function (input) {
+            switch (input) {
+                case 'a':
+                case 'start':
 
-		return Checkbox;
+                    this.toggle();
 
-	}
+                    break;
+            }
+        };
+
+        return Checkbox;
+
+    }
 );

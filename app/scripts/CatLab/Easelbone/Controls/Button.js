@@ -1,45 +1,46 @@
-define (
-	[
-		'CatLab/Easelbone/Controls/Base',
-		'CatLab/Easelbone/EaselJS/DisplayObjects/BigText',
-		'CatLab/Easelbone/EaselJS/DisplayObjects/TextPlaceholder'
-	],
-	function (
-		Base,
-		BigText,
-		TextPlaceholder
-	) {
+define(
+    [
+        'CatLab/Easelbone/Controls/Base',
+        'CatLab/Easelbone/EaselJS/DisplayObjects/BigText',
+        'CatLab/Easelbone/EaselJS/DisplayObjects/TextPlaceholder'
+    ],
+    function (Base,
+              BigText,
+              TextPlaceholder) {
 
-		var Button = function (element) {
+        var Button = function (element)
+        {
 
-			var self = this;
+            var self = this;
 
-			this.element = element;
-			this.checked = false;
+            this.element = element;
+            this.checked = false;
 
-			// Check for text placeholder.
-			if (!this.element.text) {
-				throw "All buttons should have a text placeholder.";
-			}
+            // Check for text placeholder.
+            if (!this.element.text) {
+                throw "All buttons should have a text placeholder.";
+            }
 
-			this.convertText ();
+            this.convertText();
 
-			// Listen to click event
-			this.element.addEventListener ('click', function () {
-				self.trigger ('click');
-			});
+            // Listen to click event
+            this.element.addEventListener('click', function () {
+                self.trigger('click');
+            });
 
-		};
+        };
 
-		// Extend base.
-		Button.prototype = new Base ();
+        // Extend base.
+        Button.prototype = new Base();
 
-		Button.prototype.setText = function (text, font, color) {
-			var bigtext = new BigText (text, font, color);
-			this.text.addChild (bigtext);
-		};
+        Button.prototype.setText = function (text, font, color)
+        {
+            var bigtext = new BigText(text, font, color);
+            this.text.addChild(bigtext);
+        };
 
-		Button.prototype.convertText = function (){
+        Button.prototype.convertText = function ()
+        {
 
             if (this.element.text instanceof createjs.Text) {
 
@@ -50,16 +51,23 @@ define (
                 };
             }
             else {
-                this.text = new TextPlaceholder (this.element.text);
+                this.text = new TextPlaceholder(this.element.text);
             }
 
-		};
+        };
 
-		Button.prototype.keyInput = function (input) {
-			this.trigger ('click');
-		};
+        Button.prototype.keyInput = function (input) {
+            switch (input) {
+                case 'a':
+                case 'start':
 
-		return Button;
+                    this.trigger('click');
 
-	}
+                    break;
+            }
+        };
+
+        return Button;
+
+    }
 );
