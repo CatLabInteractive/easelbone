@@ -107,6 +107,7 @@ define (
              */
             triggerBack : function()
             {
+                console.log('back');
                 if (this._backCallback !== null) {
                     this._backCallback.apply();
                 }
