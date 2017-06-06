@@ -1,9 +1,12 @@
 define (
     [
+        'underscore',
         'CatLab/Easelbone/Views/Base'
     ],
-    function (BaseView)
-    {
+    function (
+        _,
+        BaseView
+    ) {
         return BaseView.extend ({
 
             ORIENTATION : {
@@ -17,7 +20,7 @@ define (
             _options : [],
             _backCallback : null,
 
-            _controls : {
+            DefaultControls : {
 
                 navigation : [ 'left' , 'right' ],
                 toggle : [ 'start', 'a' ],
@@ -36,11 +39,15 @@ define (
                 options = options || {};
 
                 if (typeof (options.orientation) !== 'undefined') {
+                    this._controls = _.extend(this.DefaultControls, {});
 
                     // Is orientation vertical?
                     if (options.orientation === this.ORIENTATION.VERTICAL) {
                         this._controls.navigation = [ 'up', 'down' ];
                         this._controls.manipulation = [ 'left' , 'right' ];
+                    } else {
+                        this._controls.navigation = [ 'left' , 'right' ];
+                        this._controls.manipulation = [ 'up', 'down' ];
                     }
                 }
 
