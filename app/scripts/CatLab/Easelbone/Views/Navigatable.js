@@ -6,18 +6,23 @@ define (
     {
         return BaseView.extend ({
 
-            '_users' : [],
-            '_currentIndex' : -1,
-            '_current' : null,
-            '_options' : [],
+            ORIENTATION : {
+                VERTICAL : 'vertical',
+                HORIZONTAL : 'horizontal'
+            },
+
+            _users : [],
+            _currentIndex : -1,
+            _current : null,
+            _options : [],
             _backCallback : null,
 
-            '_controls' : {
+            _controls : {
 
-                'navigation' : [ 'left' , 'right' ],
-                'toggle' : [ 'start', 'a' ],
-                'manipulation' : [ 'down', 'up' ],
-                'back' : [ 'b', 'back' ]
+                navigation : [ 'left' , 'right' ],
+                toggle : [ 'start', 'a' ],
+                manipulation : [ 'down', 'up' ],
+                back : [ 'b', 'back' ]
 
             },
 
@@ -32,7 +37,8 @@ define (
 
                 if (typeof (options.orientation) !== 'undefined') {
 
-                    if (options.orientation == 'vertical') {
+                    // Is orientation vertical?
+                    if (options.orientation === this.ORIENTATION.VERTICAL) {
                         this._controls.navigation = [ 'up', 'down' ];
                         this._controls.manipulation = [ 'left' , 'right' ];
                     }
