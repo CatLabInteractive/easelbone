@@ -10,12 +10,14 @@ define (
             '_currentIndex' : -1,
             '_current' : null,
             '_options' : [],
+            _backCallback : null,
 
             '_controls' : {
 
                 'navigation' : [ 'left' , 'right' ],
                 'toggle' : [ 'start', 'a' ],
-                'manipulation' : [ 'down', 'up' ]
+                'manipulation' : [ 'down', 'up' ],
+                'back' : [ 'b', 'back' ]
 
             },
 
@@ -73,9 +75,16 @@ define (
                 for (var i = 0; i < this._controls.toggle.length; i ++ ) {
                     (function(i) {
                         user.control(this._controls.toggle[i]).click (function () {
-
                             this.keyInput(this._controls.toggle[i]);
+                        }.bind(this));
+                    }.bind(this))(i);
+                }
 
+                // Back
+                for (i = 0; i < this._controls.back.length; i ++ ) {
+                    (function(i) {
+                        user.control(this._controls.back[i]).click (function () {
+                            this.triggerBack();
                         }.bind(this));
                     }.bind(this))(i);
                 }
@@ -83,6 +92,24 @@ define (
                 // Increase or decreate
                 user.control(this._controls.manipulation[0]).click(function () { this.keyInput('down'); }.bind(this));
                 user.control(this._controls.manipulation[1]).click(function () { this.keyInput('up'); }.bind(this));
+            },
+
+            /**
+             * @param backCallback
+             */
+            setBack : function(backCallback)
+            {
+                this._backCallback = backCallback;
+            },
+
+            /**
+             *
+             */
+            triggerBack : function()
+            {
+                if (this._backCallback !== null) {
+                    this._backCallback.apply();
+                }
             },
 
             next : function ()
