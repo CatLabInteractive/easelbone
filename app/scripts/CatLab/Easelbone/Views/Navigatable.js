@@ -14,12 +14,6 @@ define (
                 HORIZONTAL : 'horizontal'
             },
 
-            _users : [],
-            _currentIndex : -1,
-            _current : null,
-            _options : [],
-            _backCallback : null,
-
             DefaultControls : {
 
                 navigation : [ 'left' , 'right' ],
@@ -29,14 +23,20 @@ define (
 
             },
 
-            'initialize' : function (options)
+            initialize : function (options)
             {
                 this.initializeNavigatable (options);
             },
 
-            'initializeNavigatable' : function (options)
+            initializeNavigatable : function (options)
             {
                 options = options || {};
+
+                this._users = [];
+                this._currentIndex = -1;
+                this._current = null;
+                this._options = [];
+                this._backCallback = null;
 
                 if (typeof (options.orientation) !== 'undefined') {
                     this._controls = _.extend(this.DefaultControls, {});
@@ -60,19 +60,14 @@ define (
              * set a user collection here.
              * @param users
              */
-            'setUsers' : function (users) {
-
+            setUsers : function (users)
+            {
                 this._users = users;
 
-                var self = this;
-
                 // Set the events for this controller.
-                for (var i = 0; i < this._users.length; i ++)
-                {
-                    var user = this._users[i];
-                    this.setWebremoteControls(user);
+                for (var i = 0; i < this._users.length; i ++) {
+                    this.setWebremoteControls(this._users[i]);
                 }
-
             },
 
             setWebremoteControls : function(user)
@@ -120,7 +115,6 @@ define (
              */
             triggerBack : function()
             {
-                console.log('back');
                 if (this._backCallback !== null) {
                     this._backCallback.apply();
                 }
@@ -131,7 +125,8 @@ define (
                 this.activate ((this._currentIndex + 1) % this._options.length);
             },
 
-            previous : function () {
+            previous : function ()
+            {
                 var previous = this._currentIndex - 1;
                 if (previous < 0) {
                     previous = this._options.length - 1;
@@ -139,47 +134,45 @@ define (
                 this.activate (previous);
             },
 
-            keyInput : function (button) {
+            keyInput : function (button)
+            {
                 if (this._current) {
                     this._current.keyInput(button);
                 }
             },
 
-            'resetOptions' : function ()
+            resetOptions : function ()
             {
                 this._options = [];
             },
 
-            'addControl' : function (control) {
-
-                var self = this;
-
+            addControl : function (control)
+            {
                 this._options.push (control);
 
-                /*
                 if (this._options.length === 1) {
                     // First control added? Activate that one.
-                    setTimeout (function ()
-                    {
-                        self.activate (0);
-                    }, 1);
-
-                }
-                else {
-                */
+                    setTimeout (function () {
+                        this.activate (0);
+                    }.bind(this), 1);
+                } else {
                     control.deactivate (false);
-                //}
+                }
             },
 
-            'activate' : function (index) {
-
+            /**
+             * Active control with given index.
+             * @param controlIndex
+             */
+            activate : function (controlIndex)
+            {
                 if (this._currentIndex !== -1 && this._currentIndex !== null) {
                     this._options[this._currentIndex].deactivate ();
                 }
 
-                this._currentIndex = index;
-                this._options[index].activate ();
-                this._current = this._options[index];
+                this._currentIndex = controlIndex;
+                this._options[controlIndex].activate ();
+                this._current = this._options[controlIndex];
             }
 
         });
