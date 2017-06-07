@@ -6,7 +6,7 @@ define (
 	{
 		var Placeholder = function (element) {
 
-			if (typeof (element) != 'undefined') {
+			if (typeof (element) !== 'undefined') {
 
 				this.initialize ();
 				this.initializePlaceholder (element);
@@ -44,7 +44,7 @@ define (
 
 			this.hasBoundsChanged = function () {
 
-				if (this.getBoundsHash () != oldBoundHash) {
+				if (this.getBoundsHash () !== oldBoundHash) {
 					oldBoundHash = boundHash;
 					return true;
 				}
@@ -87,10 +87,20 @@ define (
 				element.children[i].visible = false;
 			}
 
+			// Override shape
+			if (element.shape) {
+				element.shape = new createjs.Shape();
+			}
+
+			// Override timeline
+			if (element.timeline) {
+                element.timeline = new createjs.Timeline(null, [], {paused:true, position:0, useTicks:true});
+			}
+
 			//element.visible = false;
 
 			// And add ourselves
-			if (element.parent != null) {
+			if (element.parent !== null) {
 				var index = element.parent.getChildIndex (element);
 
 				element.parent.addChildAt (innerPlaceholder, index + 1);
