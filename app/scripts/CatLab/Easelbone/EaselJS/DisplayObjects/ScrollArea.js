@@ -19,7 +19,7 @@ define (
 				var maskShape = new createjs.Shape();
 				maskShape.graphics.drawRect (0, 0, this.getBounds ().width, this.getBounds ().height);
 
-				if (typeof (self.setMask) != 'undefined') {
+				if (typeof (self.setMask) !== 'undefined') {
 					self.setMask (maskShape);
 				}
 				else {
@@ -47,9 +47,9 @@ define (
 		var event;
 
 		p.isActive = function () {
-			return this.getBounds () != null &&
-				this.parent != null &&
-				this.parent.getBounds () != null;
+			return this.getBounds () !== null &&
+				this.parent !== null &&
+				this.parent.getBounds () !== null;
 		};
 
 		p.getFinalDestination = function (y) {
@@ -80,7 +80,7 @@ define (
 			this.oldY = this.y;
 			this.y = this.getFinalDestination (y);
 
-			if (this.oldY != this.y) {
+			if (this.oldY !== this.y) {
 				this.onScroll();
 			}
 
@@ -120,7 +120,7 @@ define (
 				return deffered;
 			}
 
-			if (typeof (delay) == 'undefined')
+			if (typeof (delay) === 'undefined')
 				delay = 0;
 
 			var y = element.y;
@@ -136,7 +136,7 @@ define (
 			if (height < this.parent.getBounds ().height)
 				y -= (this.parent.getBounds ().height / 2) - (height / 2);
 
-			if (this.getDistance () == 0.0001) {
+			if (this.getDistance () === 0.0001) {
 				// Do nothing.
 				deffered.resolve ();
 			}

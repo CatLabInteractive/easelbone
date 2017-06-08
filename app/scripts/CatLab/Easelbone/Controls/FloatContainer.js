@@ -12,7 +12,7 @@ define (
 
 			this.listItems = [];
 
-			if (typeof (childElement) != 'undefined') {
+			if (typeof (childElement) !== 'undefined') {
 				this.setChildElement (childElement);
 			}
 
@@ -34,7 +34,7 @@ define (
 		};
 
 		p.getChildElement = function (options) {
-			if (typeof (this.childElement) == 'undefined') {
+			if (typeof (this.childElement) === 'undefined') {
 				throw "No child element set.";
 			}
 

@@ -1,17 +1,18 @@
 define (
 	[
-		'CatLab/Easelbone/Controls/Base',
+	    'backbone',
 
 		'CatLab/Easelbone/Controls/ScrollBar',
 		'CatLab/Easelbone/EaselJS/DisplayObjects/ScrollArea',
 
 		'CatLab/Easelbone/Utilities/Mousewheel'
 	],
-	function (Base, ScrollBar, ScrollAreaDisplayObject, Mousewheel) {
+	function (Backbone, ScrollBar, ScrollAreaDisplayObject, Mousewheel) {
 
 		var ScrollArea = function (element) {
 
-			var self = this;
+            _.extend(this, Backbone.Events);
+
 			this.element = element;
 
 			this.scrollbar = new ScrollBar (element.scrollbar);
@@ -29,7 +30,7 @@ define (
 			this.element.on ('added', this.onAdd, this);
 		};
 
-		var p = ScrollArea.prototype = new Base ();
+		var p = ScrollArea.prototype;
 
 		p.enableScrollMouse = function () {
 			var self = this;
