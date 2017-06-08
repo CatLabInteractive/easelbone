@@ -153,7 +153,7 @@ define (
                 if (this._options.length === 1) {
                     // First control added? Activate that one.
                     setTimeout (function () {
-                        this.activate (0);
+                        this.activate(0, false);
                     }.bind(this), 1);
                 } else {
                     control.deactivate (false);
@@ -163,15 +163,20 @@ define (
             /**
              * Active control with given index.
              * @param controlIndex
+             * @param animate
              */
-            activate : function (controlIndex)
+            activate : function (controlIndex, animate)
             {
+                if (typeof(animate) === 'undefined') {
+                    animate = true;
+                }
+
                 if (this._currentIndex !== -1 && this._currentIndex !== null) {
-                    this._options[this._currentIndex].deactivate ();
+                    this._options[this._currentIndex].deactivate(animate);
                 }
 
                 this._currentIndex = controlIndex;
-                this._options[controlIndex].activate ();
+                this._options[controlIndex].activate(animate);
                 this._current = this._options[controlIndex];
             }
 

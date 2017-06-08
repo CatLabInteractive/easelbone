@@ -83,9 +83,11 @@ define (
 
 			// Remove everything
 			//element.removeAllChildren ();
-			for (var i = 0; i < element.children.length; i ++) {
-				element.children[i].visible = false;
-			}
+			if (element.children) {
+                for (var i = 0; i < element.children.length; i++) {
+                    element.children[i].visible = false;
+                }
+            }
 
 			// Override shape
 			if (element.shape) {
@@ -100,7 +102,7 @@ define (
 			//element.visible = false;
 
 			// And add ourselves
-			if (element.parent !== null) {
+			if (element.parent) {
 				var index = element.parent.getChildIndex (element);
 
 				element.parent.addChildAt (innerPlaceholder, index + 1);

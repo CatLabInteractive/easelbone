@@ -10,11 +10,7 @@ define(
 
         var Button = function (element)
         {
-
-            var self = this;
-
-            this.element = element;
-            this.checked = false;
+            Base.call(this, element);
 
             // Check for text placeholder.
             if (!this.element.text) {
@@ -25,13 +21,13 @@ define(
 
             // Listen to click event
             this.element.addEventListener('click', function () {
-                self.trigger('click');
-            });
-
+                this.trigger('click');
+            }.bind(this));
         };
 
         // Extend base.
-        Button.prototype = new Base();
+        Button.prototype = Object.create(Base.prototype);
+        Button.prototype.constructor = Button;
 
         Button.prototype.setText = function (text, font, color)
         {

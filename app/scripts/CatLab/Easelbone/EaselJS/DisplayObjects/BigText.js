@@ -130,12 +130,12 @@ define (
             } else if (this.getBounds ()) {
                 width = this.getBounds ().width;
                 height = this.getBounds ().height;
-            } else if (this.parent) {
+            } else if (this.parent && this.parent.getBounds ()) {
                 width = this.parent.getBounds ().width;
                 height = this.parent.getBounds ().height
             } else {
-                width = 100;
-                height = 100;
+                width = 0;
+                height = 0;
             }
 
             return { 'width' : width, 'height' : height };
@@ -226,6 +226,9 @@ define (
             this.removeAllChildren ();
 
             var space = this.getAvailableSpace ();
+            if (space.width === 0 || space.height === 0) {
+                return;
+            }
             //console.log (space);
 
             // Draw container size

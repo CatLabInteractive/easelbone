@@ -6,19 +6,20 @@ define(
 
         var Checkbox = function (element) {
 
-            var self = this;
+            Base.call(this, element);
 
             this.element = element;
 
             // Listen to click event
             this.element.addEventListener('click', function () {
-                self.toggle();
-            });
+                this.toggle();
+            }.bind(this));
 
         };
 
         // Extend base.
-        Checkbox.prototype = new Base();
+        Checkbox.prototype = Object.create(Base.prototype);
+        Checkbox.prototype.constructor = Checkbox;
 
         Checkbox.prototype.toggle = function () {
             this.checked = !this.checked;

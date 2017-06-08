@@ -5,13 +5,13 @@ define(
     ],
     function (_, Backbone) {
 
-        var Base = function () {
+        var Base = function (element)
+        {
             this.checked = false;
             this.active = false;
+            this.element = element;
 
             _.extend(this, Backbone.Events);
-
-            this.update(false);
         };
 
         Base.prototype.activate = function (animate) {
@@ -30,22 +30,23 @@ define(
                 animate = true;
             }
 
+            var state = null;
+
             if (this.active) {
                 if (this.checked) {
-                    this.gotoWithAnimate('Hit', animate);
+                    state = 'Hit';
+                } else {
+                    state = 'Over';
                 }
-                else {
-                    this.gotoWithAnimate('Over', animate);
-                }
-            }
-            else {
+            } else {
                 if (this.checked) {
-                    this.gotoWithAnimate('Down', animate);
-                }
-                else {
-                    this.gotoWithAnimate('Up', animate);
+                    state = 'Down';
+                } else {
+                    state = 'Up';
                 }
             }
+
+            this.gotoWithAnimate(state, animate);
         };
 
         /**
