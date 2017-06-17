@@ -21,7 +21,6 @@
     "vendor",
     "test",
     "tests",
-    "app",
     "bower.json",
     "Gruntfile.js",
     "package.json"

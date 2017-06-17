@@ -1,108 +1,98 @@
-define (
-	[
-		'CatLab/Easelbone/Utilities/Loader',
+define(
+    [
+        'CatLab/Easelbone/Utilities/Loader',
 
-		'CatLab/Easelbone/Views/Root',
-		'CatLab/Easelbone/Views/Base',
+        'CatLab/Easelbone/Views/Root',
+        'CatLab/Easelbone/Views/Base',
         'CatLab/Easelbone/Views/Layer',
-		'CatLab/Easelbone/Views/Navigatable',
+        'CatLab/Easelbone/Views/Navigatable',
 
-		'CatLab/Easelbone/Controls/Slider',
-		'CatLab/Easelbone/Controls/Checkbox',
-		'CatLab/Easelbone/Controls/Button',
-		'CatLab/Easelbone/Controls/Selectbox',
+        'CatLab/Easelbone/Controls/Slider',
+        'CatLab/Easelbone/Controls/Checkbox',
+        'CatLab/Easelbone/Controls/Button',
+        'CatLab/Easelbone/Controls/Selectbox',
 
-		'CatLab/Easelbone/Controls/ScrollBar',
-		'CatLab/Easelbone/Controls/ScrollArea',
-		'CatLab/Easelbone/Controls/List',
-		'CatLab/Easelbone/Controls/FloatContainer',
+        'CatLab/Easelbone/Controls/ScrollBar',
+        'CatLab/Easelbone/Controls/ScrollArea',
+        'CatLab/Easelbone/Controls/List',
+        'CatLab/Easelbone/Controls/FloatContainer',
 
-		'CatLab/Easelbone/EaselJS/DisplayObjects/BigText',
-		'CatLab/Easelbone/EaselJS/DisplayObjects/Placeholder',
-		'CatLab/Easelbone/EaselJS/DisplayObjects/Background',
+        'CatLab/Easelbone/EaselJS/DisplayObjects/BigText',
+        'CatLab/Easelbone/EaselJS/DisplayObjects/Placeholder',
+        'CatLab/Easelbone/EaselJS/DisplayObjects/Background',
 
-		'CatLab/Easelbone/EaselJS/DisabledButtonHelper',
+        'CatLab/Easelbone/EaselJS/DisabledButtonHelper',
 
-		'CatLab/Easelbone/Utilities/GlobalProperties',
+        'CatLab/Easelbone/Utilities/GlobalProperties',
 
-		'CatLab/FakeWebremote/Models/KeyboardUser'
-	],
-	function (
-		Loader,
-
-		RootView,
-		BaseView,
+        'CatLab/FakeWebremote/Models/KeyboardUser'
+    ],
+    function (
+        Loader,
+        RootView,
+        BaseView,
         LayerView,
-		NavigatableView,
+        NavigatableView,
+        SliderControl,
+        CheckboxControl,
+        ButtonControl,
+        SelectboxControl,
+        ScrollBar,
+        ScrollArea,
+        ListControl,
+        FloatContainer,
+        BigText,
+        Placeholder,
+        Background,
+        DisabledButtonHelper,
+        GlobalProperties,
+        KeyboardUser
+    ) {
 
-		SliderControl,
-		CheckboxControl,
-		ButtonControl,
-		SelectboxControl,
+        return {
 
-		ScrollBar,
-		ScrollArea,
-		ListControl,
-		FloatContainer,
-
-		BigText,
-		Placeholder,
-		Background,
-
-		DisabledButtonHelper,
-
-		GlobalProperties,
-
-		KeyboardUser
-	) {
+            'initialize': function () {
 
 
+            },
 
-		return {
+            'setProperties': function (properties) {
+                GlobalProperties.set(properties);
+            },
 
-			'initialize' : function () {
+            'Views': {
+                'Root': RootView,
+                'Base': BaseView,
+                'Layer': LayerView,
+                'Navigatable': NavigatableView
+            },
 
+            'Controls': {
+                'Slider': SliderControl,
+                'Checkbox': CheckboxControl,
+                'Button': ButtonControl,
+                'Selectbox': SelectboxControl,
+                'ScrollBar': ScrollBar,
+                'ScrollArea': ScrollArea,
+                'List': ListControl,
+                'FloatContainer': FloatContainer
+            },
 
+            'EaselJS': {
+                'BigText': BigText,
+                'Placeholder': Placeholder,
+                'Fill': Background,
 
-			},
+                'DisabledButtonHelper': DisabledButtonHelper
+            },
 
-			'setProperties' : function (properties) {
-				GlobalProperties.set (properties);
-			},
+            'FakeWebremote': {
+                'KeyboardUser': KeyboardUser
+            },
 
-			'Views' : {
-				'Root' : RootView,
-				'Base' : BaseView,
-                'Layer' : LayerView,
-				'Navigatable' : NavigatableView
-			},
+            'Loader': new Loader()
 
-			'Controls' : {
-				'Slider' : SliderControl,
-				'Checkbox' : CheckboxControl,
-				'Button' : ButtonControl,
-				'Selectbox' : SelectboxControl,
-				'ScrollBar' : ScrollBar,
-				'ScrollArea' : ScrollArea,
-				'List' : ListControl,
-				'FloatContainer' : FloatContainer
-			},
+        };
 
-			'EaselJS' : {
-				'BigText' : BigText,
-				'Placeholder' : Placeholder,
-				'Fill' : Background,
-
-				'DisabledButtonHelper' : DisabledButtonHelper
-			},
-
-			'FakeWebremote' : {
-				'KeyboardUser' : KeyboardUser
-			},
-
-			'Loader' : new Loader ()
-
-		};
-
-	}
+    }
 );
