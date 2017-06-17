@@ -29,7 +29,7 @@
   "dependencies": {
     "backbone": "1.*",
     "underscore": "1.*",
-    "EaselJS": ">=0.8.2",
+    "EaselJS": "0edd6ac23c96f1030203e468a02e38b772133801",
     "TweenJS": ">=0.6.2",
     "PreloadJS": ">=0.6.2",
     "SoundJS": ">=0.6.2",
