@@ -15,12 +15,21 @@ define (
 
 			'getWidth' : function ()
 			{
-				return this.el.getStage ().canvas.width;
+				return this.getStage().canvas.width;
 			},
 
 			'getHeight' : function ()
 			{
-				return this.el.getStage ().canvas.height;
+				return this.getStage().canvas.height;
+			},
+
+			getStage : function()
+			{
+				if (typeof(this.el.getStage) !== 'undefined') {
+					return this.el.getStage();
+				} else {
+					return this.el.stage;
+				}
 			},
 
 			'scale' : function (element)
@@ -33,17 +42,17 @@ define (
 
 			'getScale' : function (originalwidth, originalheight, zoom)
 			{
-				if (typeof (originalwidth) == 'undefined' || originalwidth === null)
+				if (typeof (originalwidth) === 'undefined' || originalwidth === null)
 				{
 					originalwidth = GlobalProperties.getWidth ();
 				}
 
-				if (typeof (originalheight) == 'undefined' || originalheight === null)
+				if (typeof (originalheight) === 'undefined' || originalheight === null)
 				{
 					originalheight = GlobalProperties.getHeight ();
 				}
 
-				if (typeof (zoom) == 'undefined')
+				if (typeof (zoom) === 'undefined')
 				{
 					zoom = false;
 				}
@@ -58,17 +67,17 @@ define (
 
 			'addCenter' : function (element, originalwidth, originalheight, zoom, altScale)
 			{
-				if (typeof (originalwidth) == 'undefined' || originalwidth === null)
+				if (typeof (originalwidth) === 'undefined' || originalwidth === null)
 				{
 					originalwidth = GlobalProperties.getWidth ();
 				}
 
-				if (typeof (originalheight) == 'undefined' || originalheight === null)
+				if (typeof (originalheight) === 'undefined' || originalheight === null)
 				{
 					originalheight = GlobalProperties.getHeight ();
 				}
 
-				if (typeof (altScale) == 'undefined' || altScale === null)
+				if (typeof (altScale) === 'undefined' || altScale === null)
 				{
 					altScale = 1;
 				}
