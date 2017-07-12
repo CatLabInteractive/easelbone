@@ -38,9 +38,9 @@ define (
                 this._options = [];
                 this._backCallback = null;
 
-                if (typeof (options.orientation) !== 'undefined') {
-                    this._controls = _.extend(this.DefaultControls, {});
+                this._controls = _.extend(this.DefaultControls, {});
 
+                if (typeof (options.orientation) !== 'undefined') {
                     // Is orientation vertical?
                     if (options.orientation === this.ORIENTATION.VERTICAL) {
                         this._controls.navigation = [ 'up', 'down' ];
