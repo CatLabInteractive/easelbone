@@ -90,7 +90,7 @@ define (
         {
             var fontName = font.split(' ');
             fontName.shift();
-            fontName.join(' ');
+            fontName = fontName.join(' ');
 
             if (typeof(fontOffsets[fontName]) == 'undefined') {
                 return { 'x' : 0, 'y' : 0 };
