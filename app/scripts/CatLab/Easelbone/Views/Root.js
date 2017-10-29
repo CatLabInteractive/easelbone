@@ -20,6 +20,8 @@ define(
             view: null,
             hud: null,
 
+            maxCanvasSize: null,
+
             /**
              * @param options
              */
@@ -58,6 +60,11 @@ define(
 
                 //this.stage.enableMouseOver(assets.properties.fps);
                 this.resize();
+            },
+
+            setMaxCanvasSize: function(width, height)
+            {
+                this.maxCanvasSize = [ width, height ];
             },
 
             /**
@@ -167,6 +174,11 @@ define(
                 } else {
                     this.canvas.width = window.innerWidth;
                     this.canvas.height = window.innerHeight;
+                }
+
+                if (this.maxCanvasSize !== null) {
+                    this.canvas.width = Math.min(this.canvas.width, this.maxCanvasSize[0]);
+                    this.canvas.height = Math.min(this.canvas.height, this.maxCanvasSize[1]);
                 }
 
                 this.render();
