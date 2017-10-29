@@ -1,3 +1,2496 @@
+define (
+	'CatLab/Easelbone/Utilities/Loader',[
+		'PreloadJS'
+	],
+	function (PreloadJS) {
+
+		var Loader = function () {
+
+			this.loader = new createjs.LoadQueue (false);
+
+		};
+
+		Loader.prototype.loadAssets = function (assets, path) {
+			this.loader.loadManifest (assets.properties.manifest, true, path);
+		};
+
+		Loader.prototype.load = function (callback) {
+			callback ();
+		};
+
+		return Loader;
+
+	}
+);
+define(
+    'CatLab/Easelbone/Views/Layer',[
+        'EaselJS',
+        'underscore',
+        'backbone'
+    ],
+    function (createjs, _, Backbone) {
+
+        var Layer = function (options) {
+
+            _.extend(this, Backbone.Events);
+
+            if (typeof (options) === 'undefined') {
+                options = {};
+            }
+
+            if (typeof (options.container) !== 'undefined') {
+                this.container = options.container;
+            }
+            else {
+                this.container = new createjs.Container();
+            }
+
+            this.view = null;
+        };
+
+        Layer.prototype.setView = function (view) {
+            if (this.view !== null) {
+                this.view.trigger('stage:removed');
+            }
+
+            this.view = view;
+
+            // Clear the container
+            this.container.removeAllChildren();
+
+            // Create a container for the view
+            var container = new createjs.Container();
+
+            // Set the view correctly
+            this.view.setElement(container);
+
+            // Add the container to the stage
+            this.container.addChild(container);
+
+            // Listen to all events and pass them trough.
+            this.view.on('all', function (event) {
+                this.trigger("view:" + event);
+            }.bind(this));
+
+            this.view.trigger('stage:added');
+        };
+
+        Layer.prototype.render = function () {
+
+            if (!this.view)
+                return;
+
+            // Clear the element, so that render can recreate it
+            this.view.el.removeAllChildren();
+
+            // Before render
+            this.view.trigger('render:before');
+
+            // Render the subview
+            this.view.render();
+
+            // Post render
+            this.view.trigger('render');
+
+            // Also post render
+            this.view.trigger('render:after');
+
+        };
+
+        Layer.prototype.tick = function (event) {
+            if (this.view) {
+                return this.view.tick(event);
+            }
+            return false;
+        };
+
+        return Layer;
+
+    }
+);
+define(
+    'CatLab/Easelbone/Views/Root',[
+        'backbone',
+        'EaselJS',
+
+        'CatLab/Easelbone/Views/Layer'
+    ],
+    function (Backbone, createjs, Layer) {
+        var i;
+        var layer;
+
+        var dirty = false;
+
+        return Backbone.View.extend({
+
+            stage: null,
+            container: null,
+            hudcontainer: null,
+
+            view: null,
+            hud: null,
+
+            maxCanvasSize: null,
+
+            /**
+             * @param options
+             */
+            initialize: function (options) {
+
+                if (typeof (options.canvas) !== 'undefined') {
+                    this.canvas = options.canvas;
+                    this.container = this.canvas.parentNode;
+                }
+                else {
+                    if (typeof (options.container) === 'undefined') {
+                        throw new Error("Container must be defined for root view.");
+                    }
+
+                    this.canvas = document.createElement('canvas');
+                    this.container = options.container;
+                    this.container.appendChild(this.canvas);
+
+                }
+
+                this.stage = this.createStage();
+
+                // Create the main layer.
+                this.layers = [];
+                this.layerMap = {};
+
+                this.mainLayer = this.nextLayer('main');
+
+                // Ticker
+                //createjs.Ticker.timingMode = createjs.Ticker.RAF_SYNCHED;
+                createjs.Ticker.addEventListener('tick', function (e) {
+                    this.tick(e)
+                }.bind(this));
+
+                //createjs.Ticker.addEventListener('tick', this.stage);
+
+                //this.stage.enableMouseOver(assets.properties.fps);
+                this.resize();
+            },
+
+            createStage : function() {
+                return new createjs.StageGL(this.canvas)
+            },
+
+            setMaxCanvasSize: function(width, height)
+            {
+                this.maxCanvasSize = [ width, height ];
+            },
+
+            /**
+             * Create a new layer that will be put on top of the previous one.
+             * @param name
+             * @returns {Layer}
+             */
+            nextLayer: function (name) {
+
+                if (typeof (name) === 'undefined') {
+                    name = 'Layer' + this.layers.length;
+                }
+
+                var layer = new Layer();
+                this.stage.addChild(layer.container);
+
+                this.layers.push(layer);
+                this.layerMap[name] = layer;
+
+                return layer;
+            },
+
+            /**
+             * Return a previously created layer.
+             * @param name
+             * @returns {*}
+             */
+            getLayer: function (name) {
+                return this.layerMap[name];
+            },
+
+            /**
+             * Set a view on the main layer.
+             * @param view
+             */
+            setView: function (view) {
+                this.mainLayer.setView(view);
+
+                // And render!
+                this.render();
+            },
+
+            /**
+             *
+             * @param event
+             */
+            tick: function (event) {
+                // Listen to the voice
+                //Speech.onRenderFrame ();
+                this.trigger('tick:before', event);
+                dirty = false;
+
+                for (i = 0; i < this.layers.length; i++) {
+                    layer = this.layers[i];
+                    if (layer.tick(event)) {
+                        dirty = true;
+                    }
+                }
+
+                if (dirty) {
+                    this.update();
+                }
+
+                // Update the stage.
+                //this.stage.handleEvent ("tick", event);
+
+                this.trigger('tick:after');
+            },
+
+            /**
+             *
+             * @returns {exports}
+             */
+            render: function () {
+                for (i = 0; i < this.layers.length; i++) {
+                    this.layers[i].render();
+                }
+
+                // And update the stage.
+                this.update();
+                return this;
+            },
+
+            /**
+             *
+             */
+            update: function () {
+                this.stage.update();
+            },
+
+            /**
+             *
+             */
+            fullscreen: function () {
+
+
+
+            },
+
+            /**
+             *
+             */
+            resize: function () {
+                if (typeof (this.container) !== 'undefined') {
+                    this.canvas.width = this.container.offsetWidth;
+                    this.canvas.height = this.container.offsetHeight;
+                } else {
+                    this.canvas.width = window.innerWidth;
+                    this.canvas.height = window.innerHeight;
+                }
+
+                if (this.maxCanvasSize !== null) {
+                    this.canvas.width = Math.min(this.canvas.width, this.maxCanvasSize[0]);
+                    this.canvas.height = Math.min(this.canvas.height, this.maxCanvasSize[1]);
+                }
+
+                this.render();
+            }
+        });
+    }
+);
+define (
+	'CatLab/Easelbone/Utilities/GlobalProperties',[
+		'backbone'
+	],
+	function (backbone)
+	{
+
+		var model = backbone.Model.extend ({
+
+			'initialize' : function () {
+
+				this.set ({
+					'width': 800,
+					'height' : 600,
+					'font' : 'sans-serif',
+					'textColor' : 'white'
+				});
+
+			},
+
+			'getWidth' : function () {
+				return this.get ('width');
+			},
+
+			'getHeight' : function () {
+				return this.get ('height');
+			},
+
+			'getDefaultFont' : function () {
+				return this.get ('font');
+			},
+
+			'getDefaultTextColor' : function () {
+				return this.get ('textColor');
+			},
+
+			'ifUndefined' : function (value, defaultValue) {
+				if (typeof (value) !== 'undefined' && value !== null) {
+					return value;
+				}
+				return defaultValue;
+			}
+
+
+		});
+
+		// Return an instance, not a prototype!
+		return new model ();
+
+	}
+);
+define(
+    'CatLab/Easelbone/Views/Base',[
+        'backbone',
+        'CatLab/Easelbone/Utilities/GlobalProperties'
+    ],
+    function (Backbone, GlobalProperties) {
+        return Backbone.View.extend({
+
+            el: 'div',
+
+            /**
+             *
+             * @param root
+             */
+            setRootView: function (root) {
+                this.set('root', root);
+            },
+
+            /**
+             * Get canvas width.
+             */
+            getWidth: function () {
+                return this.getStage().canvas.width;
+            },
+
+            /**
+             * Get canvas height.
+             */
+            getHeight: function () {
+                return this.getStage().canvas.height;
+            },
+
+            /**
+             * Get stage.
+             * @returns {*}
+             */
+            getStage: function () {
+                if (typeof(this.el.stage) !== 'undefined') {
+                    return this.el.stage;
+                } else if (typeof(this.el.getStage) !== 'undefined') {
+                    return this.el.getStage();
+                }
+            },
+
+            /**
+             * @param element
+             */
+            scale: function (element) {
+                var scale = this.getScale();
+
+                element.scaleX = scale.x;
+                element.scaleY = scale.y;
+            },
+
+            /**
+             * @param originalwidth
+             * @param originalheight
+             * @param zoom
+             * @returns {{x: number, y: number}}
+             */
+            getScale: function (originalwidth, originalheight, zoom) {
+                if (typeof (originalwidth) === 'undefined' || originalwidth === null) {
+                    originalwidth = GlobalProperties.getWidth();
+                }
+
+                if (typeof (originalheight) === 'undefined' || originalheight === null) {
+                    originalheight = GlobalProperties.getHeight();
+                }
+
+                if (typeof (zoom) === 'undefined') {
+                    zoom = false;
+                }
+
+                var sx = this.getWidth() / originalwidth;
+                var sy = this.getHeight() / originalheight;
+
+                var s = zoom ? Math.max(sx, sy) : Math.min(sx, sy);
+
+                return {'x': s, 'y': s};
+            },
+
+            /**
+             * @param element
+             * @param originalwidth
+             * @param originalheight
+             * @param zoom
+             * @param altScale
+             */
+            addCenter: function (element, originalwidth, originalheight, zoom, altScale) {
+                if (typeof (originalwidth) === 'undefined' || originalwidth === null) {
+                    originalwidth = GlobalProperties.getWidth();
+                }
+
+                if (typeof (originalheight) === 'undefined' || originalheight === null) {
+                    originalheight = GlobalProperties.getHeight();
+                }
+
+                if (typeof (altScale) === 'undefined' || altScale === null) {
+                    altScale = 1;
+                }
+
+                var scale = this.getScale(originalwidth, originalheight, zoom);
+
+                scale.x = scale.x * altScale;
+                scale.y = scale.y * altScale;
+
+                element.x = ((this.getWidth() - (originalwidth * scale.x)) / 2);
+                element.y = ((this.getHeight() - (originalheight * scale.y)) / 2);
+
+                element.scaleX = scale.x;
+                element.scaleY = scale.y;
+
+                this.el.addChild(element);
+
+                // Black borders
+                var g = new createjs.Graphics();
+
+                if (element.x >= 1) {
+                    g.beginFill(this.getBackground()).drawRect(0, 0, Math.ceil(element.x), this.getHeight());
+                    g.beginFill(this.getBackground()).drawRect(this.getWidth() - Math.ceil(element.x), 0, Math.ceil(element.x), this.getHeight());
+                }
+
+                if (element.y >= 1) {
+                    g.beginFill(this.getBackground()).drawRect(0, 0, this.getWidth(), Math.ceil(element.y));
+                    g.beginFill(this.getBackground()).drawRect(0, this.getHeight() - Math.ceil(element.y), this.getWidth(), Math.ceil(element.y));
+                }
+
+                var s = new createjs.Shape(g);
+                this.el.addChild(s);
+            },
+
+            /**
+             *
+             */
+            clear: function () {
+                this.el.removeAllChildren();
+
+                // Black
+                var g = new createjs.Graphics();
+                g.beginFill(this.getBackground()).drawRect(0, 0, this.getWidth(), this.getHeight());
+                var s = new createjs.Shape(g);
+
+                this.el.addChild(s);
+            },
+
+            /**
+             * @returns {string}
+             */
+            getBackground: function () {
+                return '#000000';
+            },
+
+            /**
+             *
+             */
+            render: function () {
+                var container = new createjs.Container();
+                container.setBounds(0, 0, this.getWidth(), this.getHeight());
+
+                var text = new createjs.BigText("Please wait, initializing application", "Arial", "#000000");
+                container.addChild(text);
+
+                this.el.addChild(container);
+            },
+
+            /**
+             * Tick and return TRUE if the view should be updated.
+             * @returns {boolean}
+             */
+            tick: function () {
+                return true;
+            },
+
+            /**
+             *
+             */
+            afterRender: function () {
+
+            },
+
+            /**
+             *
+             */
+            onRemove: function () {
+
+            }
+
+        });
+    }
+);
+define (
+    'CatLab/Easelbone/Views/Navigatable',[
+        'underscore',
+        'CatLab/Easelbone/Views/Base'
+    ],
+    function (
+        _,
+        BaseView
+    ) {
+        return BaseView.extend ({
+
+            ORIENTATION : {
+                VERTICAL : 'vertical',
+                HORIZONTAL : 'horizontal'
+            },
+
+            DefaultControls : {
+
+                navigation : [ 'left' , 'right' ],
+                toggle : [ 'start', 'a' ],
+                manipulation : [ 'down', 'up' ],
+                back : [ 'b', 'back' ]
+
+            },
+
+            initialize : function (options)
+            {
+                this.initializeNavigatable (options);
+            },
+
+            initializeNavigatable : function (options)
+            {
+                options = options || {};
+
+                this._users = [];
+                this._currentIndex = -1;
+                this._current = null;
+                this._options = [];
+                this._backCallback = null;
+
+                this._controls = _.extend(this.DefaultControls, {});
+
+                if (typeof (options.orientation) !== 'undefined') {
+                    // Is orientation vertical?
+                    if (options.orientation === this.ORIENTATION.VERTICAL) {
+                        this._controls.navigation = [ 'up', 'down' ];
+                        this._controls.manipulation = [ 'left' , 'right' ];
+                    } else {
+                        this._controls.navigation = [ 'left' , 'right' ];
+                        this._controls.manipulation = [ 'up', 'down' ];
+                    }
+                }
+
+                // Reset the options for Navigatable
+                this.resetOptions ();
+            },
+
+            /**
+             * To control the navigatable with keyboard, gamepad or smartphone,
+             * set a user collection here.
+             * @param users
+             */
+            setUsers : function (users)
+            {
+                this._users = users;
+
+                // Set the events for this controller.
+                for (var i = 0; i < this._users.length; i ++) {
+                    this.setWebremoteControls(this._users[i]);
+                }
+            },
+
+            setWebremoteControls : function(user)
+            {
+                user.setView ("catlab-nes");
+                user.clearEvents ();
+
+                // Focus next and previous
+                user.control(this._controls.navigation[0]).click(function () { this.previous(); }.bind(this));
+                user.control(this._controls.navigation[1]).click(function () { this.next(); }.bind(this));
+
+                // Toggle
+                for (var i = 0; i < this._controls.toggle.length; i ++ ) {
+                    (function(i) {
+                        user.control(this._controls.toggle[i]).click (function () {
+                            this.keyInput(this._controls.toggle[i]);
+                        }.bind(this));
+                    }.bind(this))(i);
+                }
+
+                // Back
+                for (i = 0; i < this._controls.back.length; i ++ ) {
+                    (function(i) {
+                        user.control(this._controls.back[i]).click (function () {
+                            this.triggerBack();
+                        }.bind(this));
+                    }.bind(this))(i);
+                }
+
+                // Increase or decreate
+                user.control(this._controls.manipulation[0]).click(function () { this.keyInput('down'); }.bind(this));
+                user.control(this._controls.manipulation[1]).click(function () { this.keyInput('up'); }.bind(this));
+            },
+
+            /**
+             * @param backCallback
+             */
+            setBack : function(backCallback)
+            {
+                this._backCallback = backCallback;
+            },
+
+            /**
+             *
+             */
+            triggerBack : function()
+            {
+                if (this._backCallback !== null) {
+                    this._backCallback.apply();
+                }
+            },
+
+            next : function ()
+            {
+                this.activate ((this._currentIndex + 1) % this._options.length);
+            },
+
+            previous : function ()
+            {
+                var previous = this._currentIndex - 1;
+                if (previous < 0) {
+                    previous = this._options.length - 1;
+                }
+                this.activate (previous);
+            },
+
+            keyInput : function (button)
+            {
+                if (this._current) {
+                    this._current.keyInput(button);
+                }
+            },
+
+            resetOptions : function ()
+            {
+                this._options = [];
+            },
+
+            addControl : function (control)
+            {
+                this._options.push (control);
+
+                if (this._options.length === 1) {
+                    // First control added? Activate that one.
+                    setTimeout (function () {
+                        this.activate(0, false);
+                    }.bind(this), 1);
+                } else {
+                    control.deactivate (false);
+                }
+            },
+
+            /**
+             * Active control with given index.
+             * @param controlIndex
+             * @param animate
+             */
+            activate : function (controlIndex, animate)
+            {
+                if (typeof(animate) === 'undefined') {
+                    animate = true;
+                }
+
+                if (this._currentIndex !== -1 && this._currentIndex !== null) {
+                    this._options[this._currentIndex].deactivate(animate);
+                }
+
+                this._currentIndex = controlIndex;
+                this._options[controlIndex].activate(animate);
+                this._current = this._options[controlIndex];
+            }
+
+        });
+    }
+);
+define(
+    'CatLab/Easelbone/Controls/Base',[
+        'underscore',
+        'backbone'
+    ],
+    function (_, Backbone) {
+
+        var Base = function (element)
+        {
+            this.checked = false;
+            this.active = false;
+            this.element = element;
+
+            _.extend(this, Backbone.Events);
+        };
+
+        Base.prototype.activate = function (animate) {
+            this.active = true;
+            this.update(animate);
+        };
+
+        Base.prototype.deactivate = function (animate) {
+            this.active = false;
+            this.update(animate);
+        };
+
+        Base.prototype.update = function (animate) {
+
+            if (typeof (animate) === 'undefined') {
+                animate = true;
+            }
+
+            var state = null;
+
+            if (this.active) {
+                if (this.checked) {
+                    state = 'Hit';
+                } else {
+                    state = 'Over';
+                }
+            } else {
+                if (this.checked) {
+                    state = 'Down';
+                } else {
+                    state = 'Up';
+                }
+            }
+
+            this.gotoWithAnimate(state, animate);
+        };
+
+        /**
+         * Check if there is a NoAnim framename and use that if animate is set to false.
+         * @param frame
+         * @param animate
+         */
+        Base.prototype.gotoWithAnimate = function (frame, animate) {
+
+            if (!animate) {
+                if (this.element.timeline.resolve(frame + '-NoAnim')) {
+                    this.element.gotoAndPlay(frame + '-NoAnim');
+                    return;
+                }
+            }
+
+            this.element.gotoAndPlay(frame);
+        };
+
+        return Base;
+
+    }
+);
+define (
+	'CatLab/Easelbone/Utilities/Path',[],
+	function ()
+	{
+		var dp, value;
+
+		var Path = function (minimum, maximum) {
+
+			this.start = { 'x' : minimum.x, 'y' : minimum.y };
+			this.end = { 'x' : maximum.x, 'y' : maximum.y };
+
+			this.distance = {
+				'x' : (maximum.x - minimum.x),
+				'y' : (maximum.y - minimum.y)
+			};
+
+			this.orientation = (this.distance.x > this.distance.y) ? 'horizontal' : 'vertical';
+			this.indicatorSize = { 'x' : 0, 'y' : 0 };
+		};
+
+		Path.prototype.getPosition = function (progress) {
+
+			if (isNaN (progress)) {
+				progress = 0;
+			}
+
+			return {
+				'x' : this.start.x + ((this.distance.x - this.indicatorSize.x) * progress),
+				'y' : this.start.y + ((this.distance.y - this.indicatorSize.y) * progress)
+			}
+
+		};
+
+		/**
+		 * Return an estimated value from x and y values.
+		 * @param x
+		 * @param y
+		 */
+		Path.prototype.getValue = function (x, y) {
+
+			if (this.orientation === 'horizontal') {
+				dp = (x - this.start.x) / this.distance.x;
+			}
+			else {
+				dp = (y - this.start.y) / this.distance.y;
+			}
+
+			value = Math.max (0, Math.min (1, dp));
+			return value;
+		};
+
+		Path.prototype.position = function (element, progress) {
+
+			var location = this.getPosition (progress);
+
+			element.x = location.x;
+			element.y = location.y;
+
+		};
+
+		/**
+		 * If set, indicator size will be withdraw
+		 * @param width
+		 * @param height
+		 */
+		Path.prototype.setIndicatorSize = function (width, height) {
+			this.indicatorSize = { 'x' : width, 'y' : height };
+		};
+
+		return Path;
+	}
+);
+define(
+    'CatLab/Easelbone/Controls/Slider',[
+        'CatLab/Easelbone/Controls/Base',
+        'CatLab/Easelbone/Utilities/Path'
+    ],
+    function (Base,
+              Path) {
+
+        var Slider = function (element)
+        {
+            var position;
+
+            this.element = element;
+            this.step = 0.1;
+
+            this.path = new Path(this.element.minimum, this.element.maximum);
+            this.setValue(0.5);
+
+            // Mouse events
+            this.element.pointer.on('pressmove', function (evt) {
+                position = this.element.globalToLocal(evt.stageX, evt.stageY);
+                this.setValue(this.path.getValue(position.x, position.y));
+            }.bind(this));
+
+            this.element.pointer.on('click', function (evt) {
+                evt.stopPropagation();
+            });
+
+            this.element.on('click', function (evt) {
+                position = this.element.globalToLocal(evt.stageX, evt.stageY);
+                this.setValue(this.path.getValue(position.x, position.y));
+            }.bind(this));
+
+        };
+
+        // Extend base.
+        Slider.prototype = Object.create(Base.prototype);
+        Slider.prototype.constructor = Slider;
+
+        Slider.prototype.link = function (model, attribute) {
+
+            this.setValue(model.get(attribute));
+            return this;
+
+        };
+
+        Slider.prototype.setValue = function (value) {
+
+            this.value = value;
+            this.path.position(this.element.pointer, this.value);
+        };
+
+        Slider.prototype.keyInput = function (input) {
+
+            console.log(input);
+
+            switch (input) {
+                case 'up':
+                    this.value = Math.min(1, this.value + this.step);
+                    break;
+
+                case 'down':
+                    this.value = Math.max(0, this.value - this.step);
+                    break;
+            }
+
+            this.setValue(this.value);
+
+        };
+
+        return Slider;
+
+    }
+);
+define(
+    'CatLab/Easelbone/Controls/Checkbox',[
+        'CatLab/Easelbone/Controls/Base'
+    ],
+    function (Base) {
+
+        var Checkbox = function (element) {
+
+            Base.call(this, element);
+
+            this.element = element;
+
+            // Listen to click event
+            this.element.addEventListener('click', function () {
+                this.toggle();
+            }.bind(this));
+
+        };
+
+        // Extend base.
+        Checkbox.prototype = Object.create(Base.prototype);
+        Checkbox.prototype.constructor = Checkbox;
+
+        Checkbox.prototype.toggle = function () {
+            this.checked = !this.checked;
+            this.update();
+        };
+
+        Checkbox.prototype.check = function () {
+            this.checked = true;
+            this.update();
+        };
+
+        Checkbox.prototype.uncheck = function () {
+            this.checked = false;
+            this.update();
+        };
+
+        Checkbox.prototype.keyInput = function (input) {
+            switch (input) {
+                case 'a':
+                case 'start':
+
+                    this.toggle();
+
+                    break;
+            }
+        };
+
+        return Checkbox;
+
+    }
+);
+define (
+    'CatLab/Easelbone/EaselJS/DisplayObjects/BigText',[
+        'EaselJS',
+        'CatLab/Easelbone/Utilities/GlobalProperties'
+    ],
+    function (createjs, GlobalProperties)
+    {
+        var width;
+        var height;
+        var debug = false;
+        var hash;
+        var hasChanged = false;
+
+        var currentHeight;
+        var currentWidth;
+
+        var currentBounds;
+        var currentSize = {
+            'width' : 0,
+            'height' : 0
+        };
+
+        var fontLineheightCache = {};
+
+        var fontOffsets = {};
+
+        var fontSize;
+
+        var BigText = function (aTextstring, aFont, aColor, align)
+        {
+            this.textstring = aTextstring;
+            this.font = GlobalProperties.ifUndefined (aFont, GlobalProperties.getDefaultFont ());
+            this.color = GlobalProperties.ifUndefined (aColor, GlobalProperties.getDefaultTextColor ());
+            this.align = typeof (align) == 'undefined' ? 'center' : align;
+
+            this.initialize ();
+            this.initialized = false;
+            this.limits = null;
+
+            this.debug = debug;
+        };
+
+        BigText.setFontOffset = function(font, x, y)
+        {
+            fontOffsets[font] = {
+                'x' : x,
+                'y' : y
+            };
+        };
+
+        function updateCurrentSize(text)
+        {
+            currentBounds = text.getMetrics();
+
+            currentSize.height = currentBounds.height;
+            currentSize.width = currentBounds.width;
+        }
+
+        function measureLineHeight(text)
+        {
+            return Math.max(
+                measureLetter(text, "M").width,
+                measureLetter(text, "m").width
+            ) * 1.2;
+        }
+
+        function measureLetter(text, letter)
+        {
+            var ctx = createjs.Text._workingContext;
+            ctx.save();
+            var size = text._prepContext(ctx).measureText(letter);
+            ctx.restore();
+            return size;
+        }
+
+        function getFontLineheight(text)
+        {
+            if (typeof(fontLineheightCache[text.font]) === 'undefined') {
+                fontLineheightCache[text.font] = measureLineHeight(text);
+            }
+
+            return fontLineheightCache[text.font];
+        }
+
+        var p = BigText.prototype = new createjs.Container ();
+
+        p.Container_initialize = p.initialize;
+        p.Container_tick = p._tick;
+
+        p.getFontOffset = function(font)
+        {
+            var fontName = font.split(' ');
+            fontName.shift();
+            fontName = fontName.join(' ');
+
+            if (typeof(fontOffsets[fontName]) === 'undefined') {
+                return { 'x' : 0, 'y' : 0 };
+            } else {
+                return fontOffsets[fontName];
+            }
+        };
+
+        p.initialize = function() {
+            this.Container_initialize ();
+        };
+
+        p.isVisible = function ()
+        {
+            return true;
+        };
+
+        p.setText = function (text)
+        {
+            this.initialized = false;
+            this.textstring = text;
+
+            if (this.textElement) {
+                this.textElement.text = text;
+            }
+        };
+
+        p.setLimits = function (width, height)
+        {
+            this.limits = { 'width' : width, 'height' : height };
+        };
+
+        p.getAvailableSpace = function ()
+        {
+            if (this.limits !== null) {
+                return this.limits;
+            } else if (this.getBounds ()) {
+                width = this.getBounds ().width;
+                height = this.getBounds ().height;
+            } else if (this.parent && this.parent.getBounds ()) {
+                width = this.parent.getBounds ().width;
+                height = this.parent.getBounds ().height
+            } else {
+                width = 0;
+                height = 0;
+            }
+
+            return { 'width' : width, 'height' : height };
+        };
+
+        /**
+         * Return an array of createjs.Text elements that should be displayed below eachother.
+         * @param textstring
+         * @param availableWidth
+         * @param availableHeight
+         */
+        p.goBigOrGoHome = function (textstring, availableWidth, availableHeight)
+        {
+            var self = this;
+
+            var fontsize = 5;
+            var stable = new createjs.Text(
+                "" + String(textstring),
+                fontsize + "px " + this.font,
+                this.color
+            );
+
+            if (!stable.getBounds()) {
+                return stable;
+            }
+
+            var maxSteps = 500;
+
+            function bigger ()
+            {
+                maxSteps --;
+
+                if (maxSteps < 0) {
+                    return false;
+                }
+
+                var text = new createjs.Text (textstring, fontsize + "px " + self.font, self.color);
+                text.lineWidth = availableWidth;
+                text.lineHeight = getFontLineheight(text);
+
+                updateCurrentSize(text);
+
+                if (
+                    currentSize.height < availableHeight &&
+                    currentSize.width <= availableWidth
+                ) {
+                    stable = text;
+                    fontsize ++;
+                    return true;
+                }
+                return false;
+            }
+
+            while (bigger ()) {}
+
+            return stable;
+        };
+
+        p.Container_draw = p.draw;
+
+        p.getLocationHash = function ()
+        {
+            hash = this.getAvailableSpace();
+            return hash.width + ':' + hash.height;
+        };
+
+        /**
+         * Determine if the dimensions have changed since last frame.
+         * @returns {boolean}
+         */
+        p.hasChanged = function ()
+        {
+            hash = this.getLocationHash ();
+            hasChanged = this.lastHash != hash;
+            this.lastHash = hash;
+
+            return hasChanged;
+        };
+
+        /**
+         * Draw text (for the first time)
+         */
+        p.drawText = function()
+        {
+            this.initialized = true;
+            this.removeAllChildren ();
+
+            var space = this.getAvailableSpace ();
+            if (space.width === 0 || space.height === 0) {
+                return;
+            }
+            //console.log (space);
+
+            // Draw container size
+            if (this.debug) {
+                var border = new createjs.Shape();
+                border.graphics.beginStroke("#FFA500");
+                border.graphics.setStrokeStyle(1);
+                border.snapToPixel = true;
+                border.graphics.drawRect(0, 0, space.width, space.height);
+                this.addChild (border);
+            }
+
+            var text = this.goBigOrGoHome (this.textstring, space.width, space.height);
+            this.textElement = text;
+
+            //console.log (text);
+
+            text.textBaseline = 'top';
+            text.textAlign = 'center';
+
+            updateCurrentSize(text);
+
+            currentHeight = currentSize.height;
+            currentWidth = currentSize.width;
+
+            if (this.align === 'center') {
+                text.x = ((space.width - currentWidth) / 2) + (currentWidth / 2);
+            }
+            else if (this.align === 'left') {
+                text.x = currentWidth / 2;
+            }
+            else if (this.align === 'right') {
+                //text.x = ((space.width - text.getBounds ().width)) + text.getBounds ().width;
+                text.x = space.width - currentWidth;
+            }
+
+            currentBounds = text.getMetrics();
+
+            var offset = this.getFontOffset(text.font);
+            text.y = (text.lineHeight * offset.y) + ((space.height - currentHeight) / 2);
+
+            this.addChild (text);
+            this.cache(-5, -5, space.width + 10, space.height + 10);
+        };
+
+        /**
+         * Called when dimensions or content changes.
+         */
+        p.redrawText = function() {
+            this.drawText();
+        };
+
+        /**
+         * Override the tick method.
+         * @param evt
+         * @private
+         */
+        p._tick = function(evt) {
+            // container tick
+            this.Container_tick(evt);
+
+            if (!this.initialized) {
+                this.drawText();
+            } else if (this.hasChanged()) {
+                this.redrawText();
+            }
+        };
+
+        createjs.BigText = BigText;
+        return BigText;
+    }
+);
+define (
+	'CatLab/Easelbone/EaselJS/DisplayObjects/Placeholder',[
+		'EaselJS'
+	],
+	function (createjs)
+	{
+		var Placeholder = function (element) {
+
+			if (typeof (element) !== 'undefined') {
+
+				this.initialize ();
+				this.initializePlaceholder (element);
+			}
+
+		};
+
+		var p = Placeholder.prototype = new createjs.Container ();
+
+		p.initializePlaceholder = function (element) {
+
+			var innerPlaceholder = this;
+			var boundHash = '0:0';
+			var oldBoundHash = '0:0';
+			var event;
+
+			element.original_draw = element.draw;
+
+			// Override the draw method of the original placeholder.
+			element.draw = function (ctx, ignoreCache) {
+
+				this.updateBounds ();
+				return element.original_draw (ctx, ignoreCache);
+			};
+
+			this.getBoundsHash = function () {
+
+				if (this.getBounds ()) {
+					boundHash = this.getBounds ().width + ':' + this.getBounds ().height;
+
+					return boundHash;
+				}
+				return null;
+			};
+
+			this.hasBoundsChanged = function () {
+
+				if (this.getBoundsHash () !== oldBoundHash) {
+					oldBoundHash = boundHash;
+					return true;
+				}
+			};
+
+			element.updateBounds = function () {
+
+				// Set the bounds on this local container
+				innerPlaceholder.setBounds (
+					0, 0,
+					Math.ceil (this.scaleX * 100),
+					Math.ceil (this.scaleY * 100)
+				);
+
+				innerPlaceholder.x = this.x;
+				innerPlaceholder.y = this.y;
+
+				innerPlaceholder.rotation = this.rotation;
+
+				if (innerPlaceholder.hasBoundsChanged ()) {
+
+					if (this.mask) {
+						innerPlaceholder.mask = this.mask;
+					}
+
+					else if (this.originalMask) {
+						innerPlaceholder.mask = this.originalMask;
+					}
+
+					this.mask = false;
+
+					event = new createjs.Event ('bounds:change');
+					innerPlaceholder.dispatchEvent (event);
+				}
+			};
+
+			// Remove everything
+			//element.removeAllChildren ();
+			if (element.children) {
+                for (var i = 0; i < element.children.length; i++) {
+                    element.children[i].visible = false;
+                }
+            }
+
+			// Override shape
+			if (element.shape) {
+				element.shape = new createjs.Shape();
+			}
+
+			// Override timeline
+			if (element.timeline) {
+                element.timeline = new createjs.Timeline(null, [], {paused:true, position:0, useTicks:true});
+			}
+
+			//element.visible = false;
+
+			// And add ourselves
+			if (element.parent) {
+				var index = element.parent.getChildIndex (element);
+
+				element.parent.addChildAt (innerPlaceholder, index + 1);
+				innerPlaceholder.dispatchEvent ('initialized');
+			}
+			else {
+				element.addEventListener ('added', function () {
+
+					var index = element.parent.getChildIndex (element);
+					element.parent.addChildAt (innerPlaceholder, index + 1);
+					innerPlaceholder.dispatchEvent ('initialized');
+				});
+			}
+
+			/*
+			// And add ourselves
+			if (element.parent != null) {
+				element.parent.addChild (innerPlaceholder);
+				innerPlaceholder.dispatchEvent ('initialized');
+			}
+			else {
+				element.addEventListener ('added', function () {
+					element.parent.addChild (innerPlaceholder);
+					innerPlaceholder.dispatchEvent ('initialized');
+				});
+			}
+			*/
+		};
+
+
+		return Placeholder;
+	}
+);
+define (
+	'CatLab/Easelbone/EaselJS/DisplayObjects/TextPlaceholder',[
+		'CatLab/Easelbone/EaselJS/DisplayObjects/Placeholder'
+	],
+	function (Placeholder)
+	{
+		return Placeholder;
+	}
+);
+define(
+    'CatLab/Easelbone/Controls/Button',[
+        'CatLab/Easelbone/Controls/Base',
+        'CatLab/Easelbone/EaselJS/DisplayObjects/BigText',
+        'CatLab/Easelbone/EaselJS/DisplayObjects/TextPlaceholder'
+    ],
+    function (Base,
+              BigText,
+              TextPlaceholder) {
+
+        var Button = function (element)
+        {
+            Base.call(this, element);
+
+            // Check for text placeholder.
+            if (!this.element.text) {
+                throw "All buttons should have a text placeholder.";
+            }
+
+            this.convertText();
+
+            // Listen to click event
+            this.element.addEventListener('click', function () {
+                this.trigger('click');
+            }.bind(this));
+        };
+
+        // Extend base.
+        Button.prototype = Object.create(Base.prototype);
+        Button.prototype.constructor = Button;
+
+        Button.prototype.setText = function (text, font, color)
+        {
+            var bigtext = new BigText(text, font, color);
+            this.text.addChild(bigtext);
+        };
+
+        Button.prototype.convertText = function ()
+        {
+
+            if (this.element.text instanceof createjs.Text) {
+
+                // Overwrite origal "bigtext" solution.
+                var self = this;
+                this.setText = function (text) {
+                    self.element.text.text = text;
+                };
+            }
+            else {
+                this.text = new TextPlaceholder(this.element.text);
+            }
+
+        };
+
+        Button.prototype.keyInput = function (input) {
+            switch (input) {
+                case 'a':
+                case 'start':
+
+                    this.trigger('click');
+
+                    break;
+            }
+        };
+
+        return Button;
+
+    }
+);
+define(
+    'CatLab/Easelbone/Controls/Selectbox',[
+        'CatLab/Easelbone/Controls/Base',
+        'CatLab/Easelbone/EaselJS/DisplayObjects/BigText',
+        'CatLab/Easelbone/EaselJS/DisplayObjects/TextPlaceholder'
+    ],
+    function (Base,
+              BigText,
+              TextPlaceholder) {
+
+        var Selectbox = function (element) {
+
+            Base.call(this, element);
+
+            this.repeat = false;
+            this.textcontainer = BigText;
+
+            this.selectedIndex = 0;
+            this.selectedValue = null;
+            this.allValues = [];
+
+            // Check for text placeholder.
+            if (!this.element.value) {
+                throw "All selectboxes should have a text placeholder.";
+            }
+
+            if (!this.element.buttons) {
+                throw "All selectboxes must have a buttons object";
+            }
+
+            this.element.buttons.on('click', function (evt) {
+
+                // @TODO fix this, I don't know what's going on here...
+                var local = this.element.buttons.globalToLocal(evt.stageX, evt.stageY);
+                if (local.y > 40) {
+                    this.previous();
+                }
+                else {
+                    this.next();
+                }
+
+            }.bind(this));
+
+            this.convertText();
+
+        };
+
+        // Extend base.
+        Selectbox.prototype = Object.create(Base.prototype);
+        Selectbox.prototype.constructor = Selectbox;
+
+        Selectbox.prototype.setText = function (text, font, color) {
+            var bigtext = new this.textcontainer(text, font, color);
+            this.textElement.removeAllChildren();
+            this.textElement.addChild(bigtext);
+        };
+
+        Selectbox.prototype.convertText = function () {
+            this.textElement = new TextPlaceholder(this.element.value);
+        };
+
+        Selectbox.prototype.setValues = function (values) {
+
+            var tmp = [];
+            if (!(values instanceof Array)) {
+                // Check if array of objects, or array of strings
+                for (var ind in values) {
+                    if (values.hasOwnProperty(ind)) {
+                        var v = values[ind];
+                        if (v instanceof Object) {
+                            tmp.push(v);
+                        }
+                        else {
+                            // 't is a map.
+                            tmp.push({
+                                'text': v,
+                                'value': ind
+                            });
+                        }
+                    }
+                }
+            } else {
+                for (var i = 0; i < values.length; i++) {
+                    tmp.push({
+                        'text': values[i],
+                        'value': values[i]
+                    });
+                }
+                values = tmp;
+            }
+
+            this.allValues = tmp;
+            this.select(0);
+        };
+
+        Selectbox.prototype.getValue = function () {
+            return this.value;
+        };
+
+        Selectbox.prototype.select = function (index) {
+
+            if (index < 0 || index > this.values.length - 1)
+                return;
+
+            this.selectedIndex = index;
+            this.selectedValue = this.values[this.selectedIndex];
+
+            this.setText(this.selectedValue.text);
+        };
+
+        Selectbox.prototype.getIndexFromText = function (value) {
+            for (var i = 0; i < this.allValues.length; i++) {
+                if (this.allValues[i].text == value) {
+                    return i;
+                }
+            }
+            return null;
+        };
+
+        Selectbox.prototype.getIndexFromValue = function (value) {
+            for (var i = 0; i < this.allValues.length; i++) {
+                if (this.allValues[i].value == value) {
+                    return i;
+                }
+            }
+            return null;
+        };
+
+        Selectbox.prototype.next = function () {
+            if (this.selectedIndex < this.allValues.length - 1) {
+                this.select(this.selectedIndex + 1);
+            }
+            else if (this.repeat) {
+                this.select(0);
+            }
+        };
+
+        Selectbox.prototype.previous = function () {
+            if (this.selectedIndex > 0) {
+                this.select(this.selectedIndex - 1);
+            }
+            else if (this.repeat) {
+                this.select(this.allValues.length - 1);
+            }
+        };
+
+        Selectbox.prototype.keyInput = function (input) {
+
+            switch (input) {
+                case 'up':
+                    this.next();
+                    break;
+
+                case 'down':
+                    this.previous();
+                    break;
+            }
+
+        };
+
+        Object.defineProperty(Selectbox.prototype, "text", {
+            get: function () {
+                return this.selectedValue.text;
+            },
+            set: function (value) {
+                //alert (value);
+                //this.selectedValue = value;
+                var index = this.getIndexFromText(value);
+                if (index !== null) {
+                    this.index = index;
+                }
+            }
+        });
+
+        Object.defineProperty(Selectbox.prototype, "value", {
+            get: function () {
+                return this.selectedValue.value;
+            },
+
+            set: function (value) {
+                var index = this.getIndexFromValue(value);
+                if (index !== null) {
+                    this.index = index;
+                }
+            }
+        });
+
+        Object.defineProperty(Selectbox.prototype, "index", {
+            get: function () {
+                return this.selectedIndex;
+            },
+
+            set: function (value) {
+                this.select(value);
+            }
+        });
+
+        Object.defineProperty(Selectbox.prototype, "values", {
+            get: function () {
+                return this.allValues;
+            },
+
+            set: function (values) {
+                this.setValues(values);
+            }
+        });
+
+        return Selectbox;
+
+    }
+);
+define (
+	'CatLab/Easelbone/Controls/ScrollBar',[
+		'underscore',
+
+		'CatLab/Easelbone/Utilities/Path'
+	],
+	function (_, Path) {
+
+		var ScrollBar = function (element) {
+
+			var self = this;
+
+			this.element = element;
+
+			this.element.up.on ('click', this.up, this);
+			this.element.down.on ('click', this.down, this);
+
+			this.path = new Path (this.element.minimum, this.element.maximum);
+
+			this.containers = [];
+
+			// Set scroller
+			this.element.on ('pressmove', function (evt) {
+				position = self.element.globalToLocal (evt.stageX, evt.stageY);
+				self.scrollTo (self.path.getValue (position.x, position.y));
+			});
+
+		};
+
+		var p = ScrollBar.prototype;
+
+		var heightPercentage;
+		var position;
+
+		p.link = function (container) {
+			this.containers.push (container);
+
+			container.on ('scroll', this.onScroll, this);
+		};
+
+		p.up = function () {
+			_.each (this.containers, function (v) {
+				v.up ();
+			});
+		};
+
+		p.down = function () {
+			_.each (this.containers, function (v) {
+				v.down ();
+			});
+		};
+
+		p.getIndicatorSize = function () {
+
+			if (this.element.indicator.bottom && this.element.indicator.top) {
+				position = {
+					'x' : (this.element.indicator.bottom.x - this.element.indicator.top.x) * this.element.indicator.scaleX,
+					'y' : (this.element.indicator.bottom.y - this.element.indicator.top.y) * this.element.indicator.scaleY
+				};
+			}
+			else {
+				position = { 'x' : 0, 'y' : 0 };
+			}
+
+			return position;
+		};
+
+		p.scrollTo = function (percentage) {
+			_.each (this.containers, function (v) {
+				v.scrollTo (percentage);
+			});
+		};
+
+		p.onScroll = function (percentage) {
+
+			heightPercentage = Math.min (1, percentage.containerHeight / percentage.contentHeight);
+
+			position = this.getIndicatorSize ();
+			this.path.setIndicatorSize (position.x, position.y);
+			this.path.position (this.element.indicator, percentage.percentage);
+
+		};
+
+		return ScrollBar;
+
+	}
+);
+define (
+	'CatLab/Easelbone/EaselJS/DisplayObjects/ScrollArea',[
+		'EaselJS',
+		'CatLab/Easelbone/EaselJS/DisplayObjects/Placeholder',
+		'jquery'
+	],
+	function (createjs, Placeholder)
+	{
+		var ScrollArea = function (element) {
+
+			var self = this;
+
+			this.initialize ();
+
+			var parent = new Placeholder (element);
+
+			parent.on ('bounds:change', function () {
+				// Also set the mask.
+				var maskShape = new createjs.Shape();
+				maskShape.graphics.drawRect (0, 0, this.getBounds ().width, this.getBounds ().height);
+
+				if (typeof (self.setMask) !== 'undefined') {
+					self.setMask (maskShape);
+				}
+				else {
+					self.mask = maskShape;
+				}
+			});
+
+			parent.addChild (this);
+
+			this.on ('tick', function () {
+				self.setScroll (0);
+			}, this, true);
+
+			Object.defineProperty (this, 'scroll', {
+				'set' : function (value) {
+					this.setScroll (value);
+				},
+				'get' : function () {
+					return this.getScroll ();
+				}
+			})
+		};
+
+		var p = ScrollArea.prototype = new Placeholder ();
+		var event;
+
+		p.isActive = function () {
+			return this.getBounds () !== null &&
+				this.parent !== null &&
+				this.parent.getBounds () !== null;
+		};
+
+		p.getFinalDestination = function (y) {
+
+			if (!this.isActive ()) {
+				return 0;
+			}
+
+			else if (y < 0) {
+				return 0;
+			}
+
+			else if (this.getBounds ().height - this.parent.getBounds ().height < 0) {
+				return 0;
+			}
+
+			else if (y > (this.getBounds ().height - this.parent.getBounds ().height)) {
+				return 0 - (this.getBounds ().height - this.parent.getBounds ().height);
+			}
+
+			else {
+				return 0 - y;
+			}
+		};
+
+		p.setScroll = function (y) {
+
+			this.oldY = this.y;
+			this.y = this.getFinalDestination (y);
+
+			if (this.oldY !== this.y) {
+				this.onScroll();
+			}
+
+			return this;
+		};
+
+		p.getDistance = function (y) {
+			return Math.abs (this.y - this.getFinalDestination (y));
+		};
+
+		p.getScroll = function () {
+			return 0 - this.y;
+		};
+
+		p.down = function (amount) {
+			return this.setScroll (this.getScroll () + amount);
+		};
+
+		p.up = function (amount) {
+			return this.setScroll (this.getScroll () - amount);
+		};
+
+		p.getPercentage = function () {
+			if (!this.getBounds ()) {
+				return 0;
+			}
+
+			return this.getScroll () / (this.getBounds ().height - this.parent.getBounds ().height);
+		};
+
+		p.focus = function (element, delay, ease) {
+
+			var deffered = new jQuery.Deferred ();
+
+			if (!this.parent.getBounds ()) {
+				deffered.resolve ();
+				return deffered;
+			}
+
+			if (typeof (delay) === 'undefined')
+				delay = 0;
+
+			var y = element.y;
+			//this.setScroll (y);
+
+			// Center around this y position.
+			var height = 0;
+			if (element.getBounds ()) {
+				height = element.getBounds ().height;
+			}
+
+			// y should be in the middle of the screen, so...
+			if (height < this.parent.getBounds ().height)
+				y -= (this.parent.getBounds ().height / 2) - (height / 2);
+
+			if (this.getDistance () === 0.0001) {
+				// Do nothing.
+				deffered.resolve ();
+			}
+
+			else if (delay > 0) {
+				createjs.Tween.get (this).to ({ 'scroll' : y }, delay, ease).call (deffered.resolve);
+			}
+			else {
+				this.scroll = y;
+				deffered.resolve ();
+			}
+
+			return deffered;
+		};
+
+		p.scrollTo = function (percentage) {
+
+			if (!this.getBounds ()) {
+				this.setScroll (0);
+				return;
+			}
+
+			this.setScroll (percentage * (this.getBounds ().height - this.parent.getBounds ().height));
+		};
+
+		p.onScroll = function () {
+
+			event = new createjs.Event ('scroll');
+			this.dispatchEvent (event);
+		};
+
+		return ScrollArea;
+	}
+);
+define (
+	'CatLab/Easelbone/Utilities/Mousewheel',[],
+	function () {
+
+		var MouseWheel = function () {
+
+			var self = this;
+
+			document.body.addEventListener ('mousewheel', function (evt) {
+				self.scroll (evt);
+			})
+
+		};
+
+		var p = MouseWheel.prototype;
+
+		p.scroll = function (evt) {
+
+			if (this.callback) {
+				this.callback ({ 'x' : 0, 'y' : evt.wheelDelta });
+			}
+
+		};
+
+		p.listen = function (callback) {
+
+			this.stop ();
+			this.callback = callback;
+
+		};
+
+		p.stop = function () {
+			this.callback = null;
+		};
+
+		return new MouseWheel ();
+	}
+);
+define (
+	'CatLab/Easelbone/Controls/ScrollArea',[
+	    'backbone',
+
+		'CatLab/Easelbone/Controls/ScrollBar',
+		'CatLab/Easelbone/EaselJS/DisplayObjects/ScrollArea',
+
+		'CatLab/Easelbone/Utilities/Mousewheel'
+	],
+	function (Backbone, ScrollBar, ScrollAreaDisplayObject, Mousewheel) {
+
+		var ScrollArea = function (element) {
+
+            _.extend(this, Backbone.Events);
+
+			this.element = element;
+
+			this.scrollbar = new ScrollBar (element.scrollbar);
+			this.scrollbar.link (this);
+
+			this.content = new ScrollAreaDisplayObject (element.content);
+			this.content.on ('scroll', this.onScroll, this);
+
+			// If mouseover events are available, listen to those
+			this.element.on ('mouseover', this.enableScrollMouse, this);
+			this.element.on ('mouseout', this.disableScrollMouse, this);
+			this.element.on ('removed', this.disableScrollMouse, this);
+
+			//this.scrollTo (0);
+			this.element.on ('added', this.onAdd, this);
+		};
+
+		var p = ScrollArea.prototype;
+
+		p.enableScrollMouse = function () {
+			var self = this;
+			Mousewheel.listen (function (iv) {
+				self.scroll (iv.y > 0 ? 50 : - 50);
+			});
+		};
+
+		p.onAdd = function () {
+			this.scrollTo (0);
+		};
+
+		p.disableScrollMouse = function () {
+			Mousewheel.stop ();
+		};
+
+		p.onScroll = function (evt) {
+
+			var perc = {
+				'percentage' : this.content.getPercentage (),
+				'contentHeight' : this.content.getBounds ().height,
+				'containerHeight' : this.content.parent.getBounds ().height
+			};
+
+			this.trigger ('scroll', perc);
+		};
+
+		p.scrollTo = function (percentage) {
+			this.content.scrollTo (percentage);
+		};
+
+		p.scroll = function (pixels) {
+			this.content.up (pixels);
+		};
+
+		p.up = function () {
+			this.content.up (25);
+		};
+
+		p.down = function () {
+			this.content.down (25);
+		};
+
+		p.focus = function (element, delay, ease) {
+			return this.content.focus (element, delay, ease);
+		};
+
+		return ScrollArea;
+
+	}
+);
+define (
+	'CatLab/Easelbone/Controls/ListElement',[],
+	function () {
+
+		var ListElement = function (element) {
+
+			this.element = element;
+
+		};
+
+		var p = ListElement.prototype;
+
+		p.focus = function () {
+			this.dispatchEvent ('focus');
+		};
+
+		return ListElement;
+
+	}
+);
+define (
+	'CatLab/Easelbone/Controls/List',[
+		'EaselJS',
+
+		'CatLab/Easelbone/Controls/ListElement'
+	],
+	function (createjs, ListElement)
+	{
+		var List = function (childElement) {
+
+			this.initialize ();
+
+			this.listItems = [];
+
+			if (typeof (childElement) !== 'undefined') {
+				this.setChildElement (childElement);
+			}
+		};
+
+		var p = List.prototype = new createjs.Container ();
+
+		p.setChildElement = function (element) {
+			this.childElement = element;
+
+			var tmpElement = new element ();
+			this.boundary = {
+				'x' : tmpElement.boundary.x,
+				'y' : tmpElement.boundary.y
+			};
+		};
+
+		p.getChildElement = function () {
+			if (typeof (this.childElement) === 'undefined') {
+				throw "No child element set.";
+			}
+			return this.childElement;
+		};
+
+		p.updateBounds = function () {
+			this.setBounds (
+				0, 0,
+				this.boundary.x, (this.boundary.y * (this.listItems.length))
+			);
+		};
+
+		p.createElement = function () {
+
+			var child = new ListElement (new (this.getChildElement ()) ());
+			this.listItems.push (child);
+
+			this.addChild (child.element);
+			child.element.y = (this.boundary.y * (this.listItems.length - 1));
+
+			this.updateBounds ();
+
+			return child;
+		};
+
+		return List;
+	}
+);
+define (
+	'CatLab/Easelbone/Controls/FloatContainer',[
+		'EaselJS',
+
+		'CatLab/Easelbone/Controls/ListElement'
+	],
+	function (createjs, ListElement)
+	{
+		var List = function (childElement, columns) {
+
+			this.initialize ();
+
+			this.listItems = [];
+
+			if (typeof (childElement) !== 'undefined') {
+				this.setChildElement (childElement);
+			}
+
+			this.rows = 0;
+			this.columns = columns;
+			this.currentColumn = 0;
+		};
+
+		var p = List.prototype = new createjs.Container ();
+
+		p.setChildElement = function (element) {
+			this.childElement = element;
+
+			var tmpElement = this.getChildElement ();
+			this.boundary = {
+				'x' : tmpElement.boundary.x,
+				'y' : tmpElement.boundary.y
+			};
+		};
+
+		p.getChildElement = function (options) {
+			if (typeof (this.childElement) === 'undefined') {
+				throw "No child element set.";
+			}
+
+			if (this.childElement.prototype instanceof createjs.DisplayObject) {
+				return new this.childElement ();
+			}
+			
+			return this.childElement (options);
+		};
+
+		p.updateBounds = function () {
+			this.setBounds (
+				0, 0,
+				this.boundary.x * this.columns, (this.boundary.y * (this.rows + 1))
+			);
+		};
+
+		p.nextRow = function () {
+			this.currentColumn = 1;
+			this.rows ++;
+		};
+
+		p.getNextPosition = function () {
+
+			var out = {};
+
+			this.currentColumn ++;
+			if (this.currentColumn > this.columns) {
+				this.nextRow ();
+			}
+
+			out.x = this.boundary.x * (this.currentColumn - 1);
+			out.y = this.boundary.y * (this.rows);
+
+			return out;
+		};
+
+		p.createElement = function (options) {
+
+			var child = new ListElement (this.getChildElement (options));
+			this.listItems.push (child);
+
+			this.addChild (child.element);
+
+			// Check if there is space getPleft on the current row.
+			var pos = this.getNextPosition ();
+
+			child.element.x = pos.x;
+			child.element.y = pos.y;
+
+			this.updateBounds ();
+
+			return child;
+		};
+
+        p.removeAllChildren_container = p.removeAllChildren;
+
+        p.removeAllChildren = function () {
+
+            this.currentColumn = 0;
+            this.rows = 0;
+
+            this.removeAllChildren_container.apply (this, arguments);
+
+        };
+
+		return List;
+	}
+);
+define (
+    'CatLab/Easelbone/EaselJS/DisplayObjects/Background',[
+        'EaselJS'
+    ],
+    function (createjs)
+    {
+        var width;
+        var height;
+        var debug = false;
+        var hash;
+        var hasChanged = false;
+        var zooms = {};
+
+        var Background = function (background, options)
+        {
+            if (typeof (options) === 'undefined') {
+                options = {
+                    'zoom' : 'stretch'
+                };
+            }
+
+            this.fillOptions = options;
+
+            if (
+                background instanceof Image ||
+                background instanceof HTMLImageElement
+            ) {
+                this.displayobject = new createjs.Bitmap (background);
+            }
+            else if (background instanceof createjs.DisplayObject) {
+
+                if (!background.getBounds ()) {
+                    throw "Objects to be filled must have bounds set.";
+                }
+
+                this.displayobject = background;
+            }
+            else {
+                this.color = background;
+            }
+
+            this.initialize ();
+            this.initialized = false;
+            this.limits = null;
+
+            this.debug = debug;
+        };
+
+        var p = Background.prototype = new createjs.Container ();
+
+        p.Container_initialize = p.initialize;
+
+        p.initialize = function()
+        {
+            this.Container_initialize ();
+        };
+
+        p.isVisible = function ()
+        {
+            return true;
+        };
+
+        p.setLimits = function (width, height)
+        {
+            this.limits = { 'width' : width, 'height' : height };
+        };
+
+        p.getAvailableSpace = function ()
+        {
+            if (this.limits !== null)
+            {
+                return this.limits;
+            }
+
+            else if (this.parent)
+            {
+                width = this.parent.getBounds ().width;
+                height = this.parent.getBounds ().height
+            }
+            else if (this.getBounds ())
+            {
+                width = this.getBounds ().width;
+                height = this.getBounds ().height;
+            }
+            else
+            {
+                width = 100;
+                height = 100;
+            }
+
+            return { 'width' : width, 'height' : height };
+        };
+
+        p.Container_draw = p.draw;
+
+        p.getLocationHash = function ()
+        {
+            hash = this.getAvailableSpace ();
+            return hash.width + ':' + hash.height;
+        };
+
+        /**
+         * Determine if the dimensions have changed since last frame.
+         * @returns {boolean}
+         */
+        p.hasChanged = function ()
+        {
+            hash = this.getLocationHash ();
+            hasChanged = this.lastHash !== hash;
+            this.lastHash = hash;
+
+            return hasChanged;
+        };
+
+        // Center a displayobject.
+        p.center = function (space)
+        {
+            if (!this.displayobject) {
+                return;
+            }
+
+            this.displayobject.x = (space.width - (this.displayobject.getBounds ().width * this.displayobject.scaleX)) / 2;
+            this.displayobject.y = (space.height - (this.displayobject.getBounds ().height * this.displayobject.scaleY)) / 2;
+        };
+
+        p.draw = function (ctx, ignoreCache)
+        {
+            if (this.initialized && !this.hasChanged ()) {
+                return this.Container_draw (ctx, ignoreCache);
+            }
+
+            this.initialized = true;
+
+            this.removeAllChildren ();
+
+            var space = this.getAvailableSpace ();
+
+            // Background color!
+            if (this.color) {
+                var border = new createjs.Shape();
+
+                border.graphics.setStrokeStyle(0);
+                border.graphics.beginFill(this.color);
+                border.graphics.beginStroke(this.color);
+                border.snapToPixel = true;
+                border.graphics.drawRect(0, 0, space.width, space.height);
+
+                this.addChild(border);
+            }
+            else if (this.displayobject) {
+
+            	try {
+                    if (!this.displayobject.getBounds()) {
+                        this.initialized = false;
+                        return;
+                    }
+                } catch (e) {
+            		this.initialized = false;
+            		return;
+				}
+
+                zooms = {
+                    'x' : (space.width / this.displayobject.getBounds ().width),
+                    'y' : (space.height / this.displayobject.getBounds ().height)
+                };
+
+                switch (this.fillOptions.zoom) {
+
+                    case 'minimum':
+                        this.displayobject.scaleX = this.displayobject.scaleY = Math.min (zooms.x, zooms.y);
+                        this.center (space);
+                    break;
+
+                    case 'maximum':
+                        this.displayobject.scaleX = this.displayobject.scaleY = Math.max (zooms.x, zooms.y);
+                        this.center (space);
+                    break;
+
+                    case 'stretch':
+                    case 'default':
+                        this.displayobject.scaleX = zooms.x;
+                        this.displayobject.scaleY = zooms.y;
+                    break;
+                }
+
+                this.addChild (this.displayobject);
+
+            }
+
+            return this.Container_draw (ctx, ignoreCache);
+        };
+
+        createjs.Background = Background;
+        return Background;
+    }
+);
 /*
  * ButtonHelper
  * Visit http://createjs.com/ for documentation, updates and examples.
@@ -26,5 +2519,910 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-define("CatLab/Easelbone/Utilities/Loader",["PreloadJS"],function(t){var e=function(){this.loader=new createjs.LoadQueue(!1)};return e.prototype.loadAssets=function(t,e){this.loader.loadManifest(t.properties.manifest,!0,e)},e.prototype.load=function(t){t()},e}),define("CatLab/Easelbone/Views/Layer",["EaselJS","underscore","backbone"],function(t,e,i){var n=function(n){e.extend(this,i.Events),"undefined"==typeof n&&(n={}),"undefined"!=typeof n.container?this.container=n.container:this.container=new t.Container,this.view=null};return n.prototype.setView=function(e){null!==this.view&&this.view.trigger("stage:removed"),this.view=e,this.container.removeAllChildren();var i=new t.Container;this.view.setElement(i),this.container.addChild(i),this.view.on("all",function(t){this.trigger("view:"+t)}.bind(this)),this.view.trigger("stage:added")},n.prototype.render=function(){this.view&&(this.view.el.removeAllChildren(),this.view.trigger("render:before"),this.view.render(),this.view.trigger("render"),this.view.trigger("render:after"))},n.prototype.tick=function(t){return!!this.view&&this.view.tick(t)},n}),define("CatLab/Easelbone/Views/Root",["backbone","EaselJS","CatLab/Easelbone/Views/Layer"],function(t,e,i){var n,s,o=!1;return t.View.extend({stage:null,container:null,hudcontainer:null,view:null,hud:null,maxCanvasSize:null,initialize:function(t){if("undefined"!=typeof t.canvas)this.canvas=t.canvas,this.container=this.canvas.parentNode;else{if("undefined"==typeof t.container)throw new Error("Container must be defined for root view.");this.canvas=document.createElement("canvas"),this.container=t.container,this.container.appendChild(this.canvas)}this.stage=this.createStage(),this.layers=[],this.layerMap={},this.mainLayer=this.nextLayer("main"),e.Ticker.addEventListener("tick",function(t){this.tick(t)}.bind(this)),this.resize()},createStage:function(){return new e.StageGL(this.canvas)},setMaxCanvasSize:function(t,e){this.maxCanvasSize=[t,e]},nextLayer:function(t){"undefined"==typeof t&&(t="Layer"+this.layers.length);var e=new i;return this.stage.addChild(e.container),this.layers.push(e),this.layerMap[t]=e,e},getLayer:function(t){return this.layerMap[t]},setView:function(t){this.mainLayer.setView(t),this.render()},tick:function(t){for(this.trigger("tick:before",t),o=!1,n=0;n<this.layers.length;n++)s=this.layers[n],s.tick(t)&&(o=!0);o&&this.update(),this.trigger("tick:after")},render:function(){for(n=0;n<this.layers.length;n++)this.layers[n].render();return this.update(),this},update:function(){this.stage.update()},fullscreen:function(){},resize:function(){"undefined"!=typeof this.container?(this.canvas.width=this.container.offsetWidth,this.canvas.height=this.container.offsetHeight):(this.canvas.width=window.innerWidth,this.canvas.height=window.innerHeight),null!==this.maxCanvasSize&&(this.canvas.width=Math.min(this.canvas.width,this.maxCanvasSize[0]),this.canvas.height=Math.min(this.canvas.height,this.maxCanvasSize[1])),this.render()}})}),define("CatLab/Easelbone/Utilities/GlobalProperties",["backbone"],function(t){var e=t.Model.extend({initialize:function(){this.set({width:800,height:600,font:"sans-serif",textColor:"white"})},getWidth:function(){return this.get("width")},getHeight:function(){return this.get("height")},getDefaultFont:function(){return this.get("font")},getDefaultTextColor:function(){return this.get("textColor")},ifUndefined:function(t,e){return"undefined"!=typeof t&&null!==t?t:e}});return new e}),define("CatLab/Easelbone/Views/Base",["backbone","CatLab/Easelbone/Utilities/GlobalProperties"],function(t,e){return t.View.extend({el:"div",setRootView:function(t){this.set("root",t)},getWidth:function(){return this.getStage().canvas.width},getHeight:function(){return this.getStage().canvas.height},getStage:function(){return"undefined"!=typeof this.el.stage?this.el.stage:"undefined"!=typeof this.el.getStage?this.el.getStage():void 0},scale:function(t){var e=this.getScale();t.scaleX=e.x,t.scaleY=e.y},getScale:function(t,i,n){"undefined"!=typeof t&&null!==t||(t=e.getWidth()),"undefined"!=typeof i&&null!==i||(i=e.getHeight()),"undefined"==typeof n&&(n=!1);var s=this.getWidth()/t,o=this.getHeight()/i,a=n?Math.max(s,o):Math.min(s,o);return{x:a,y:a}},addCenter:function(t,i,n,s,o){"undefined"!=typeof i&&null!==i||(i=e.getWidth()),"undefined"!=typeof n&&null!==n||(n=e.getHeight()),"undefined"!=typeof o&&null!==o||(o=1);var a=this.getScale(i,n,s);a.x=a.x*o,a.y=a.y*o,t.x=(this.getWidth()-i*a.x)/2,t.y=(this.getHeight()-n*a.y)/2,t.scaleX=a.x,t.scaleY=a.y,this.el.addChild(t);var r=new createjs.Graphics;t.x>=1&&(r.beginFill(this.getBackground()).drawRect(0,0,Math.ceil(t.x),this.getHeight()),r.beginFill(this.getBackground()).drawRect(this.getWidth()-Math.ceil(t.x),0,Math.ceil(t.x),this.getHeight())),t.y>=1&&(r.beginFill(this.getBackground()).drawRect(0,0,this.getWidth(),Math.ceil(t.y)),r.beginFill(this.getBackground()).drawRect(0,this.getHeight()-Math.ceil(t.y),this.getWidth(),Math.ceil(t.y)));var l=new createjs.Shape(r);this.el.addChild(l)},clear:function(){this.el.removeAllChildren();var t=new createjs.Graphics;t.beginFill(this.getBackground()).drawRect(0,0,this.getWidth(),this.getHeight());var e=new createjs.Shape(t);this.el.addChild(e)},getBackground:function(){return"#000000"},render:function(){var t=new createjs.Container;t.setBounds(0,0,this.getWidth(),this.getHeight());var e=new createjs.BigText("Please wait, initializing application","Arial","#000000");t.addChild(e),this.el.addChild(t)},tick:function(){return!0},afterRender:function(){},onRemove:function(){}})}),define("CatLab/Easelbone/Views/Navigatable",["underscore","CatLab/Easelbone/Views/Base"],function(t,e){return e.extend({ORIENTATION:{VERTICAL:"vertical",HORIZONTAL:"horizontal"},DefaultControls:{navigation:["left","right"],toggle:["start","a"],manipulation:["down","up"],back:["b","back"]},initialize:function(t){this.initializeNavigatable(t)},initializeNavigatable:function(e){e=e||{},this._users=[],this._currentIndex=-1,this._current=null,this._options=[],this._backCallback=null,this._controls=t.extend(this.DefaultControls,{}),"undefined"!=typeof e.orientation&&(e.orientation===this.ORIENTATION.VERTICAL?(this._controls.navigation=["up","down"],this._controls.manipulation=["left","right"]):(this._controls.navigation=["left","right"],this._controls.manipulation=["up","down"])),this.resetOptions()},setUsers:function(t){this._users=t;for(var e=0;e<this._users.length;e++)this.setWebremoteControls(this._users[e])},setWebremoteControls:function(t){t.setView("catlab-nes"),t.clearEvents(),t.control(this._controls.navigation[0]).click(function(){this.previous()}.bind(this)),t.control(this._controls.navigation[1]).click(function(){this.next()}.bind(this));for(var e=0;e<this._controls.toggle.length;e++)(function(e){t.control(this._controls.toggle[e]).click(function(){this.keyInput(this._controls.toggle[e])}.bind(this))}).bind(this)(e);for(e=0;e<this._controls.back.length;e++)(function(e){t.control(this._controls.back[e]).click(function(){this.triggerBack()}.bind(this))}).bind(this)(e);t.control(this._controls.manipulation[0]).click(function(){this.keyInput("down")}.bind(this)),t.control(this._controls.manipulation[1]).click(function(){this.keyInput("up")}.bind(this))},setBack:function(t){this._backCallback=t},triggerBack:function(){null!==this._backCallback&&this._backCallback.apply()},next:function(){this.activate((this._currentIndex+1)%this._options.length)},previous:function(){var t=this._currentIndex-1;t<0&&(t=this._options.length-1),this.activate(t)},keyInput:function(t){this._current&&this._current.keyInput(t)},resetOptions:function(){this._options=[]},addControl:function(t){this._options.push(t),1===this._options.length?setTimeout(function(){this.activate(0,!1)}.bind(this),1):t.deactivate(!1)},activate:function(t,e){"undefined"==typeof e&&(e=!0),this._currentIndex!==-1&&null!==this._currentIndex&&this._options[this._currentIndex].deactivate(e),this._currentIndex=t,this._options[t].activate(e),this._current=this._options[t]}})}),define("CatLab/Easelbone/Controls/Base",["underscore","backbone"],function(t,e){var i=function(i){this.checked=!1,this.active=!1,this.element=i,t.extend(this,e.Events)};return i.prototype.activate=function(t){this.active=!0,this.update(t)},i.prototype.deactivate=function(t){this.active=!1,this.update(t)},i.prototype.update=function(t){"undefined"==typeof t&&(t=!0);var e=null;e=this.active?this.checked?"Hit":"Over":this.checked?"Down":"Up",this.gotoWithAnimate(e,t)},i.prototype.gotoWithAnimate=function(t,e){return!e&&this.element.timeline.resolve(t+"-NoAnim")?void this.element.gotoAndPlay(t+"-NoAnim"):void this.element.gotoAndPlay(t)},i}),define("CatLab/Easelbone/Utilities/Path",[],function(){var t,e,i=function(t,e){this.start={x:t.x,y:t.y},this.end={x:e.x,y:e.y},this.distance={x:e.x-t.x,y:e.y-t.y},this.orientation=this.distance.x>this.distance.y?"horizontal":"vertical",this.indicatorSize={x:0,y:0}};return i.prototype.getPosition=function(t){return isNaN(t)&&(t=0),{x:this.start.x+(this.distance.x-this.indicatorSize.x)*t,y:this.start.y+(this.distance.y-this.indicatorSize.y)*t}},i.prototype.getValue=function(i,n){return t="horizontal"===this.orientation?(i-this.start.x)/this.distance.x:(n-this.start.y)/this.distance.y,e=Math.max(0,Math.min(1,t))},i.prototype.position=function(t,e){var i=this.getPosition(e);t.x=i.x,t.y=i.y},i.prototype.setIndicatorSize=function(t,e){this.indicatorSize={x:t,y:e}},i}),define("CatLab/Easelbone/Controls/Slider",["CatLab/Easelbone/Controls/Base","CatLab/Easelbone/Utilities/Path"],function(t,e){var i=function(t){var i;this.element=t,this.step=.1,this.path=new e(this.element.minimum,this.element.maximum),this.setValue(.5),this.element.pointer.on("pressmove",function(t){i=this.element.globalToLocal(t.stageX,t.stageY),this.setValue(this.path.getValue(i.x,i.y))}.bind(this)),this.element.pointer.on("click",function(t){t.stopPropagation()}),this.element.on("click",function(t){i=this.element.globalToLocal(t.stageX,t.stageY),this.setValue(this.path.getValue(i.x,i.y))}.bind(this))};return i.prototype=Object.create(t.prototype),i.prototype.constructor=i,i.prototype.link=function(t,e){return this.setValue(t.get(e)),this},i.prototype.setValue=function(t){this.value=t,this.path.position(this.element.pointer,this.value)},i.prototype.keyInput=function(t){switch(console.log(t),t){case"up":this.value=Math.min(1,this.value+this.step);break;case"down":this.value=Math.max(0,this.value-this.step)}this.setValue(this.value)},i}),define("CatLab/Easelbone/Controls/Checkbox",["CatLab/Easelbone/Controls/Base"],function(t){var e=function(e){t.call(this,e),this.element=e,this.element.addEventListener("click",function(){this.toggle()}.bind(this))};return e.prototype=Object.create(t.prototype),e.prototype.constructor=e,e.prototype.toggle=function(){this.checked=!this.checked,this.update()},e.prototype.check=function(){this.checked=!0,this.update()},e.prototype.uncheck=function(){this.checked=!1,this.update()},e.prototype.keyInput=function(t){switch(t){case"a":case"start":this.toggle()}},e}),define("CatLab/Easelbone/EaselJS/DisplayObjects/BigText",["EaselJS","CatLab/Easelbone/Utilities/GlobalProperties"],function(t,e){function i(t){u=t.getMetrics(),p.height=u.height,p.width=u.width}function n(t){return 1.2*Math.max(s(t,"M").width,s(t,"m").width)}function s(e,i){var n=t.Text._workingContext;n.save();var s=e._prepContext(n).measureText(i);return n.restore(),s}function o(t){return"undefined"==typeof g[t.font]&&(g[t.font]=n(t)),g[t.font]}var a,r,l,h,c,u,d=!1,f=!1,p={width:0,height:0},g={},b={},y=function(t,i,n,s){this.textstring=t,this.font=e.ifUndefined(i,e.getDefaultFont()),this.color=e.ifUndefined(n,e.getDefaultTextColor()),this.align="undefined"==typeof s?"center":s,this.initialize(),this.initialized=!1,this.limits=null,this.debug=d};y.setFontOffset=function(t,e,i){b[t]={x:e,y:i}};var v=y.prototype=new t.Container;return v.Container_initialize=v.initialize,v.getFontOffset=function(t){var e=t.split(" ");return e.shift(),e=e.join(" "),"undefined"==typeof b[e]?{x:0,y:0}:b[e]},v.initialize=function(){this.Container_initialize()},v.isVisible=function(){return!0},v.setText=function(t){this.initialized=!1,this.textstring=t,this.textElement&&(this.textElement.text=t)},v.setLimits=function(t,e){this.limits={width:t,height:e}},v.getAvailableSpace=function(){return null!==this.limits?this.limits:(this.getBounds()?(a=this.getBounds().width,r=this.getBounds().height):this.parent&&this.parent.getBounds()?(a=this.parent.getBounds().width,r=this.parent.getBounds().height):(a=0,r=0),{width:a,height:r})},v.goBigOrGoHome=function(e,n,s){function a(){if(c--,c<0)return!1;var a=new t.Text(e,l+"px "+r.font,r.color);return a.lineWidth=n,a.lineHeight=o(a),i(a),p.height<s&&p.width<=n&&(h=a,l++,!0)}var r=this,l=5,h=new t.Text(""+String(e),l+"px "+this.font,this.color);if(!h.getBounds())return h;for(var c=500;a(););return h},v.Container_draw=v.draw,v.getLocationHash=function(){return l=this.getAvailableSpace(),l.width+":"+l.height},v.hasChanged=function(){return l=this.getLocationHash(),f=this.lastHash!=l,this.lastHash=l,f},v.draw=function(e,n){if(this.initialized&&!this.hasChanged())return this.Container_draw(e,n);this.initialized=!0,this.removeAllChildren();var s=this.getAvailableSpace();if(0!==s.width&&0!==s.height){if(this.debug){var o=new t.Shape;o.graphics.beginStroke("#FFA500"),o.graphics.setStrokeStyle(1),o.snapToPixel=!0,o.graphics.drawRect(0,0,s.width,s.height),this.addChild(o)}var a=this.goBigOrGoHome(this.textstring,s.width,s.height);this.textElement=a,a.textBaseline="top",a.textAlign="center",i(a),h=p.height,c=p.width,"center"===this.align?a.x=(s.width-c)/2+c/2:"left"===this.align?a.x=c/2:"right"===this.align&&(a.x=s.width-c),u=a.getMetrics();var r=this.getFontOffset(a.font);return a.y=a.lineHeight*r.y+(s.height-h)/2,this.addChild(a),this.Container_draw(e,n)}},t.BigText=y,y}),define("CatLab/Easelbone/EaselJS/DisplayObjects/Placeholder",["EaselJS"],function(t){var e=function(t){"undefined"!=typeof t&&(this.initialize(),this.initializePlaceholder(t))},i=e.prototype=new t.Container;return i.initializePlaceholder=function(e){var i,n=this,s="0:0",o="0:0";if(e.original_draw=e.draw,e.draw=function(t,i){return this.updateBounds(),e.original_draw(t,i)},this.getBoundsHash=function(){return this.getBounds()?s=this.getBounds().width+":"+this.getBounds().height:null},this.hasBoundsChanged=function(){if(this.getBoundsHash()!==o)return o=s,!0},e.updateBounds=function(){n.setBounds(0,0,Math.ceil(100*this.scaleX),Math.ceil(100*this.scaleY)),n.x=this.x,n.y=this.y,n.rotation=this.rotation,n.hasBoundsChanged()&&(this.mask?n.mask=this.mask:this.originalMask&&(n.mask=this.originalMask),this.mask=!1,i=new t.Event("bounds:change"),n.dispatchEvent(i))},e.children)for(var a=0;a<e.children.length;a++)e.children[a].visible=!1;if(e.shape&&(e.shape=new t.Shape),e.timeline&&(e.timeline=new t.Timeline(null,[],{paused:!0,position:0,useTicks:!0})),e.parent){var r=e.parent.getChildIndex(e);e.parent.addChildAt(n,r+1),n.dispatchEvent("initialized")}else e.addEventListener("added",function(){var t=e.parent.getChildIndex(e);e.parent.addChildAt(n,t+1),n.dispatchEvent("initialized")})},e}),define("CatLab/Easelbone/EaselJS/DisplayObjects/TextPlaceholder",["CatLab/Easelbone/EaselJS/DisplayObjects/Placeholder"],function(t){return t}),define("CatLab/Easelbone/Controls/Button",["CatLab/Easelbone/Controls/Base","CatLab/Easelbone/EaselJS/DisplayObjects/BigText","CatLab/Easelbone/EaselJS/DisplayObjects/TextPlaceholder"],function(t,e,i){var n=function(e){if(t.call(this,e),!this.element.text)throw"All buttons should have a text placeholder.";this.convertText(),this.element.addEventListener("click",function(){this.trigger("click")}.bind(this))};return n.prototype=Object.create(t.prototype),n.prototype.constructor=n,n.prototype.setText=function(t,i,n){var s=new e(t,i,n);this.text.addChild(s)},n.prototype.convertText=function(){if(this.element.text instanceof createjs.Text){var t=this;this.setText=function(e){t.element.text.text=e}}else this.text=new i(this.element.text)},n.prototype.keyInput=function(t){switch(t){case"a":case"start":this.trigger("click")}},n}),define("CatLab/Easelbone/Controls/Selectbox",["CatLab/Easelbone/Controls/Base","CatLab/Easelbone/EaselJS/DisplayObjects/BigText","CatLab/Easelbone/EaselJS/DisplayObjects/TextPlaceholder"],function(t,e,i){var n=function(i){if(t.call(this,i),this.repeat=!1,this.textcontainer=e,this.selectedIndex=0,this.selectedValue=null,this.allValues=[],!this.element.value)throw"All selectboxes should have a text placeholder.";if(!this.element.buttons)throw"All selectboxes must have a buttons object";this.element.buttons.on("click",function(t){var e=this.element.buttons.globalToLocal(t.stageX,t.stageY);e.y>40?this.previous():this.next()}.bind(this)),this.convertText()};return n.prototype=Object.create(t.prototype),n.prototype.constructor=n,n.prototype.setText=function(t,e,i){var n=new this.textcontainer(t,e,i);this.textElement.removeAllChildren(),this.textElement.addChild(n)},n.prototype.convertText=function(){this.textElement=new i(this.element.value)},n.prototype.setValues=function(t){var e=[];if(t instanceof Array){for(var i=0;i<t.length;i++)e.push({text:t[i],value:t[i]});t=e}else for(var n in t)if(t.hasOwnProperty(n)){var s=t[n];s instanceof Object?e.push(s):e.push({text:s,value:n})}this.allValues=e,this.select(0)},n.prototype.getValue=function(){return this.value},n.prototype.select=function(t){t<0||t>this.values.length-1||(this.selectedIndex=t,this.selectedValue=this.values[this.selectedIndex],this.setText(this.selectedValue.text))},n.prototype.getIndexFromText=function(t){for(var e=0;e<this.allValues.length;e++)if(this.allValues[e].text==t)return e;return null},n.prototype.getIndexFromValue=function(t){for(var e=0;e<this.allValues.length;e++)if(this.allValues[e].value==t)return e;return null},n.prototype.next=function(){this.selectedIndex<this.allValues.length-1?this.select(this.selectedIndex+1):this.repeat&&this.select(0)},n.prototype.previous=function(){this.selectedIndex>0?this.select(this.selectedIndex-1):this.repeat&&this.select(this.allValues.length-1)},n.prototype.keyInput=function(t){switch(t){case"up":this.next();break;case"down":this.previous()}},Object.defineProperty(n.prototype,"text",{get:function(){return this.selectedValue.text},set:function(t){var e=this.getIndexFromText(t);null!==e&&(this.index=e)}}),Object.defineProperty(n.prototype,"value",{get:function(){return this.selectedValue.value},set:function(t){var e=this.getIndexFromValue(t);null!==e&&(this.index=e)}}),Object.defineProperty(n.prototype,"index",{get:function(){return this.selectedIndex},set:function(t){this.select(t)}}),Object.defineProperty(n.prototype,"values",{get:function(){return this.allValues},set:function(t){this.setValues(t)}}),n}),define("CatLab/Easelbone/Controls/ScrollBar",["underscore","CatLab/Easelbone/Utilities/Path"],function(t,e){var i,n,s=function(t){var i=this;this.element=t,this.element.up.on("click",this.up,this),this.element.down.on("click",this.down,this),this.path=new e(this.element.minimum,this.element.maximum),this.containers=[],this.element.on("pressmove",function(t){n=i.element.globalToLocal(t.stageX,t.stageY),i.scrollTo(i.path.getValue(n.x,n.y))})},o=s.prototype;return o.link=function(t){this.containers.push(t),t.on("scroll",this.onScroll,this)},o.up=function(){t.each(this.containers,function(t){t.up()})},o.down=function(){t.each(this.containers,function(t){t.down()})},o.getIndicatorSize=function(){return n=this.element.indicator.bottom&&this.element.indicator.top?{x:(this.element.indicator.bottom.x-this.element.indicator.top.x)*this.element.indicator.scaleX,y:(this.element.indicator.bottom.y-this.element.indicator.top.y)*this.element.indicator.scaleY}:{x:0,y:0}},o.scrollTo=function(e){t.each(this.containers,function(t){t.scrollTo(e)})},o.onScroll=function(t){i=Math.min(1,t.containerHeight/t.contentHeight),n=this.getIndicatorSize(),this.path.setIndicatorSize(n.x,n.y),this.path.position(this.element.indicator,t.percentage)},s}),define("CatLab/Easelbone/EaselJS/DisplayObjects/ScrollArea",["EaselJS","CatLab/Easelbone/EaselJS/DisplayObjects/Placeholder","jquery"],function(t,e){var i,n=function(i){var n=this;this.initialize();var s=new e(i);s.on("bounds:change",function(){var e=new t.Shape;e.graphics.drawRect(0,0,this.getBounds().width,this.getBounds().height),"undefined"!=typeof n.setMask?n.setMask(e):n.mask=e}),s.addChild(this),this.on("tick",function(){n.setScroll(0)},this,!0),Object.defineProperty(this,"scroll",{set:function(t){this.setScroll(t)},get:function(){return this.getScroll()}})},s=n.prototype=new e;return s.isActive=function(){return null!==this.getBounds()&&null!==this.parent&&null!==this.parent.getBounds()},s.getFinalDestination=function(t){return this.isActive()?t<0?0:this.getBounds().height-this.parent.getBounds().height<0?0:t>this.getBounds().height-this.parent.getBounds().height?0-(this.getBounds().height-this.parent.getBounds().height):0-t:0},s.setScroll=function(t){return this.oldY=this.y,this.y=this.getFinalDestination(t),this.oldY!==this.y&&this.onScroll(),this},s.getDistance=function(t){return Math.abs(this.y-this.getFinalDestination(t))},s.getScroll=function(){return 0-this.y},s.down=function(t){return this.setScroll(this.getScroll()+t)},s.up=function(t){return this.setScroll(this.getScroll()-t)},s.getPercentage=function(){return this.getBounds()?this.getScroll()/(this.getBounds().height-this.parent.getBounds().height):0},s.focus=function(e,i,n){var s=new jQuery.Deferred;if(!this.parent.getBounds())return s.resolve(),s;"undefined"==typeof i&&(i=0);var o=e.y,a=0;return e.getBounds()&&(a=e.getBounds().height),a<this.parent.getBounds().height&&(o-=this.parent.getBounds().height/2-a/2),1e-4===this.getDistance()?s.resolve():i>0?t.Tween.get(this).to({scroll:o},i,n).call(s.resolve):(this.scroll=o,s.resolve()),s},s.scrollTo=function(t){return this.getBounds()?void this.setScroll(t*(this.getBounds().height-this.parent.getBounds().height)):void this.setScroll(0)},s.onScroll=function(){i=new t.Event("scroll"),this.dispatchEvent(i)},n}),define("CatLab/Easelbone/Utilities/Mousewheel",[],function(){var t=function(){var t=this;document.body.addEventListener("mousewheel",function(e){t.scroll(e)})},e=t.prototype;return e.scroll=function(t){this.callback&&this.callback({x:0,y:t.wheelDelta})},e.listen=function(t){this.stop(),this.callback=t},e.stop=function(){this.callback=null},new t}),define("CatLab/Easelbone/Controls/ScrollArea",["backbone","CatLab/Easelbone/Controls/ScrollBar","CatLab/Easelbone/EaselJS/DisplayObjects/ScrollArea","CatLab/Easelbone/Utilities/Mousewheel"],function(t,e,i,n){var s=function(n){_.extend(this,t.Events),this.element=n,this.scrollbar=new e(n.scrollbar),this.scrollbar.link(this),this.content=new i(n.content),this.content.on("scroll",this.onScroll,this),this.element.on("mouseover",this.enableScrollMouse,this),this.element.on("mouseout",this.disableScrollMouse,this),this.element.on("removed",this.disableScrollMouse,this),this.element.on("added",this.onAdd,this)},o=s.prototype;return o.enableScrollMouse=function(){var t=this;n.listen(function(e){t.scroll(e.y>0?50:-50)})},o.onAdd=function(){this.scrollTo(0)},o.disableScrollMouse=function(){n.stop()},o.onScroll=function(t){var e={percentage:this.content.getPercentage(),contentHeight:this.content.getBounds().height,containerHeight:this.content.parent.getBounds().height};this.trigger("scroll",e)},o.scrollTo=function(t){this.content.scrollTo(t)},o.scroll=function(t){this.content.up(t)},o.up=function(){this.content.up(25)},o.down=function(){this.content.down(25)},o.focus=function(t,e,i){return this.content.focus(t,e,i)},s}),define("CatLab/Easelbone/Controls/ListElement",[],function(){var t=function(t){this.element=t},e=t.prototype;return e.focus=function(){this.dispatchEvent("focus")},t}),define("CatLab/Easelbone/Controls/List",["EaselJS","CatLab/Easelbone/Controls/ListElement"],function(t,e){var i=function(t){this.initialize(),this.listItems=[],"undefined"!=typeof t&&this.setChildElement(t)},n=i.prototype=new t.Container;return n.setChildElement=function(t){this.childElement=t;var e=new t;this.boundary={x:e.boundary.x,y:e.boundary.y}},n.getChildElement=function(){if("undefined"==typeof this.childElement)throw"No child element set.";return this.childElement},n.updateBounds=function(){this.setBounds(0,0,this.boundary.x,this.boundary.y*this.listItems.length)},n.createElement=function(){var t=new e(new(this.getChildElement()));return this.listItems.push(t),this.addChild(t.element),t.element.y=this.boundary.y*(this.listItems.length-1),this.updateBounds(),t},i}),define("CatLab/Easelbone/Controls/FloatContainer",["EaselJS","CatLab/Easelbone/Controls/ListElement"],function(t,e){var i=function(t,e){this.initialize(),this.listItems=[],"undefined"!=typeof t&&this.setChildElement(t),this.rows=0,this.columns=e,this.currentColumn=0},n=i.prototype=new t.Container;return n.setChildElement=function(t){this.childElement=t;var e=this.getChildElement();this.boundary={x:e.boundary.x,y:e.boundary.y}},n.getChildElement=function(e){if("undefined"==typeof this.childElement)throw"No child element set.";return this.childElement.prototype instanceof t.DisplayObject?new this.childElement:this.childElement(e)},n.updateBounds=function(){this.setBounds(0,0,this.boundary.x*this.columns,this.boundary.y*(this.rows+1))},n.nextRow=function(){this.currentColumn=1,this.rows++},n.getNextPosition=function(){var t={};return this.currentColumn++,this.currentColumn>this.columns&&this.nextRow(),t.x=this.boundary.x*(this.currentColumn-1),t.y=this.boundary.y*this.rows,t},n.createElement=function(t){var i=new e(this.getChildElement(t));this.listItems.push(i),this.addChild(i.element);var n=this.getNextPosition();return i.element.x=n.x,i.element.y=n.y,this.updateBounds(),i},n.removeAllChildren_container=n.removeAllChildren,n.removeAllChildren=function(){this.currentColumn=0,this.rows=0,this.removeAllChildren_container.apply(this,arguments)},i}),define("CatLab/Easelbone/EaselJS/DisplayObjects/Background",["EaselJS"],function(t){var e,i,n,s=!1,o=!1,a={},r=function(e,i){if("undefined"==typeof i&&(i={zoom:"stretch"}),this.fillOptions=i,e instanceof Image||e instanceof HTMLImageElement)this.displayobject=new t.Bitmap(e);else if(e instanceof t.DisplayObject){if(!e.getBounds())throw"Objects to be filled must have bounds set.";this.displayobject=e}else this.color=e;this.initialize(),this.initialized=!1,this.limits=null,this.debug=s},l=r.prototype=new t.Container;return l.Container_initialize=l.initialize,l.initialize=function(){this.Container_initialize()},l.isVisible=function(){return!0},l.setLimits=function(t,e){this.limits={width:t,height:e}},l.getAvailableSpace=function(){return null!==this.limits?this.limits:(this.parent?(e=this.parent.getBounds().width,i=this.parent.getBounds().height):this.getBounds()?(e=this.getBounds().width,i=this.getBounds().height):(e=100,i=100),{width:e,height:i})},l.Container_draw=l.draw,l.getLocationHash=function(){return n=this.getAvailableSpace(),n.width+":"+n.height},l.hasChanged=function(){return n=this.getLocationHash(),o=this.lastHash!==n,this.lastHash=n,o},l.center=function(t){this.displayobject&&(this.displayobject.x=(t.width-this.displayobject.getBounds().width*this.displayobject.scaleX)/2,this.displayobject.y=(t.height-this.displayobject.getBounds().height*this.displayobject.scaleY)/2)},l.draw=function(e,i){if(this.initialized&&!this.hasChanged())return this.Container_draw(e,i);this.initialized=!0,this.removeAllChildren();var n=this.getAvailableSpace();if(this.color){var s=new t.Shape;s.graphics.setStrokeStyle(0),s.graphics.beginFill(this.color),s.graphics.beginStroke(this.color),s.snapToPixel=!0,s.graphics.drawRect(0,0,n.width,n.height),this.addChild(s)}else if(this.displayobject){try{if(!this.displayobject.getBounds())return void(this.initialized=!1)}catch(t){return void(this.initialized=!1)}switch(a={x:n.width/this.displayobject.getBounds().width,y:n.height/this.displayobject.getBounds().height},this.fillOptions.zoom){case"minimum":this.displayobject.scaleX=this.displayobject.scaleY=Math.min(a.x,a.y),this.center(n);break;case"maximum":this.displayobject.scaleX=this.displayobject.scaleY=Math.max(a.x,a.y),this.center(n);break;case"stretch":case"default":this.displayobject.scaleX=a.x,this.displayobject.scaleY=a.y}this.addChild(this.displayobject)}return this.Container_draw(e,i)},t.Background=r,r}),define("CatLab/Easelbone/EaselJS/DisabledButtonHelper",["EaselJS"],function(t){var e=function(t,e,i,n,s,o,a){this.initialize(t,e,i,n,s,o,a)},i=e.prototype;i.target=null,i.overLabel=null,i.outLabel=null,i.downLabel=null,i.play=!1,i.setEnabled=function(t){},i.getEnabled=function(){return this._enabled};try{Object.defineProperties(i,{enabled:{get:i.getEnabled,set:i.setEnabled}})}catch(t){}return i._isPressed=!1,i._isOver=!1,i._enabled=!1,i.initialize=function(t,e,i,n,s,o,a){t.addEventListener&&(this.target=t,t.mouseChildren=!1,this.overLabel=null==i?"over":i,this.outLabel=null==e?"out":e,this.downLabel=null==n?"down":n,this.play=s,this.setEnabled(!0),this.handleEvent({}),o&&(a&&(o.actionsEnabled=!1,o.gotoAndStop&&o.gotoAndStop(a)),t.hitArea=o))},i.toString=function(){return"[DisabledButtonHelper]"},i.handleEvent=function(t){var e,i=this.target,n=t.type;"mousedown"==n?(this._isPressed=!0,e=this.downLabel):"pressup"==n?(this._isPressed=!1,e=this._isOver?this.overLabel:this.outLabel):"rollover"==n?(this._isOver=!0,e=this._isPressed?this.downLabel:this.overLabel):(this._isOver=!1,e=this._isPressed?this.overLabel:this.outLabel),this.play?i.gotoAndPlay&&i.gotoAndPlay(e):i.gotoAndStop&&i.gotoAndStop(e)},e}),define("CatLab/FakeWebremote/Models/User",[],function(){return function(t){var e,i,n,s=t;this.getAccessToken=function(){return s},this.setId=function(t){n=t},this.getId=function(){return n},this.setName=function(t){e=t},this.getName=function(){return e},this.setAvatar=function(t){i=t},this.getAvatar=function(){return i}}}),define("CatLab/FakeWebremote/Models/Control",[],function(){return function(t,e){var i,n,s=0,o={},a=t,r=[];this.id=t,this.pushed=function(){return 0===s},this.scale=function(){return s},this.update=function(t){s>0&&0==t&&this.trigger("click"),s=t},this.getLabel=function(){return'<span class="control-label '+n+'">'+a+"</span>"},this.setStaticLabel=function(t,e){return a=t,n=e,this},this.setLabel=function(i,n){return e.emit("button:label",{id:t,label:i}),this},this.click=function(t){return this.on("click",t),this},this.on=function(t,e){return"undefined"==typeof o[t]&&(o[t]=[]),o[t].push(e),this},this.trigger=function(t){var e=[];if("undefined"!=typeof o[t])for(i=0;i<o[t].length;i++)e.push(o[t][i]);for(i=0;i<e.length;i++)try{e[i]()}catch(t){console.log(t)}return this},this.off=function(t){return o[t]=[],this},this.clearEvents=function(){return o={},this},this.addDomElement=function(t){var e=this,i=[];return i.push(t.addEventListener("click",function(){e.trigger("click")})),r.push({element:t,listeners:i}),this},this.clearDomElements=function(){for(var t=0;t<r.length;t++)for(var e=0;e<r[t].listeners.length;e++)r[t].element.removeEventListener("click",r[t].listeners[e]);return r=[],this},this.isLocalAuthentication=function(){return!1},this.log=function(t){e.log("["+this.id+"] "+t)}}}),define("CatLab/FakeWebremote/Models/ControlUser",["CatLab/FakeWebremote/Models/User","CatLab/FakeWebremote/Models/Control"],function(t,e){var i=function(t){this.initialize(t)};return i.prototype=t,i.prototype.setWebcontrol=function(t){this.Webcontrol=t},i.prototype.initialize=function(t){this.controls={},this.currentView=null,this.color="orange",this.colorName="orange",this.tmpid=null,this.active=!1,this.userdata=t,this.profiledata={},this.access_token=null},i.prototype.clearControls=function(){if(null!=this.currentView)for(var t=this.Webcontrol.getViewLabels(this.currentView),e=0;e<t.length;e++)this.control(t[e].id).setStaticLabel(t[e].label,"mobile")},i.prototype.clearEvents=function(){for(this.tmpid in this.controls)this.controls.hasOwnProperty(this.tmpid)&&this.controls[this.tmpid].clearEvents();
-},i.prototype.trigger=function(t,e){"button:down"==t?this.control(e.id).update(1):"button:up"==t?this.control(e.id).update(0):"user:login"==t?this.login(e):"user:logout"==t&&this.logout(e)},i.prototype.emit=function(t,e){return this.Webcontrol._playerEmit(this,t,e),!0},i.prototype.control=function(t){var i=this;return"undefined"==typeof this.controls[t]&&(this.controls[t]=new e(t,i)),this.controls[t]},i.prototype.getId=function(){return this.userdata.id},i.prototype.getName=function(){return"User "+this.getId()},i.prototype.getType=function(){return"mobile"},i.prototype.getIcon=function(){return"fa fa-mobile-phone"},i.prototype.login=function(t){var e=this;this.access_token=t.access_token,this.Webcontrol.getOAuthClient(function(t){t.profile(e.access_token,function(t){e.profiledata=t.user})})},i.prototype.getData=function(){return this.profiledata},i.prototype.logout=function(t){this.profiledata=null,this.access_token=null},i.prototype.setColor=function(t,e){this.color=t,this.colorName=e,this.emit("color:set",{color:t,name:e})},i.prototype.getColor=function(){return this.color},i.prototype.getColorName=function(){return this.colorName},i.prototype.isActive=function(){return this.active},i.prototype.toggleActive=function(){this.active=!this.active,this.setLabel()},i.prototype.setActive=function(t){this.active=t,this.setLabel()},i.prototype.setLabel=function(){1==this.active?this.control("join-game").setLabel("LEAVE"):this.control("join-game").setLabel("JOIN")},i.prototype.setView=function(t){this.currentView=t,this.clearControls(),this.emit("view:set",{id:t})},i.prototype.setUserData=function(t,e){console.log("Setting user data: ",t,e)},i.prototype.isLocalAuthentication=function(){return!0},i.prototype.log=function(t){console.log("[u:"+this.getId()+"] "+t)},i}),define("CatLab/FakeWebremote/Models/KeyboardUser",["CatLab/FakeWebremote/Models/ControlUser"],function(t){var e=function(t){function e(e){for(s=0;s<t.length;s++)if(t[s].key==e)return i=n.control(t[s].id);return null}"undefined"==typeof t&&(t=[{id:"up",label:"↑",key:38},{id:"down",label:"↓",key:40},{id:"right",label:"→",key:39},{id:"left",label:"←",key:37},{id:"a",label:"A",key:65},{id:"b",label:"B",key:66},{id:"x",label:"X",key:88},{id:"y",label:"Y",key:89},{id:"join-game",label:"SPACE",key:32},{id:"start-game",label:"ENTER",key:13}]),this.keys=t,this.initialize({id:"keyboard"});var i,n=this,s=0;document.addEventListener("keydown",function(t){i=e(t.keyCode),i&&i.update(1)}),document.addEventListener("keyup",function(t){i=e(t.keyCode),i&&i.update(0)}),this.clearControls=function(){for(var e=0;e<t.length;e++)this.control(t[e].id).setStaticLabel(t[e].label,"keyboard")},this.getType=function(){return"keyboard"},this.getIcon=function(){return"fa fa-keyboard-o"},this.setView=function(t){this.clearControls()},this.emit=function(t,e){return!1},this.isLocalAuthentication=function(){return!1},this.clearControls()};return e.prototype=new t,e.prototype.constructor=e,e}),define("CatLab/Easelbone/FrontController",["CatLab/Easelbone/Utilities/Loader","CatLab/Easelbone/Views/Root","CatLab/Easelbone/Views/Base","CatLab/Easelbone/Views/Layer","CatLab/Easelbone/Views/Navigatable","CatLab/Easelbone/Controls/Slider","CatLab/Easelbone/Controls/Checkbox","CatLab/Easelbone/Controls/Button","CatLab/Easelbone/Controls/Selectbox","CatLab/Easelbone/Controls/ScrollBar","CatLab/Easelbone/Controls/ScrollArea","CatLab/Easelbone/Controls/List","CatLab/Easelbone/Controls/FloatContainer","CatLab/Easelbone/EaselJS/DisplayObjects/BigText","CatLab/Easelbone/EaselJS/DisplayObjects/Placeholder","CatLab/Easelbone/EaselJS/DisplayObjects/Background","CatLab/Easelbone/EaselJS/DisabledButtonHelper","CatLab/Easelbone/Utilities/GlobalProperties","CatLab/FakeWebremote/Models/KeyboardUser"],function(t,e,i,n,s,o,a,r,l,h,c,u,d,f,p,g,b,y,v){return{initialize:function(){},setProperties:function(t){y.set(t)},Views:{Root:e,Base:i,Layer:n,Navigatable:s},Controls:{Slider:o,Checkbox:a,Button:r,Selectbox:l,ScrollBar:h,ScrollArea:c,List:u,FloatContainer:d},EaselJS:{BigText:f,Placeholder:p,Fill:g,DisabledButtonHelper:b},FakeWebremote:{KeyboardUser:v},Loader:new t}}),define("easelbone",["CatLab/Easelbone/FrontController"],function(t){return t});
+/**
+ * @module EaselJS
+ */
+
+// namespace:
+//this.createjs = this.createjs||{};
+
+define ('CatLab/Easelbone/EaselJS/DisabledButtonHelper',['EaselJS'], function (createjs)
+{
+
+	/**
+	 * The ButtonHelper is a helper class to create interactive buttons from {{#crossLink "MovieClip"}}{{/crossLink}} or
+	 * {{#crossLink "Sprite"}}{{/crossLink}} instances. This class will intercept mouse events from an object, and
+	 * automatically call {{#crossLink "Sprite/gotoAndStop"}}{{/crossLink}} or {{#crossLink "Sprite/gotoAndPlay"}}{{/crossLink}},
+	 * to the respective animation labels, add a pointer cursor, and allows the user to define a hit state frame.
+	 *
+	 * The ButtonHelper instance does not need to be added to the stage, but a reference should be maintained to prevent
+	 * garbage collection.
+	 *
+	 * Note that over states will not work unless you call {{#crossLink "Stage/enableMouseOver"}}{{/crossLink}}.
+	 *
+	 * <h4>Example</h4>
+	 *
+	 *      var helper = new createjs.ButtonHelper(myInstance, "out", "over", "down", false, myInstance, "hit");
+	 *      myInstance.addEventListener("click", handleClick);
+	 *      function handleClick(event) {
+ *          // Click Happened.
+ *      }
+	 *
+	 * @class ButtonHelper
+	 * @param {Sprite|MovieClip} target The instance to manage.
+	 * @param {String} [outLabel="out"] The label or animation to go to when the user rolls out of the button.
+	 * @param {String} [overLabel="over"] The label or animation to go to when the user rolls over the button.
+	 * @param {String} [downLabel="down"] The label or animation to go to when the user presses the button.
+	 * @param {Boolean} [play=false] If the helper should call "gotoAndPlay" or "gotoAndStop" on the button when changing
+	 * states.
+	 * @param {DisplayObject} [hitArea] An optional item to use as the hit state for the button. If this is not defined,
+	 * then the button's visible states will be used instead. Note that the same instance as the "target" argument can be
+	 * used for the hitState.
+	 * @param {String} [hitLabel] The label or animation on the hitArea instance that defines the hitArea bounds. If this is
+	 * null, then the default state of the hitArea will be used. *
+	 * @constructor
+	 */
+	var DisabledButtonHelper = function(target, outLabel, overLabel, downLabel, play, hitArea, hitLabel) {
+		this.initialize(target, outLabel, overLabel, downLabel, play, hitArea, hitLabel);
+	};
+	var p = DisabledButtonHelper.prototype;
+
+// public properties:
+	/**
+	 * The target for this button helper.
+	 * @property target
+	 * @type MovieClip | Sprite
+	 * @readonly
+	 **/
+	p.target = null;
+
+	/**
+	 * The label name or frame number to display when the user mouses out of the target. Defaults to "over".
+	 * @property overLabel
+	 * @type String | Number
+	 **/
+	p.overLabel = null;
+
+	/**
+	 * The label name or frame number to display when the user mouses over the target. Defaults to "out".
+	 * @property outLabel
+	 * @type String | Number
+	 **/
+	p.outLabel = null;
+
+	/**
+	 * The label name or frame number to display when the user presses on the target. Defaults to "down".
+	 * @property downLabel
+	 * @type String | Number
+	 **/
+	p.downLabel = null;
+
+	/**
+	 * If true, then ButtonHelper will call gotoAndPlay, if false, it will use gotoAndStop. Default is false.
+	 * @property play
+	 * @default false
+	 * @type Boolean
+	 **/
+	p.play = false;
+
+// getter / setters:
+
+	/**
+	 * Enables or disables the button functionality on the target.
+	 * @property enabled
+	 * @type {Boolean}
+	 **/
+	/**
+	 * Enables or disables the button functionality on the target.
+	 * @deprecated in favour of the enabled property.
+	 * @method setEnabled
+	 * @param {Boolean} value
+	 **/
+	p.setEnabled = function(value) { // TODO: deprecated.
+
+		/*
+		 var o = this.target;
+		 this._enabled = value;
+		 if (value) {
+		 o.cursor = "pointer";
+		 o.addEventListener("rollover", this);
+		 o.addEventListener("rollout", this);
+		 o.addEventListener("mousedown", this);
+		 o.addEventListener("pressup", this);
+		 } else {
+		 o.cursor = null;
+		 o.removeEventListener("rollover", this);
+		 o.removeEventListener("rollout", this);
+		 o.removeEventListener("mousedown", this);
+		 o.removeEventListener("pressup", this);
+		 }
+		 */
+	};
+	/**
+	 * Returns enabled state of this instance.
+	 * @deprecated in favour of the enabled property.
+	 * @method getEnabled
+	 * @return {Boolean} The last value passed to setEnabled().
+	 **/
+	p.getEnabled = function() {
+		return this._enabled;
+	};
+
+	try {
+		Object.defineProperties(p, {
+			enabled: { get: p.getEnabled, set: p.setEnabled }
+		});
+	} catch (e) {} // TODO: use Log
+
+//  private properties
+	/**
+	 * @property _isPressed
+	 * @type Boolean
+	 * @protected
+	 **/
+	p._isPressed = false;
+
+	/**
+	 * @property _isOver
+	 * @type Boolean
+	 * @protected
+	 **/
+	p._isOver = false;
+
+	/**
+	 * @property _enabled
+	 * @type Boolean
+	 * @protected
+	 **/
+	p._enabled = false;
+
+// constructor:
+	/**
+	 * Initialization method.
+	 * @method initialize
+	 * @param {Sprite|MovieClip} target The instance to manage.
+	 * @param {String} [outLabel="out"] The label or animation to go to when the user rolls out of the button.
+	 * @param {String} [overLabel="over"] The label or animation to go to when the user rolls over the button.
+	 * @param {String} [downLabel="down"] The label or animation to go to when the user presses the button.
+	 * @param {Boolean} [play=false] If the helper should call "gotoAndPlay" or "gotoAndStop" on the button when changing
+	 * states.
+	 * @param {DisplayObject} [hitArea] An optional item to use as the hit state for the button. If this is not defined,
+	 * then the button's visible states will be used instead. Note that the same instance as the "target" argument can be
+	 * used for the hitState.
+	 * @param {String} [hitLabel] The label or animation on the hitArea instance that defines the hitArea bounds. If this is
+	 * null, then the default state of the hitArea will be used.
+	 * @protected
+	 **/
+	p.initialize = function(target, outLabel, overLabel, downLabel, play, hitArea, hitLabel) {
+		if (!target.addEventListener) { return; }
+		this.target = target;
+		target.mouseChildren = false; // prevents issues when children are removed from the display list when state changes.
+		this.overLabel = overLabel == null ? "over" : overLabel;
+		this.outLabel = outLabel == null ? "out" : outLabel;
+		this.downLabel = downLabel == null ? "down" : downLabel;
+		this.play = play;
+		this.setEnabled(true);
+		this.handleEvent({});
+		if (hitArea) {
+			if (hitLabel) {
+				hitArea.actionsEnabled = false;
+				hitArea.gotoAndStop&&hitArea.gotoAndStop(hitLabel);
+			}
+			target.hitArea = hitArea;
+		}
+	};
+
+// public methods:
+
+	/**
+	 * Returns a string representation of this object.
+	 * @method toString
+	 * @return {String} a string representation of the instance.
+	 **/
+	p.toString = function() {
+		return "[DisabledButtonHelper]";
+	};
+
+
+// protected methods:
+	/**
+	 * @method handleEvent
+	 * @param {Object} evt The mouse event to handle.
+	 * @protected
+	 **/
+	p.handleEvent = function(evt) {
+		var label, t = this.target, type = evt.type;
+		if (type == "mousedown") {
+			this._isPressed = true;
+			label = this.downLabel;
+		} else if (type == "pressup") {
+			this._isPressed = false;
+			label = this._isOver ? this.overLabel : this.outLabel;
+		} else if (type == "rollover") {
+			this._isOver = true;
+			label = this._isPressed ? this.downLabel : this.overLabel;
+		} else { // rollout and default
+			this._isOver = false;
+			label = this._isPressed ? this.overLabel : this.outLabel;
+		}
+		if (this.play) {
+			t.gotoAndPlay&&t.gotoAndPlay(label);
+		} else {
+			t.gotoAndStop&&t.gotoAndStop(label);
+		}
+	};
+
+	return DisabledButtonHelper;
+});
+define (
+	'CatLab/FakeWebremote/Models/User',[],
+	function ()
+	{
+		return function (aAccessToken)
+		{
+			var accessToken = aAccessToken;
+			var name;
+			var avatar;
+			var id;
+
+			this.getAccessToken = function ()
+			{
+				return accessToken;
+			};
+
+			this.setId = function (aId)
+			{
+				id = aId;
+			};
+
+			this.getId = function ()
+			{
+				return id;
+			};
+
+			this.setName = function (aName)
+			{
+				name = aName;
+			};
+
+			this.getName = function ()
+			{
+				return name;
+			};
+
+			this.setAvatar = function (aAvatar)
+			{
+				avatar = aAvatar;
+			};
+
+			this.getAvatar = function ()
+			{
+				return avatar;
+			};
+		};
+	}
+);
+define (
+	'CatLab/FakeWebremote/Models/Control',[],
+	function () {
+		return function (id, user)
+		{
+			var value = 0;
+			var listeners = {};
+			var i;
+			var m_label = id;
+			var m_label_type;
+			var domwatchers = [];
+
+			this.id = id;
+
+			this.pushed = function ()
+			{
+				return value === 0;
+			};
+
+			this.scale = function ()
+			{
+				return value;
+			};
+
+			this.update = function (newvalue)
+			{
+				if (value > 0 && newvalue == 0)
+				{
+					this.trigger ('click');
+				}
+				value = newvalue;
+			};
+
+			this.getLabel = function ()
+			{
+				return '<span class="control-label ' + m_label_type + '">' + m_label + '</span>';
+			};
+
+			this.setStaticLabel = function (label, type)
+			{
+				m_label = label;
+				m_label_type = type;
+				return this;
+			}
+
+			this.setLabel = function (label, force)
+			{
+				// Networky stuff to set the label
+				user.emit ('button:label', { 'id' : id, 'label' : label });
+				return this;
+			};
+
+			/**
+			 * Event will be called any time specific button is clicked (= released)
+			 */
+			this.click = function (callback)
+			{
+				this.on ('click', callback);
+				return this;
+			};
+
+			this.on = function (event, callback)
+			{
+				//this.log ('Setting trigger ' + event);
+				if (typeof (listeners[event]) == 'undefined')
+				{
+					listeners[event] = [];
+				}
+				listeners[event].push (callback);
+				return this;
+			};
+
+			this.trigger = function (event)
+			{
+				//this.log ("Triggering " + event);
+
+				var todo = [];
+
+				if (typeof (listeners[event]) != 'undefined')
+				{
+					//this.log ("Found " + listeners[event].length + " events");
+
+					for (i = 0; i < listeners[event].length; i ++)
+					{
+						todo.push (listeners[event][i]);
+					}
+				}
+
+				for (i = 0; i < todo.length; i ++)
+				{
+					try {
+						todo[i] ();
+					}
+					catch (e)
+					{
+						console.log (e);
+					}
+				}
+				return this;
+			};
+
+			this.off = function (event)
+			{
+				listeners[event] = [];
+				return this;
+			};
+
+			this.clearEvents = function ()
+			{
+				//this.log ('Clearing events');
+
+				listeners = {};
+				return this;
+			};
+
+			this.addDomElement = function (element)
+			{
+				var self = this;
+				var listeners = [];
+
+				listeners.push (element.addEventListener ('click', function ()
+				{
+					self.trigger ('click');
+				}));
+
+				domwatchers.push ({ 'element' : element, 'listeners' : listeners });
+
+				return this;
+			};
+
+			this.clearDomElements = function ()
+			{
+				for (var i = 0; i < domwatchers.length; i ++)
+				{
+					for (var j = 0; j < domwatchers[i].listeners.length; j ++)
+					{
+						domwatchers[i].element.removeEventListener ('click', domwatchers[i].listeners[j]);
+					}
+				}
+
+				domwatchers = [];
+
+				return this;
+			};
+
+			this.isLocalAuthentication = function ()
+			{
+				return false;
+			};
+
+			this.log = function (msg)
+			{
+				user.log ('[' + this.id + '] ' + msg);
+			};
+		};
+	}
+);
+define (
+	'CatLab/FakeWebremote/Models/ControlUser',[
+		'CatLab/FakeWebremote/Models/User',
+		'CatLab/FakeWebremote/Models/Control'
+	],
+	function (User, WebcontrolControl) {
+
+		var WebcontrolUser = function (data) {
+			this.initialize (data);
+		};
+
+		WebcontrolUser.prototype = User;
+
+		WebcontrolUser.prototype.setWebcontrol = function (Webcontrol) {
+			this.Webcontrol = Webcontrol;
+		};
+
+		WebcontrolUser.prototype.initialize = function (data)
+		{
+			this.controls = {};
+			this.currentView = null;
+			this.color = 'orange';
+			this.colorName = 'orange';
+			this.tmpid = null;
+			this.active = false;
+
+			this.userdata = data;
+			this.profiledata = {};
+
+			this.access_token = null;
+		};
+
+		WebcontrolUser.prototype.clearControls = function ()
+		{
+			if (this.currentView != null)
+			{
+				var labels = this.Webcontrol.getViewLabels (this.currentView);
+				for (var i = 0; i < labels.length; i ++)
+				{
+					this.control(labels[i].id).setStaticLabel (labels[i].label, 'mobile');
+				}
+			}
+		};
+
+		WebcontrolUser.prototype.clearEvents = function ()
+		{
+			//this.log ('Clearing events');
+			for (this.tmpid in this.controls)
+			{
+				if (this.controls.hasOwnProperty (this.tmpid))
+				{
+					this.controls[this.tmpid].clearEvents ();
+				}
+			}
+		};
+
+		WebcontrolUser.prototype.trigger = function (method, data)
+		{
+			if (method == 'button:down')
+			{
+				this.control (data.id).update (1);
+			}
+
+			else if (method == 'button:up')
+			{
+				this.control (data.id).update (0);
+			}
+
+			else if (method == 'user:login')
+			{
+				this.login (data);
+			}
+
+			else if (method == 'user:logout')
+			{
+				this.logout (data);
+			}
+		};
+
+		WebcontrolUser.prototype.emit = function (method, data)
+		{
+			this.Webcontrol._playerEmit (this, method, data);
+			return true;
+		};
+
+		WebcontrolUser.prototype.control = function (id)
+		{
+			var self = this;
+			if (typeof (this.controls[id]) == 'undefined')
+			{
+				this.controls[id] = new WebcontrolControl (id, self);
+			}
+			return this.controls[id];
+		};
+
+		WebcontrolUser.prototype.getId = function ()
+		{
+			return this.userdata.id;
+		};
+
+		WebcontrolUser.prototype.getName = function ()
+		{
+			return 'User ' + this.getId ();
+		};
+
+		WebcontrolUser.prototype.getType = function ()
+		{
+			return 'mobile';
+		};
+
+		WebcontrolUser.prototype.getIcon = function ()
+		{
+			return 'fa fa-mobile-phone';
+		};
+
+		WebcontrolUser.prototype.login = function (data)
+		{
+			var self = this;
+
+			this.access_token = data.access_token;
+
+			this.Webcontrol.getOAuthClient (function (client)
+			{
+				client.profile  (self.access_token, function (data)
+				{
+					self.profiledata = data.user;
+				});
+			});
+		};
+
+		WebcontrolUser.prototype.getData = function ()
+		{
+			return this.profiledata;
+		};
+
+		WebcontrolUser.prototype.logout = function (data)
+		{
+			this.profiledata = null;
+			this.access_token = null;
+		};
+
+		WebcontrolUser.prototype.setColor = function (aColor, colorName)
+		{
+			this.color = aColor;
+			this.colorName = colorName;
+			this.emit ('color:set', { 'color' : aColor, 'name' : colorName });
+		};
+
+		WebcontrolUser.prototype.getColor = function ()
+		{
+			return this.color;
+		};
+
+		WebcontrolUser.prototype.getColorName = function ()
+		{
+			return this.colorName;
+		};
+
+		WebcontrolUser.prototype.isActive = function ()
+		{
+			return this.active;
+		};
+
+		WebcontrolUser.prototype.toggleActive = function ()
+		{
+			this.active = !this.active;
+			this.setLabel();
+		};
+
+		WebcontrolUser.prototype.setActive = function (bool)
+		{
+			this.active = bool;
+			this.setLabel();
+		};
+
+		WebcontrolUser.prototype.setLabel = function ()
+		{
+			if (this.active==true){
+				this.control ('join-game').setLabel ('LEAVE');
+			}else{
+				this.control ('join-game').setLabel ('JOIN');
+			}
+		};
+
+		WebcontrolUser.prototype.setView = function (id)
+		{
+			this.currentView = id;
+
+			// Clear controls
+			this.clearControls ();
+
+			// Set view
+			this.emit ('view:set', { 'id' : id });
+		};
+
+		WebcontrolUser.prototype.setUserData = function (access_key, userdata)
+		{
+			console.log ('Setting user data: ', access_key, userdata);
+		};
+
+		WebcontrolUser.prototype.isLocalAuthentication = function ()
+		{
+			return true;
+		};
+
+		WebcontrolUser.prototype.log = function (string)
+		{
+			console.log ("[u:" + this.getId () + "] " + string);
+		};
+
+		return WebcontrolUser;
+	}
+);
+define (
+	'CatLab/FakeWebremote/Models/KeyboardUser',[
+		'CatLab/FakeWebremote/Models/ControlUser'
+	],
+	function (User)
+	{
+
+		var KeyboardUser = function (keys) {
+			if (typeof (keys) == 'undefined') {
+				keys = [
+					{
+						'id': 'up',
+						'label': '↑',
+						'key': 38
+					},
+
+					{
+						'id': 'down',
+						'label': '↓',
+						'key': 40
+					},
+
+					{
+						'id': 'right',
+						'label': '→',
+						'key': 39
+					},
+
+					{
+						'id': 'left',
+						'label': '←',
+						'key': 37
+					},
+
+					{
+						'id': 'a',
+						'label': 'A',
+						'key': 65
+					},
+
+					{
+						'id': 'b',
+						'label': 'B',
+						'key': 66
+					},
+
+					{
+						'id': 'x',
+						'label': 'X',
+						'key': 88
+					},
+
+					{
+						'id': 'y',
+						'label': 'Y',
+						'key': 89
+					},
+
+					{
+						'id': 'join-game',
+						'label': 'SPACE',
+						'key': 32
+					},
+
+					{
+						'id': 'start-game',
+						'label': 'ENTER',
+						'key': 13
+					}
+				];
+			}
+
+			this.keys = keys;
+
+			this.initialize ({ 'id' : 'keyboard' });
+
+			var controls = {};
+			var self = this;
+
+			var control;
+			var i = 0;
+
+			// Attach the events
+			document.addEventListener('keydown', function (e) {
+				control = getControlFromKey(e.keyCode);
+				if (control) {
+					control.update(1);
+				}
+			});
+
+			document.addEventListener('keyup', function (e) {
+				control = getControlFromKey(e.keyCode);
+				if (control) {
+					control.update(0);
+				}
+			});
+
+			function getControlFromKey(keycode) {
+				for (i = 0; i < keys.length; i++) {
+					if (keys[i].key == keycode) {
+						control = self.control (keys[i].id);
+						return control;
+					}
+				}
+				return null;
+			}
+
+			this.clearControls = function () {
+				for (var i = 0; i < keys.length; i++) {
+					this.control (keys[i].id).setStaticLabel(keys[i].label, 'keyboard');
+				}
+			};
+
+			this.getType = function () {
+				return 'keyboard';
+			};
+
+			this.getIcon = function () {
+				return 'fa fa-keyboard-o';
+			};
+
+			this.setView = function (id) {
+				// Clear controls
+				this.clearControls();
+			};
+
+			this.emit = function (method, data) {
+				// Keyboard. Do nothing.
+				return false;
+			};
+
+			this.isLocalAuthentication = function ()
+			{
+				return false;
+			};
+
+			// Set labels
+			this.clearControls();
+		};
+
+		KeyboardUser.prototype = new User ();
+		KeyboardUser.prototype.constructor = KeyboardUser;
+
+		return KeyboardUser;
+
+	}
+);
+define(
+    'CatLab/Easelbone/FrontController',[
+        'CatLab/Easelbone/Utilities/Loader',
+
+        'CatLab/Easelbone/Views/Root',
+        'CatLab/Easelbone/Views/Base',
+        'CatLab/Easelbone/Views/Layer',
+        'CatLab/Easelbone/Views/Navigatable',
+
+        'CatLab/Easelbone/Controls/Slider',
+        'CatLab/Easelbone/Controls/Checkbox',
+        'CatLab/Easelbone/Controls/Button',
+        'CatLab/Easelbone/Controls/Selectbox',
+
+        'CatLab/Easelbone/Controls/ScrollBar',
+        'CatLab/Easelbone/Controls/ScrollArea',
+        'CatLab/Easelbone/Controls/List',
+        'CatLab/Easelbone/Controls/FloatContainer',
+
+        'CatLab/Easelbone/EaselJS/DisplayObjects/BigText',
+        'CatLab/Easelbone/EaselJS/DisplayObjects/Placeholder',
+        'CatLab/Easelbone/EaselJS/DisplayObjects/Background',
+
+        'CatLab/Easelbone/EaselJS/DisabledButtonHelper',
+
+        'CatLab/Easelbone/Utilities/GlobalProperties',
+
+        'CatLab/FakeWebremote/Models/KeyboardUser'
+    ],
+    function (
+        Loader,
+        RootView,
+        BaseView,
+        LayerView,
+        NavigatableView,
+        SliderControl,
+        CheckboxControl,
+        ButtonControl,
+        SelectboxControl,
+        ScrollBar,
+        ScrollArea,
+        ListControl,
+        FloatContainer,
+        BigText,
+        Placeholder,
+        Background,
+        DisabledButtonHelper,
+        GlobalProperties,
+        KeyboardUser
+    ) {
+
+        return {
+
+            'initialize': function () {
+
+
+            },
+
+            'setProperties': function (properties) {
+                GlobalProperties.set(properties);
+            },
+
+            'Views': {
+                'Root': RootView,
+                'Base': BaseView,
+                'Layer': LayerView,
+                'Navigatable': NavigatableView
+            },
+
+            'Controls': {
+                'Slider': SliderControl,
+                'Checkbox': CheckboxControl,
+                'Button': ButtonControl,
+                'Selectbox': SelectboxControl,
+                'ScrollBar': ScrollBar,
+                'ScrollArea': ScrollArea,
+                'List': ListControl,
+                'FloatContainer': FloatContainer
+            },
+
+            'EaselJS': {
+                'BigText': BigText,
+                'Placeholder': Placeholder,
+                'Fill': Background,
+
+                'DisabledButtonHelper': DisabledButtonHelper
+            },
+
+            'FakeWebremote': {
+                'KeyboardUser': KeyboardUser
+            },
+
+            'Loader': new Loader()
+
+        };
+
+    }
+);
+define (
+	'easelbone',
+	[
+		'CatLab/Easelbone/FrontController'
+	],
+	function (easelbone) {
+		return easelbone;
+	}
+);

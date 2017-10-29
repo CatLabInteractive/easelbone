@@ -8,10 +8,10 @@ module.exports = function (grunt) {
 
                     baseUrl: 'app/scripts/',
                     paths: {
-                        EaselJS: "vendor/EaselJS/lib/easeljs-NEXT.combined",
-                        PreloadJS: "vendor/PreloadJS/lib/preloadjs-NEXT.combined",
-                        SoundJS: "vendor/SoundJS/lib/soundjs-NEXT.combined",
-                        TweenJS: "vendor/TweenJS/lib/tweenjs-NEXT.combined",
+                        EaselJS: "vendor/EaselJS/lib/easeljs-NEXT",
+                        PreloadJS: "vendor/PreloadJS/lib/preloadjs-NEXT",
+                        SoundJS: "vendor/SoundJS/lib/soundjs-NEXT",
+                        TweenJS: "vendor/TweenJS/lib/tweenjs-NEXT",
                         jquery: "vendor/jquery/dist/jquery",
                         requirejs: "vendor/requirejs/require",
                         underscore: "vendor/underscore/underscore",
@@ -33,6 +33,7 @@ module.exports = function (grunt) {
                         'underscore'
                     ],
                     out: 'dist/scripts/easelbone.js',
+                    optimize: 'none',
                     /*
                     wrap: {
                         "startFile": "wrapper/wrap.start",

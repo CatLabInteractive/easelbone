@@ -85,6 +85,7 @@ define (
         var p = BigText.prototype = new createjs.Container ();
 
         p.Container_initialize = p.initialize;
+        p.Container_tick = p._tick;
 
         p.getFontOffset = function(font)
         {
@@ -92,7 +93,7 @@ define (
             fontName.shift();
             fontName = fontName.join(' ');
 
-            if (typeof(fontOffsets[fontName]) == 'undefined') {
+            if (typeof(fontOffsets[fontName]) === 'undefined') {
                 return { 'x' : 0, 'y' : 0 };
             } else {
                 return fontOffsets[fontName];
@@ -215,14 +216,12 @@ define (
             return hasChanged;
         };
 
-        p.draw = function (ctx, ignoreCache)
+        /**
+         * Draw text (for the first time)
+         */
+        p.drawText = function()
         {
-            if (this.initialized && !this.hasChanged ()) {
-                return this.Container_draw (ctx, ignoreCache);
-            }
-
             this.initialized = true;
-
             this.removeAllChildren ();
 
             var space = this.getAvailableSpace ();
@@ -271,7 +270,30 @@ define (
             text.y = (text.lineHeight * offset.y) + ((space.height - currentHeight) / 2);
 
             this.addChild (text);
-            return this.Container_draw (ctx, ignoreCache);
+            this.cache(-5, -5, space.width + 10, space.height + 10);
+        };
+
+        /**
+         * Called when dimensions or content changes.
+         */
+        p.redrawText = function() {
+            this.drawText();
+        };
+
+        /**
+         * Override the tick method.
+         * @param evt
+         * @private
+         */
+        p._tick = function(evt) {
+            // container tick
+            this.Container_tick(evt);
+
+            if (!this.initialized) {
+                this.drawText();
+            } else if (this.hasChanged()) {
+                this.redrawText();
+            }
         };
 
         createjs.BigText = BigText;
