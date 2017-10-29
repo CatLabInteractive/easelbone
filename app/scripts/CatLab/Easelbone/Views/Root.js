@@ -42,7 +42,7 @@ define(
 
                 }
 
-                this.stage = new createjs.Stage(this.canvas);
+                this.stage = this.createStage();
 
                 // Create the main layer.
                 this.layers = [];
@@ -60,6 +60,10 @@ define(
 
                 //this.stage.enableMouseOver(assets.properties.fps);
                 this.resize();
+            },
+
+            createStage : function() {
+                return new createjs.StageGL(this.canvas)
             },
 
             setMaxCanvasSize: function(width, height)
