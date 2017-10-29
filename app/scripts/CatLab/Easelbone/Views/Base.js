@@ -115,12 +115,12 @@ define(
                 // Black borders
                 var g = new createjs.Graphics();
 
-                if (element.x > 0) {
+                if (element.x >= 1) {
                     g.beginFill(this.getBackground()).drawRect(0, 0, Math.ceil(element.x), this.getHeight());
                     g.beginFill(this.getBackground()).drawRect(this.getWidth() - Math.ceil(element.x), 0, Math.ceil(element.x), this.getHeight());
                 }
 
-                if (element.y > 0) {
+                if (element.y >= 1) {
                     g.beginFill(this.getBackground()).drawRect(0, 0, this.getWidth(), Math.ceil(element.y));
                     g.beginFill(this.getBackground()).drawRect(0, this.getHeight() - Math.ceil(element.y), this.getWidth(), Math.ceil(element.y));
                 }
