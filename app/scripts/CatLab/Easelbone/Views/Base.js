@@ -6,20 +6,34 @@ define(
     function (Backbone, GlobalProperties) {
         return Backbone.View.extend({
 
-            'el': 'div',
+            el: 'div',
 
-            'setRootView': function (root) {
+            /**
+             *
+             * @param root
+             */
+            setRootView: function (root) {
                 this.set('root', root);
             },
 
-            'getWidth': function () {
+            /**
+             * Get canvas width.
+             */
+            getWidth: function () {
                 return this.getStage().canvas.width;
             },
 
-            'getHeight': function () {
+            /**
+             * Get canvas height.
+             */
+            getHeight: function () {
                 return this.getStage().canvas.height;
             },
 
+            /**
+             * Get stage.
+             * @returns {*}
+             */
             getStage: function () {
                 if (typeof(this.el.stage) !== 'undefined') {
                     return this.el.stage;
@@ -28,14 +42,23 @@ define(
                 }
             },
 
-            'scale': function (element) {
+            /**
+             * @param element
+             */
+            scale: function (element) {
                 var scale = this.getScale();
 
                 element.scaleX = scale.x;
                 element.scaleY = scale.y;
             },
 
-            'getScale': function (originalwidth, originalheight, zoom) {
+            /**
+             * @param originalwidth
+             * @param originalheight
+             * @param zoom
+             * @returns {{x: number, y: number}}
+             */
+            getScale: function (originalwidth, originalheight, zoom) {
                 if (typeof (originalwidth) === 'undefined' || originalwidth === null) {
                     originalwidth = GlobalProperties.getWidth();
                 }
@@ -56,7 +79,14 @@ define(
                 return {'x': s, 'y': s};
             },
 
-            'addCenter': function (element, originalwidth, originalheight, zoom, altScale) {
+            /**
+             * @param element
+             * @param originalwidth
+             * @param originalheight
+             * @param zoom
+             * @param altScale
+             */
+            addCenter: function (element, originalwidth, originalheight, zoom, altScale) {
                 if (typeof (originalwidth) === 'undefined' || originalwidth === null) {
                     originalwidth = GlobalProperties.getWidth();
                 }
@@ -99,7 +129,10 @@ define(
                 this.el.addChild(s);
             },
 
-            'clear': function () {
+            /**
+             *
+             */
+            clear: function () {
                 this.el.removeAllChildren();
 
                 // Black
@@ -110,11 +143,17 @@ define(
                 this.el.addChild(s);
             },
 
-            'getBackground': function () {
+            /**
+             * @returns {string}
+             */
+            getBackground: function () {
                 return '#000000';
             },
 
-            'render': function () {
+            /**
+             *
+             */
+            render: function () {
                 var container = new createjs.Container();
                 container.setBounds(0, 0, this.getWidth(), this.getHeight());
 
@@ -124,15 +163,25 @@ define(
                 this.el.addChild(container);
             },
 
-            'tick': function () {
-                return false;
+            /**
+             * Tick and return TRUE if the view should be updated.
+             * @returns {boolean}
+             */
+            tick: function () {
+                return true;
             },
 
-            'afterRender': function () {
+            /**
+             *
+             */
+            afterRender: function () {
 
             },
 
-            'onRemove': function () {
+            /**
+             *
+             */
+            onRemove: function () {
 
             }
 

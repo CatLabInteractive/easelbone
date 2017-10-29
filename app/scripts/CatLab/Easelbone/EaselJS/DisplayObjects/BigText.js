@@ -75,7 +75,7 @@ define (
 
         function getFontLineheight(text)
         {
-            if (typeof(fontLineheightCache[text.font]) == 'undefined') {
+            if (typeof(fontLineheightCache[text.font]) === 'undefined') {
                 fontLineheightCache[text.font] = measureLineHeight(text);
             }
 
@@ -254,13 +254,13 @@ define (
             currentHeight = currentSize.height;
             currentWidth = currentSize.width;
 
-            if (this.align == 'center') {
+            if (this.align === 'center') {
                 text.x = ((space.width - currentWidth) / 2) + (currentWidth / 2);
             }
-            else if (this.align == 'left') {
+            else if (this.align === 'left') {
                 text.x = currentWidth / 2;
             }
-            else if (this.align == 'right') {
+            else if (this.align === 'right') {
                 //text.x = ((space.width - text.getBounds ().width)) + text.getBounds ().width;
                 text.x = space.width - currentWidth;
             }
