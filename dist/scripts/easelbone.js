@@ -1008,6 +1008,7 @@ define (
         var height;
         var debug = false;
         var hash;
+        var location;
         var hasChanged = false;
 
         var currentHeight;
@@ -1030,13 +1031,14 @@ define (
             this.textstring = aTextstring;
             this.font = GlobalProperties.ifUndefined (aFont, GlobalProperties.getDefaultFont ());
             this.color = GlobalProperties.ifUndefined (aColor, GlobalProperties.getDefaultTextColor ());
-            this.align = typeof (align) == 'undefined' ? 'center' : align;
+            this.align = typeof (align) === 'undefined' ? 'center' : align;
 
             this.initialize ();
             this.initialized = false;
             this.limits = null;
 
             this.debug = debug;
+            this.fontsize = 0;
         };
 
         BigText.setFontOffset = function(font, x, y)
@@ -1110,7 +1112,6 @@ define (
 
         p.setText = function (text)
         {
-            this.initialized = false;
             this.textstring = text;
 
             if (this.textElement) {
@@ -1191,15 +1192,24 @@ define (
 
             while (bigger ()) {}
 
+            this.fontsize = fontsize;
             return stable;
         };
 
         p.Container_draw = p.draw;
 
+        /**
+         * @returns {string|*}
+         */
         p.getLocationHash = function ()
         {
             hash = this.getAvailableSpace();
-            return hash.width + ':' + hash.height;
+            hash = hash.width + ':' + hash.height + ':' + this.textstring;
+
+            location = this.localToGlobal(this.x, this.y);
+            hash = location.x + ':' + location.y + ':' + hash + ':' + this.align;
+
+            return hash;
         };
 
         /**
@@ -1209,7 +1219,8 @@ define (
         p.hasChanged = function ()
         {
             hash = this.getLocationHash ();
-            hasChanged = this.lastHash != hash;
+
+            hasChanged = this.lastHash !== hash;
             this.lastHash = hash;
 
             return hasChanged;
@@ -1223,11 +1234,12 @@ define (
             this.initialized = true;
             this.removeAllChildren ();
 
+            this.uncache();
+
             var space = this.getAvailableSpace ();
             if (space.width === 0 || space.height === 0) {
                 return;
             }
-            //console.log (space);
 
             // Draw container size
             if (this.debug) {
@@ -1241,8 +1253,6 @@ define (
 
             var text = this.goBigOrGoHome (this.textstring, space.width, space.height);
             this.textElement = text;
-
-            //console.log (text);
 
             text.textBaseline = 'top';
             text.textAlign = 'center';
@@ -1269,7 +1279,7 @@ define (
             text.y = (text.lineHeight * offset.y) + ((space.height - currentHeight) / 2);
 
             this.addChild (text);
-            this.cache(-5, -5, space.width + 10, space.height + 10);
+            //this.cache(-15, -15, space.width + 30, space.height + this.fontsize);
         };
 
         /**
