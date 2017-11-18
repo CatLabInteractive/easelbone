@@ -1,94 +1,103 @@
-define (
-	[
-		'EaselJS',
+define(
+    [
+        'EaselJS',
 
-		'CatLab/Easelbone/Controls/ListElement'
-	],
-	function (createjs, ListElement)
-	{
-		var List = function (childElement, columns) {
+        'CatLab/Easelbone/Controls/ListElement'
+    ],
+    function (createjs, ListElement) {
+        var List = function (childElement, columns) {
 
-			this.initialize ();
+            this.initialize();
 
-			this.listItems = [];
+            this.listItems = [];
 
-			if (typeof (childElement) !== 'undefined') {
-				this.setChildElement (childElement);
-			}
+            if (typeof (childElement) !== 'undefined') {
+                this.setChildElement(childElement);
+            }
 
-			this.rows = 0;
-			this.columns = columns;
-			this.currentColumn = 0;
-		};
+            this.rows = 0;
+            this.columns = columns;
+            this.currentColumn = 0;
 
-		var p = List.prototype = new createjs.Container ();
+            this.curX = 0;
+            this.curY = 0;
+            this.rowHeight = 0;
+        };
 
-		p.setChildElement = function (element) {
-			this.childElement = element;
+        var p = List.prototype = new createjs.Container();
 
-			var tmpElement = this.getChildElement ();
-			this.boundary = {
-				'x' : tmpElement.boundary.x,
-				'y' : tmpElement.boundary.y
-			};
-		};
+        p.setChildElement = function (element) {
+            this.childElement = element;
 
-		p.getChildElement = function (options) {
-			if (typeof (this.childElement) === 'undefined') {
-				throw "No child element set.";
-			}
+            var tmpElement = this.getChildElement();
+            this.boundary = {
+                'x': tmpElement.boundary.x,
+                'y': tmpElement.boundary.y
+            };
 
-			if (this.childElement.prototype instanceof createjs.DisplayObject) {
-				return new this.childElement ();
-			}
-			
-			return this.childElement (options);
-		};
+            this.rowHeight = this.boundary.y;
+        };
 
-		p.updateBounds = function () {
-			this.setBounds (
-				0, 0,
-				this.boundary.x * this.columns, (this.boundary.y * (this.rows + 1))
-			);
-		};
+        p.getChildElement = function (options) {
+            if (typeof (this.childElement) === 'undefined') {
+                throw "No child element set.";
+            }
 
-		p.nextRow = function () {
-			this.currentColumn = 1;
-			this.rows ++;
-		};
+            if (this.childElement.prototype instanceof createjs.DisplayObject) {
+                return new this.childElement();
+            }
 
-		p.getNextPosition = function () {
+            return this.childElement(options);
+        };
 
-			var out = {};
+        p.updateBounds = function () {
+            this.setBounds(
+                0, 0,
+                this.boundary.x * this.columns, this.curY + this.rowHeight
+            );
+        };
 
-			this.currentColumn ++;
-			if (this.currentColumn > this.columns) {
-				this.nextRow ();
-			}
+        p.nextRow = function () {
+            this.currentColumn = 1;
+            this.rows++;
 
-			out.x = this.boundary.x * (this.currentColumn - 1);
-			out.y = this.boundary.y * (this.rows);
+            this.curY += this.rowHeight;
+            this.rowHeight = 0;
+        };
 
-			return out;
-		};
+        p.getNextPosition = function () {
 
-		p.createElement = function (options) {
+            var out = {};
 
-			var child = new ListElement (this.getChildElement (options));
-			this.listItems.push (child);
+            this.currentColumn++;
+            if (this.currentColumn > this.columns) {
+                this.nextRow();
+            }
 
-			this.addChild (child.element);
+            out.x = this.boundary.x * (this.currentColumn - 1);
+            out.y = this.curY;
 
-			// Check if there is space getPleft on the current row.
-			var pos = this.getNextPosition ();
+            return out;
+        };
 
-			child.element.x = pos.x;
-			child.element.y = pos.y;
+        p.createElement = function (options) {
 
-			this.updateBounds ();
+            var child = new ListElement(this.getChildElement(options));
+            this.listItems.push(child);
 
-			return child;
-		};
+            this.addChild(child.element);
+
+            // Check if there is space getPleft on the current row.
+            var pos = this.getNextPosition();
+            this.rowHeight = Math.max(this.rowHeight, child.getDimensions().height);
+
+            child.element.x = pos.x;
+            child.element.y = pos.y;
+
+            this.updateBounds();
+
+            return child;
+        };
 
         p.removeAllChildren_container = p.removeAllChildren;
 
@@ -97,10 +106,10 @@ define (
             this.currentColumn = 0;
             this.rows = 0;
 
-            this.removeAllChildren_container.apply (this, arguments);
+            this.removeAllChildren_container.apply(this, arguments);
 
         };
 
-		return List;
-	}
+        return List;
+    }
 );

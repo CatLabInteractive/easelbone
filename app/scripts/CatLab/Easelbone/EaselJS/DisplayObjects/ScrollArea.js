@@ -1,173 +1,172 @@
-define (
-	[
-		'EaselJS',
-		'CatLab/Easelbone/EaselJS/DisplayObjects/Placeholder',
-		'jquery'
-	],
-	function (createjs, Placeholder)
-	{
-		var ScrollArea = function (element) {
+define(
+    [
+        'EaselJS',
+        'CatLab/Easelbone/EaselJS/DisplayObjects/Placeholder',
+        'jquery'
+    ],
+    function (createjs, Placeholder) {
+        var ScrollArea = function (element) {
 
-			var self = this;
+            this.initialize();
 
-			this.initialize ();
+            var parent = new Placeholder(element);
 
-			var parent = new Placeholder (element);
+            parent.on('bounds:change', function () {
 
-			parent.on ('bounds:change', function () {
-				// Also set the mask.
-				var maskShape = new createjs.Shape();
-				maskShape.graphics.drawRect (0, 0, this.getBounds ().width, this.getBounds ().height);
+                // Also set the mask.
+                var bounds = parent.getBounds();
 
-				if (typeof (self.setMask) !== 'undefined') {
-					self.setMask (maskShape);
-				}
-				else {
-					self.mask = maskShape;
-				}
-			});
+                var maskShape = new createjs.Shape();
+                maskShape.graphics.drawRect(0, 0, bounds.width, bounds.height);
 
-			parent.addChild (this);
+                if (typeof (this.setMask) !== 'undefined') {
+                    this.setMask(maskShape);
+                } else {
+                    this.mask = maskShape;
+                }
+            }.bind(this));
 
-			this.on ('tick', function () {
-				self.setScroll (0);
-			}, this, true);
+            parent.addChild(this);
 
-			Object.defineProperty (this, 'scroll', {
-				'set' : function (value) {
-					this.setScroll (value);
-				},
-				'get' : function () {
-					return this.getScroll ();
-				}
-			})
-		};
+            this.on('tick', function () {
+                this.setScroll(0);
+            }, this, true);
 
-		var p = ScrollArea.prototype = new Placeholder ();
-		var event;
+            Object.defineProperty(this, 'scroll', {
+                'set': function (value) {
+                    this.setScroll(value);
+                },
+                'get': function () {
+                    return this.getScroll();
+                }
+            })
+        };
 
-		p.isActive = function () {
-			return this.getBounds () !== null &&
-				this.parent !== null &&
-				this.parent.getBounds () !== null;
-		};
+        var p = ScrollArea.prototype = new Placeholder();
+        var event;
 
-		p.getFinalDestination = function (y) {
+        p.isActive = function () {
+            return this.getBounds() !== null &&
+                this.parent !== null &&
+                this.parent.getBounds() !== null;
+        };
 
-			if (!this.isActive ()) {
-				return 0;
-			}
+        p.getFinalDestination = function (y) {
 
-			else if (y < 0) {
-				return 0;
-			}
+            if (!this.isActive()) {
+                return 0;
+            }
 
-			else if (this.getBounds ().height - this.parent.getBounds ().height < 0) {
-				return 0;
-			}
+            else if (y < 0) {
+                return 0;
+            }
 
-			else if (y > (this.getBounds ().height - this.parent.getBounds ().height)) {
-				return 0 - (this.getBounds ().height - this.parent.getBounds ().height);
-			}
+            else if (this.getBounds().height - this.parent.getBounds().height < 0) {
+                return 0;
+            }
 
-			else {
-				return 0 - y;
-			}
-		};
+            else if (y > (this.getBounds().height - this.parent.getBounds().height)) {
+                return 0 - (this.getBounds().height - this.parent.getBounds().height);
+            }
 
-		p.setScroll = function (y) {
+            else {
+                return 0 - y;
+            }
+        };
 
-			this.oldY = this.y;
-			this.y = this.getFinalDestination (y);
+        p.setScroll = function (y) {
 
-			if (this.oldY !== this.y) {
-				this.onScroll();
-			}
+            this.oldY = this.y;
+            this.y = this.getFinalDestination(y);
 
-			return this;
-		};
+            if (this.oldY !== this.y) {
+                this.onScroll();
+            }
 
-		p.getDistance = function (y) {
-			return Math.abs (this.y - this.getFinalDestination (y));
-		};
+            return this;
+        };
 
-		p.getScroll = function () {
-			return 0 - this.y;
-		};
+        p.getDistance = function (y) {
+            return Math.abs(this.y - this.getFinalDestination(y));
+        };
 
-		p.down = function (amount) {
-			return this.setScroll (this.getScroll () + amount);
-		};
+        p.getScroll = function () {
+            return 0 - this.y;
+        };
 
-		p.up = function (amount) {
-			return this.setScroll (this.getScroll () - amount);
-		};
+        p.down = function (amount) {
+            return this.setScroll(this.getScroll() + amount);
+        };
 
-		p.getPercentage = function () {
-			if (!this.getBounds ()) {
-				return 0;
-			}
+        p.up = function (amount) {
+            return this.setScroll(this.getScroll() - amount);
+        };
 
-			return this.getScroll () / (this.getBounds ().height - this.parent.getBounds ().height);
-		};
+        p.getPercentage = function () {
+            if (!this.getBounds()) {
+                return 0;
+            }
 
-		p.focus = function (element, delay, ease) {
+            return this.getScroll() / (this.getBounds().height - this.parent.getBounds().height);
+        };
 
-			var deffered = new jQuery.Deferred ();
+        p.focus = function (element, delay, ease) {
 
-			if (!this.parent.getBounds ()) {
-				deffered.resolve ();
-				return deffered;
-			}
+            var deffered = new jQuery.Deferred();
 
-			if (typeof (delay) === 'undefined')
-				delay = 0;
+            if (!this.parent.getBounds()) {
+                deffered.resolve();
+                return deffered;
+            }
 
-			var y = element.y;
-			//this.setScroll (y);
+            if (typeof (delay) === 'undefined')
+                delay = 0;
 
-			// Center around this y position.
-			var height = 0;
-			if (element.getBounds ()) {
-				height = element.getBounds ().height;
-			}
+            var y = element.y;
+            //this.setScroll (y);
 
-			// y should be in the middle of the screen, so...
-			if (height < this.parent.getBounds ().height)
-				y -= (this.parent.getBounds ().height / 2) - (height / 2);
+            // Center around this y position.
+            var height = 0;
+            if (element.getBounds()) {
+                height = element.getBounds().height;
+            }
 
-			if (this.getDistance () === 0.0001) {
-				// Do nothing.
-				deffered.resolve ();
-			}
+            // y should be in the middle of the screen, so...
+            if (height < this.parent.getBounds().height)
+                y -= (this.parent.getBounds().height / 2) - (height / 2);
 
-			else if (delay > 0) {
-				createjs.Tween.get (this).to ({ 'scroll' : y }, delay, ease).call (deffered.resolve);
-			}
-			else {
-				this.scroll = y;
-				deffered.resolve ();
-			}
+            if (this.getDistance() === 0.0001) {
+                // Do nothing.
+                deffered.resolve();
+            }
 
-			return deffered;
-		};
+            else if (delay > 0) {
+                createjs.Tween.get(this).to({'scroll': y}, delay, ease).call(deffered.resolve);
+            }
+            else {
+                this.scroll = y;
+                deffered.resolve();
+            }
 
-		p.scrollTo = function (percentage) {
+            return deffered;
+        };
 
-			if (!this.getBounds ()) {
-				this.setScroll (0);
-				return;
-			}
+        p.scrollTo = function (percentage) {
 
-			this.setScroll (percentage * (this.getBounds ().height - this.parent.getBounds ().height));
-		};
+            if (!this.getBounds()) {
+                this.setScroll(0);
+                return;
+            }
 
-		p.onScroll = function () {
+            this.setScroll(percentage * (this.getBounds().height - this.parent.getBounds().height));
+        };
 
-			event = new createjs.Event ('scroll');
-			this.dispatchEvent (event);
-		};
+        p.onScroll = function () {
 
-		return ScrollArea;
-	}
+            event = new createjs.Event('scroll');
+            this.dispatchEvent(event);
+        };
+
+        return ScrollArea;
+    }
 );

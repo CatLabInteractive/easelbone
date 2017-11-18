@@ -14,6 +14,16 @@ define (
 			this.dispatchEvent ('focus');
 		};
 
+        /**
+         * @returns {{width, height}}
+         */
+		p.getDimensions = function() {
+			return {
+                'width' : this.element.boundary.x,
+                'height': this.element.boundary.y
+            };
+		};
+
 		return ListElement;
 
 	}

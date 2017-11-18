@@ -1823,178 +1823,177 @@ define (
 
 	}
 );
-define (
-	'CatLab/Easelbone/EaselJS/DisplayObjects/ScrollArea',[
-		'EaselJS',
-		'CatLab/Easelbone/EaselJS/DisplayObjects/Placeholder',
-		'jquery'
-	],
-	function (createjs, Placeholder)
-	{
-		var ScrollArea = function (element) {
+define(
+    'CatLab/Easelbone/EaselJS/DisplayObjects/ScrollArea',[
+        'EaselJS',
+        'CatLab/Easelbone/EaselJS/DisplayObjects/Placeholder',
+        'jquery'
+    ],
+    function (createjs, Placeholder) {
+        var ScrollArea = function (element) {
 
-			var self = this;
+            this.initialize();
 
-			this.initialize ();
+            var parent = new Placeholder(element);
 
-			var parent = new Placeholder (element);
+            parent.on('bounds:change', function () {
 
-			parent.on ('bounds:change', function () {
-				// Also set the mask.
-				var maskShape = new createjs.Shape();
-				maskShape.graphics.drawRect (0, 0, this.getBounds ().width, this.getBounds ().height);
+                // Also set the mask.
+                var bounds = parent.getBounds();
 
-				if (typeof (self.setMask) !== 'undefined') {
-					self.setMask (maskShape);
-				}
-				else {
-					self.mask = maskShape;
-				}
-			});
+                var maskShape = new createjs.Shape();
+                maskShape.graphics.drawRect(0, 0, bounds.width, bounds.height);
 
-			parent.addChild (this);
+                if (typeof (this.setMask) !== 'undefined') {
+                    this.setMask(maskShape);
+                } else {
+                    this.mask = maskShape;
+                }
+            }.bind(this));
 
-			this.on ('tick', function () {
-				self.setScroll (0);
-			}, this, true);
+            parent.addChild(this);
 
-			Object.defineProperty (this, 'scroll', {
-				'set' : function (value) {
-					this.setScroll (value);
-				},
-				'get' : function () {
-					return this.getScroll ();
-				}
-			})
-		};
+            this.on('tick', function () {
+                this.setScroll(0);
+            }, this, true);
 
-		var p = ScrollArea.prototype = new Placeholder ();
-		var event;
+            Object.defineProperty(this, 'scroll', {
+                'set': function (value) {
+                    this.setScroll(value);
+                },
+                'get': function () {
+                    return this.getScroll();
+                }
+            })
+        };
 
-		p.isActive = function () {
-			return this.getBounds () !== null &&
-				this.parent !== null &&
-				this.parent.getBounds () !== null;
-		};
+        var p = ScrollArea.prototype = new Placeholder();
+        var event;
 
-		p.getFinalDestination = function (y) {
+        p.isActive = function () {
+            return this.getBounds() !== null &&
+                this.parent !== null &&
+                this.parent.getBounds() !== null;
+        };
 
-			if (!this.isActive ()) {
-				return 0;
-			}
+        p.getFinalDestination = function (y) {
 
-			else if (y < 0) {
-				return 0;
-			}
+            if (!this.isActive()) {
+                return 0;
+            }
 
-			else if (this.getBounds ().height - this.parent.getBounds ().height < 0) {
-				return 0;
-			}
+            else if (y < 0) {
+                return 0;
+            }
 
-			else if (y > (this.getBounds ().height - this.parent.getBounds ().height)) {
-				return 0 - (this.getBounds ().height - this.parent.getBounds ().height);
-			}
+            else if (this.getBounds().height - this.parent.getBounds().height < 0) {
+                return 0;
+            }
 
-			else {
-				return 0 - y;
-			}
-		};
+            else if (y > (this.getBounds().height - this.parent.getBounds().height)) {
+                return 0 - (this.getBounds().height - this.parent.getBounds().height);
+            }
 
-		p.setScroll = function (y) {
+            else {
+                return 0 - y;
+            }
+        };
 
-			this.oldY = this.y;
-			this.y = this.getFinalDestination (y);
+        p.setScroll = function (y) {
 
-			if (this.oldY !== this.y) {
-				this.onScroll();
-			}
+            this.oldY = this.y;
+            this.y = this.getFinalDestination(y);
 
-			return this;
-		};
+            if (this.oldY !== this.y) {
+                this.onScroll();
+            }
 
-		p.getDistance = function (y) {
-			return Math.abs (this.y - this.getFinalDestination (y));
-		};
+            return this;
+        };
 
-		p.getScroll = function () {
-			return 0 - this.y;
-		};
+        p.getDistance = function (y) {
+            return Math.abs(this.y - this.getFinalDestination(y));
+        };
 
-		p.down = function (amount) {
-			return this.setScroll (this.getScroll () + amount);
-		};
+        p.getScroll = function () {
+            return 0 - this.y;
+        };
 
-		p.up = function (amount) {
-			return this.setScroll (this.getScroll () - amount);
-		};
+        p.down = function (amount) {
+            return this.setScroll(this.getScroll() + amount);
+        };
 
-		p.getPercentage = function () {
-			if (!this.getBounds ()) {
-				return 0;
-			}
+        p.up = function (amount) {
+            return this.setScroll(this.getScroll() - amount);
+        };
 
-			return this.getScroll () / (this.getBounds ().height - this.parent.getBounds ().height);
-		};
+        p.getPercentage = function () {
+            if (!this.getBounds()) {
+                return 0;
+            }
 
-		p.focus = function (element, delay, ease) {
+            return this.getScroll() / (this.getBounds().height - this.parent.getBounds().height);
+        };
 
-			var deffered = new jQuery.Deferred ();
+        p.focus = function (element, delay, ease) {
 
-			if (!this.parent.getBounds ()) {
-				deffered.resolve ();
-				return deffered;
-			}
+            var deffered = new jQuery.Deferred();
 
-			if (typeof (delay) === 'undefined')
-				delay = 0;
+            if (!this.parent.getBounds()) {
+                deffered.resolve();
+                return deffered;
+            }
 
-			var y = element.y;
-			//this.setScroll (y);
+            if (typeof (delay) === 'undefined')
+                delay = 0;
 
-			// Center around this y position.
-			var height = 0;
-			if (element.getBounds ()) {
-				height = element.getBounds ().height;
-			}
+            var y = element.y;
+            //this.setScroll (y);
 
-			// y should be in the middle of the screen, so...
-			if (height < this.parent.getBounds ().height)
-				y -= (this.parent.getBounds ().height / 2) - (height / 2);
+            // Center around this y position.
+            var height = 0;
+            if (element.getBounds()) {
+                height = element.getBounds().height;
+            }
 
-			if (this.getDistance () === 0.0001) {
-				// Do nothing.
-				deffered.resolve ();
-			}
+            // y should be in the middle of the screen, so...
+            if (height < this.parent.getBounds().height)
+                y -= (this.parent.getBounds().height / 2) - (height / 2);
 
-			else if (delay > 0) {
-				createjs.Tween.get (this).to ({ 'scroll' : y }, delay, ease).call (deffered.resolve);
-			}
-			else {
-				this.scroll = y;
-				deffered.resolve ();
-			}
+            if (this.getDistance() === 0.0001) {
+                // Do nothing.
+                deffered.resolve();
+            }
 
-			return deffered;
-		};
+            else if (delay > 0) {
+                createjs.Tween.get(this).to({'scroll': y}, delay, ease).call(deffered.resolve);
+            }
+            else {
+                this.scroll = y;
+                deffered.resolve();
+            }
 
-		p.scrollTo = function (percentage) {
+            return deffered;
+        };
 
-			if (!this.getBounds ()) {
-				this.setScroll (0);
-				return;
-			}
+        p.scrollTo = function (percentage) {
 
-			this.setScroll (percentage * (this.getBounds ().height - this.parent.getBounds ().height));
-		};
+            if (!this.getBounds()) {
+                this.setScroll(0);
+                return;
+            }
 
-		p.onScroll = function () {
+            this.setScroll(percentage * (this.getBounds().height - this.parent.getBounds().height));
+        };
 
-			event = new createjs.Event ('scroll');
-			this.dispatchEvent (event);
-		};
+        p.onScroll = function () {
 
-		return ScrollArea;
-	}
+            event = new createjs.Event('scroll');
+            this.dispatchEvent(event);
+        };
+
+        return ScrollArea;
+    }
 );
 define (
 	'CatLab/Easelbone/Utilities/Mousewheel',[],
@@ -2134,6 +2133,16 @@ define (
 			this.dispatchEvent ('focus');
 		};
 
+        /**
+         * @returns {{width, height}}
+         */
+		p.getDimensions = function() {
+			return {
+                'width' : this.element.boundary.x,
+                'height': this.element.boundary.y
+            };
+		};
+
 		return ListElement;
 
 	}
@@ -2199,97 +2208,106 @@ define (
 		return List;
 	}
 );
-define (
-	'CatLab/Easelbone/Controls/FloatContainer',[
-		'EaselJS',
+define(
+    'CatLab/Easelbone/Controls/FloatContainer',[
+        'EaselJS',
 
-		'CatLab/Easelbone/Controls/ListElement'
-	],
-	function (createjs, ListElement)
-	{
-		var List = function (childElement, columns) {
+        'CatLab/Easelbone/Controls/ListElement'
+    ],
+    function (createjs, ListElement) {
+        var List = function (childElement, columns) {
 
-			this.initialize ();
+            this.initialize();
 
-			this.listItems = [];
+            this.listItems = [];
 
-			if (typeof (childElement) !== 'undefined') {
-				this.setChildElement (childElement);
-			}
+            if (typeof (childElement) !== 'undefined') {
+                this.setChildElement(childElement);
+            }
 
-			this.rows = 0;
-			this.columns = columns;
-			this.currentColumn = 0;
-		};
+            this.rows = 0;
+            this.columns = columns;
+            this.currentColumn = 0;
 
-		var p = List.prototype = new createjs.Container ();
+            this.curX = 0;
+            this.curY = 0;
+            this.rowHeight = 0;
+        };
 
-		p.setChildElement = function (element) {
-			this.childElement = element;
+        var p = List.prototype = new createjs.Container();
 
-			var tmpElement = this.getChildElement ();
-			this.boundary = {
-				'x' : tmpElement.boundary.x,
-				'y' : tmpElement.boundary.y
-			};
-		};
+        p.setChildElement = function (element) {
+            this.childElement = element;
 
-		p.getChildElement = function (options) {
-			if (typeof (this.childElement) === 'undefined') {
-				throw "No child element set.";
-			}
+            var tmpElement = this.getChildElement();
+            this.boundary = {
+                'x': tmpElement.boundary.x,
+                'y': tmpElement.boundary.y
+            };
 
-			if (this.childElement.prototype instanceof createjs.DisplayObject) {
-				return new this.childElement ();
-			}
-			
-			return this.childElement (options);
-		};
+            this.rowHeight = this.boundary.y;
+        };
 
-		p.updateBounds = function () {
-			this.setBounds (
-				0, 0,
-				this.boundary.x * this.columns, (this.boundary.y * (this.rows + 1))
-			);
-		};
+        p.getChildElement = function (options) {
+            if (typeof (this.childElement) === 'undefined') {
+                throw "No child element set.";
+            }
 
-		p.nextRow = function () {
-			this.currentColumn = 1;
-			this.rows ++;
-		};
+            if (this.childElement.prototype instanceof createjs.DisplayObject) {
+                return new this.childElement();
+            }
 
-		p.getNextPosition = function () {
+            return this.childElement(options);
+        };
 
-			var out = {};
+        p.updateBounds = function () {
+            this.setBounds(
+                0, 0,
+                this.boundary.x * this.columns, this.curY + this.rowHeight
+            );
+        };
 
-			this.currentColumn ++;
-			if (this.currentColumn > this.columns) {
-				this.nextRow ();
-			}
+        p.nextRow = function () {
+            this.currentColumn = 1;
+            this.rows++;
 
-			out.x = this.boundary.x * (this.currentColumn - 1);
-			out.y = this.boundary.y * (this.rows);
+            this.curY += this.rowHeight;
+            this.rowHeight = 0;
+        };
 
-			return out;
-		};
+        p.getNextPosition = function () {
 
-		p.createElement = function (options) {
+            var out = {};
 
-			var child = new ListElement (this.getChildElement (options));
-			this.listItems.push (child);
+            this.currentColumn++;
+            if (this.currentColumn > this.columns) {
+                this.nextRow();
+            }
 
-			this.addChild (child.element);
+            out.x = this.boundary.x * (this.currentColumn - 1);
+            out.y = this.curY;
 
-			// Check if there is space getPleft on the current row.
-			var pos = this.getNextPosition ();
+            return out;
+        };
 
-			child.element.x = pos.x;
-			child.element.y = pos.y;
+        p.createElement = function (options) {
 
-			this.updateBounds ();
+            var child = new ListElement(this.getChildElement(options));
+            this.listItems.push(child);
 
-			return child;
-		};
+            this.addChild(child.element);
+
+            // Check if there is space getPleft on the current row.
+            var pos = this.getNextPosition();
+            this.rowHeight = Math.max(this.rowHeight, child.getDimensions().height);
+
+            child.element.x = pos.x;
+            child.element.y = pos.y;
+
+            this.updateBounds();
+
+            return child;
+        };
 
         p.removeAllChildren_container = p.removeAllChildren;
 
@@ -2298,12 +2316,12 @@ define (
             this.currentColumn = 0;
             this.rows = 0;
 
-            this.removeAllChildren_container.apply (this, arguments);
+            this.removeAllChildren_container.apply(this, arguments);
 
         };
 
-		return List;
-	}
+        return List;
+    }
 );
 define (
     'CatLab/Easelbone/EaselJS/DisplayObjects/Background',[
