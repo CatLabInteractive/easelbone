@@ -184,7 +184,7 @@ define (
                 }
 
                 this.addChild (this.displayobject);
-                console.log(this.displayobject);
+                //console.log(this.displayobject);
 
             }
 

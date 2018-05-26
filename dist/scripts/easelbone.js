@@ -924,7 +924,7 @@ define(
 
         Slider.prototype.keyInput = function (input) {
 
-            console.log(input);
+            //console.log(input);
 
             switch (input) {
                 case 'up':
@@ -2509,7 +2509,7 @@ define (
                 }
 
                 this.addChild (this.displayobject);
-                console.log(this.displayobject);
+                //console.log(this.displayobject);
 
             }
 

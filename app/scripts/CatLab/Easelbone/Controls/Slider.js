@@ -52,7 +52,7 @@ define(
 
         Slider.prototype.keyInput = function (input) {
 
-            console.log(input);
+            //console.log(input);
 
             switch (input) {
                 case 'up':
