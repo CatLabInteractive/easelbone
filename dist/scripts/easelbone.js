@@ -1327,121 +1327,145 @@ define (
 
 		var p = Placeholder.prototype = new createjs.Container ();
 
-		p.initializePlaceholder = function (element) {
+        p.initializePlaceholder = function (element) {
 
-			var innerPlaceholder = this;
-			var boundHash = '0:0';
-			var oldBoundHash = '0:0';
-			var event;
+            var innerPlaceholder = this;
+            var boundHash = '0:0';
+            var oldBoundHash = '0:0';
+            var event;
 
-			element.original_draw = element.draw;
+            var innerIndex;
+            var originalIndex;
 
-			// Override the draw method of the original placeholder.
-			element.draw = function (ctx, ignoreCache) {
+            element.original_draw = element.draw;
+            element.original_tick = element._tick;
 
-				this.updateBounds ();
-				return element.original_draw (ctx, ignoreCache);
-			};
 
-			this.getBoundsHash = function () {
+            // Override the draw method of the original placeholder.
+            element.draw = function (ctx, ignoreCache) {
 
-				if (this.getBounds ()) {
-					boundHash = this.getBounds ().width + ':' + this.getBounds ().height;
+                this.updateBounds();
+                this.updateZIndex();
 
-					return boundHash;
-				}
-				return null;
-			};
+                return element.original_draw.apply(element, arguments);
+            };
 
-			this.hasBoundsChanged = function () {
+            this.getBoundsHash = function () {
 
-				if (this.getBoundsHash () !== oldBoundHash) {
-					oldBoundHash = boundHash;
-					return true;
-				}
-			};
+                if (this.getBounds ()) {
+                    boundHash = this.getBounds ().width + ':' + this.getBounds ().height;
 
-			element.updateBounds = function () {
+                    return boundHash;
+                }
+                return null;
+            };
 
-				// Set the bounds on this local container
-				innerPlaceholder.setBounds (
-					0, 0,
-					Math.ceil (this.scaleX * 100),
-					Math.ceil (this.scaleY * 100)
-				);
+            this.hasBoundsChanged = function () {
 
-				innerPlaceholder.x = this.x;
-				innerPlaceholder.y = this.y;
+                if (this.getBoundsHash () !== oldBoundHash) {
+                    oldBoundHash = boundHash;
+                    return true;
+                }
+            };
 
-				innerPlaceholder.rotation = this.rotation;
+            element._tick = function() {
+                this.updateZIndex();
+                return element.original_tick.apply(element, arguments);
+            };
 
-				if (innerPlaceholder.hasBoundsChanged ()) {
+            element.updateZIndex = function() {
+                // check if order is still correct
+                innerIndex = element.parent.getChildIndex(innerPlaceholder);
+                originalIndex = element.parent.getChildIndex(element);
 
-					if (this.mask) {
-						innerPlaceholder.mask = this.mask;
-					}
+                if (originalIndex + 1 !== innerIndex) {
+                    element.parent.addChildAt(innerPlaceholder, originalIndex + 1);
+                }
+            };
 
-					else if (this.originalMask) {
-						innerPlaceholder.mask = this.originalMask;
-					}
+            element.updateBounds = function () {
 
-					this.mask = false;
+                // Set the bounds on this local container
+                innerPlaceholder.setBounds (
+                    0, 0,
+                    Math.ceil (this.scaleX * 100),
+                    Math.ceil (this.scaleY * 100)
+                );
 
-					event = new createjs.Event ('bounds:change');
-					innerPlaceholder.dispatchEvent (event);
-				}
-			};
+                innerPlaceholder.x = this.x;
+                innerPlaceholder.y = this.y;
 
-			// Remove everything
-			//element.removeAllChildren ();
-			if (element.children) {
+                innerPlaceholder.rotation = this.rotation;
+
+                if (innerPlaceholder.hasBoundsChanged ()) {
+
+                    if (this.mask) {
+                        innerPlaceholder.mask = this.mask;
+                    }
+
+                    else if (this.originalMask) {
+                        innerPlaceholder.mask = this.originalMask;
+                    }
+
+                    this.mask = false;
+
+                    event = new createjs.Event ('bounds:change');
+                    innerPlaceholder.dispatchEvent (event);
+                }
+            };
+
+            // Remove everything
+            //element.removeAllChildren ();
+            if (element.children) {
                 for (var i = 0; i < element.children.length; i++) {
                     element.children[i].visible = false;
                 }
             }
 
-			// Override shape
-			if (element.shape) {
-				element.shape = new createjs.Shape();
-			}
+            // Override shape
+            if (element.shape) {
+                element.shape = new createjs.Shape();
+            }
 
-			// Override timeline
-			if (element.timeline) {
+            // Override timeline
+            if (element.timeline) {
                 element.timeline = new createjs.Timeline(null, [], {paused:true, position:0, useTicks:true});
-			}
+            }
 
-			//element.visible = false;
+            //element.visible = false;
 
-			// And add ourselves
-			if (element.parent) {
-				var index = element.parent.getChildIndex (element);
+            // And add ourselves
+            if (element.parent) {
 
-				element.parent.addChildAt (innerPlaceholder, index + 1);
-				innerPlaceholder.dispatchEvent ('initialized');
-			}
-			else {
-				element.addEventListener ('added', function () {
+                var index = element.parent.getChildIndex (element);
 
-					var index = element.parent.getChildIndex (element);
-					element.parent.addChildAt (innerPlaceholder, index + 1);
-					innerPlaceholder.dispatchEvent ('initialized');
-				});
-			}
+                element.parent.addChildAt (innerPlaceholder, index + 1);
+                innerPlaceholder.dispatchEvent ('initialized');
 
-			/*
-			// And add ourselves
-			if (element.parent != null) {
-				element.parent.addChild (innerPlaceholder);
-				innerPlaceholder.dispatchEvent ('initialized');
-			}
-			else {
-				element.addEventListener ('added', function () {
-					element.parent.addChild (innerPlaceholder);
-					innerPlaceholder.dispatchEvent ('initialized');
-				});
-			}
-			*/
-		};
+            } else {
+
+                element.addEventListener ('added', function () {
+                    var index = element.parent.getChildIndex (element);
+                    element.parent.addChildAt (innerPlaceholder, index + 1);
+                    innerPlaceholder.dispatchEvent ('initialized');
+                });
+
+            }
+
+            /*
+            // And add ourselves
+            if (element.parent != null) {
+                element.parent.addChild (innerPlaceholder);
+                innerPlaceholder.dispatchEvent ('initialized');
+            }
+            else {
+                element.addEventListener ('added', function () {
+                    element.parent.addChild (innerPlaceholder);
+                    innerPlaceholder.dispatchEvent ('initialized');
+                });
+            }
+            */
+        };
 
 
 		return Placeholder;
