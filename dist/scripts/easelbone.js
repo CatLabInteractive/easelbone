@@ -1255,7 +1255,7 @@ define (
             this.textElement = text;
 
             text.textBaseline = 'top';
-            text.textAlign = 'center';
+            text.textAlign = this.align;
 
             updateCurrentSize(text);
 
@@ -1266,7 +1266,7 @@ define (
                 text.x = ((space.width - currentWidth) / 2) + (currentWidth / 2);
             }
             else if (this.align === 'left') {
-                text.x = currentWidth / 2;
+                text.x = 0;
             }
             else if (this.align === 'right') {
                 //text.x = ((space.width - text.getBounds ().width)) + text.getBounds ().width;
