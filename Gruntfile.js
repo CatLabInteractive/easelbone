@@ -8,10 +8,10 @@ module.exports = function (grunt) {
 
                     baseUrl: 'app/scripts/',
                     paths: {
-                        EaselJS: "vendor/EaselJS/lib/easeljs-NEXT",
-                        PreloadJS: "vendor/PreloadJS/lib/preloadjs-NEXT",
-                        SoundJS: "vendor/SoundJS/lib/soundjs-NEXT",
-                        TweenJS: "vendor/TweenJS/lib/tweenjs-NEXT",
+                        easeljs: "vendor/EaselJS/lib/easeljs-NEXT",
+                        preloadjs: "vendor/PreloadJS/lib/preloadjs-NEXT",
+                        soundjs: "vendor/SoundJS/lib/soundjs-NEXT",
+                        tweenjs: "vendor/TweenJS/lib/tweenjs-NEXT",
                         jquery: "vendor/jquery/dist/jquery",
                         requirejs: "vendor/requirejs/require",
                         underscore: "vendor/underscore/underscore",
@@ -24,22 +24,39 @@ module.exports = function (grunt) {
                     ],
                     exclude: [
                         'jquery',
-                        'EaselJS',
-                        'PreloadJS',
-                        'SoundJS',
-                        'TweenJS',
+                        'easeljs',
+                        'preloadjs',
+                        'soundjs',
+                        'tweenjs',
                         'backbone',
                         'requirejs',
                         'underscore'
                     ],
                     out: 'dist/scripts/easelbone.js',
                     optimize: 'none',
-                    /*
-                    wrap: {
-                        "startFile": "wrapper/wrap.start",
-                        "endFile": "wrapper/wrap.end"
+                    onBuildWrite: function(moduleName, path, contents) {
+                        // r.js overrides `require` saving the original function as `require.nodeRequire`
+                        var terser = require("terser");
+
+                        var options = {
+                            toplevel: true,
+                            compress: {
+                                global_defs: {
+
+                                },
+                                passes: 2
+                            },
+                            output: {
+                                beautify: false
+                            }
+                        };
+
+                        var result = terser.minify(contents, options);
+                        if (result.error) {
+                            throw new Error(result.error);
+                        }
+                        return result.code;
                     }
-                    */
                 }
             }
         },

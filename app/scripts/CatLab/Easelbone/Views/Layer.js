@@ -1,6 +1,6 @@
 define(
     [
-        'EaselJS',
+        'easeljs',
         'underscore',
         'backbone'
     ],

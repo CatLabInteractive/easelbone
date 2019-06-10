@@ -1,7 +1,7 @@
 define(
     [
         'backbone',
-        'EaselJS',
+        'easeljs',
 
         'CatLab/Easelbone/Views/Layer'
     ],

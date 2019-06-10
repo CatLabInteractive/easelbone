@@ -1,6 +1,6 @@
 define(
     [
-        'EaselJS',
+        'easeljs',
         'CatLab/Easelbone/EaselJS/DisplayObjects/Placeholder',
         'jquery'
     ],

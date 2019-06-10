@@ -1,6 +1,6 @@
 define (
 	[
-		'PreloadJS'
+		'preloadjs'
 	],
 	function (PreloadJS) {
 

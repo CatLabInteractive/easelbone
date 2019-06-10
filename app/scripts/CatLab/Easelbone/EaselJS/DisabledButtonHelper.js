@@ -33,7 +33,7 @@
 // namespace:
 //this.createjs = this.createjs||{};
 
-define (['EaselJS'], function (createjs)
+define (['easeljs'], function (createjs)
 {
 
 	/**

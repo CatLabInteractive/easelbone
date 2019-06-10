@@ -1,6 +1,6 @@
 define (
     [
-        'EaselJS',
+        'easeljs',
         'CatLab/Easelbone/Utilities/GlobalProperties'
     ],
     function (createjs, GlobalProperties)

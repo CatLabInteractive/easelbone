@@ -1,7 +1,6 @@
 define (
 	[
-		'EaselJS',
-
+		'easeljs',
 		'CatLab/Easelbone/Controls/ListElement'
 	],
 	function (createjs, ListElement)

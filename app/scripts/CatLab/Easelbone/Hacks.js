@@ -1,7 +1,7 @@
 define (
 	[
 		'easelhacks',
-		'EaselJS'
+		'easeljs'
 	],
 	function (easelhacks, createjs) {
 
