@@ -22,7 +22,9 @@
     "test",
     "tests",
     "bower.json",
-    "package.json"
+    "package.json",
+    "app",
+    "dist/examples"
   ],
   "dependencies": {
     "backbone": "1.*",
