@@ -252,15 +252,10 @@ define(
                     if (this.easelScreen) {
                         containers.push(this.easelScreen);
                     }
-
                 }
 
                 if (!Array.isArray(containers)) {
                     containers = [containers];
-                }
-
-                if (containers.length === 0) {
-                    throw new Error('findFromNames requires a screen to be set or a container to be provided.');
                 }
 
                 if (!Array.isArray(names)) {
