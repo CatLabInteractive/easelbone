@@ -61,6 +61,10 @@ define(
                 return this;
             },
 
+            getScreen: function() {
+                return this.easelScreen;
+            },
+
             /**
              * @param container
              * @param label
