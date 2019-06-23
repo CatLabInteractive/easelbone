@@ -16,7 +16,7 @@ define(
         return Backbone.View.extend({
 
             el: 'div',
-            screen: null,
+            easelScreen: null,
 
             /**
              *
@@ -57,7 +57,7 @@ define(
              * @param screen
              */
             setScreen: function(screen) {
-                this.screen = screen;
+                this.easelScreen = screen;
                 return this;
             },
 
@@ -69,7 +69,7 @@ define(
             hasLabeledFrame : function(label, container) {
 
                 if (typeof(container) === 'undefined') {
-                    container = this.screen;
+                    container = this.easelScreen;
                 }
 
                 if (!container) {
@@ -202,8 +202,8 @@ define(
              *
              */
             render: function () {
-                if (this.screen) {
-                    this.addCenter(this.screen);
+                if (this.easelScreen) {
+                    this.addCenter(this.easelScreen);
                     return this;
                 }
 
@@ -245,8 +245,8 @@ define(
 
                 if (typeof(containers) === 'undefined') {
                     containers = [];
-                    if (this.screen) {
-                        containers.push(this.screen);
+                    if (this.easelScreen) {
+                        containers.push(this.easelScreen);
                     }
 
                 }
