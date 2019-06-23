@@ -94,6 +94,18 @@ define(
 
             },
 
+            jumpToFrame: function(label, container) {
+                if (typeof(container) === 'undefined') {
+                    container = this.easelScreen;
+                }
+
+                if (!container) {
+                    throw new Error('hasLabeledFrame requires a screen to be set or a container to be provided.');
+                }
+
+                this.getScreen().gotoAndPlay(label);
+            },
+
             /**
              * @param element
              */
