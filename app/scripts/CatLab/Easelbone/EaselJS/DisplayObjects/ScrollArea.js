@@ -2,7 +2,7 @@ define(
     [
         'easeljs',
         'CatLab/Easelbone/EaselJS/DisplayObjects/Placeholder',
-        'jquery'
+        'CatLab/Easelbone/Utilities/Deferred'
     ],
     function (createjs, Placeholder) {
         var ScrollArea = function (element) {
@@ -112,7 +112,7 @@ define(
 
         p.focus = function (element, delay, ease) {
 
-            var deffered = new jQuery.Deferred();
+            var deffered = new Deferred();
 
             if (!this.parent.getBounds()) {
                 deffered.resolve();
