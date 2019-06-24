@@ -4,7 +4,7 @@ define(
         'CatLab/Easelbone/EaselJS/DisplayObjects/Placeholder',
         'CatLab/Easelbone/Utilities/Deferred'
     ],
-    function (createjs, Placeholder) {
+    function (createjs, Placeholder, Deferred) {
         var ScrollArea = function (element) {
 
             this.initialize();
