@@ -137,10 +137,7 @@ define(
                 y -= (this.parent.getBounds().height / 2) - (height / 2);
             }
 
-            if (this.getDistance() <= 1) {
-                // Do nothing.
-                state.resolve();
-            } else if (delay > 0) {
+            if (delay > 0) {
                 createjs.Tween.get(this)
                     .to({'scroll': y}, delay, ease)
                     .call(function() {
