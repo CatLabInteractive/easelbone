@@ -90,7 +90,18 @@ define(
                         return true;
                     }
                 }
-                return false;
+
+                // Also take a look in the children
+                var result = false;
+
+                this.forEachNamedChild(container, function(child) {
+                    if (this.hasLabeledFrame(label, child)) {
+                        result = true;
+                        return false; // return false will stop the loop.
+                    }
+                }.bind(this));
+
+                return result;
 
             },
 
@@ -103,7 +114,20 @@ define(
                     throw new Error('hasLabeledFrame requires a screen to be set or a container to be provided.');
                 }
 
-                this.getScreen().gotoAndPlay(label);
+                if (!container.timeline) {
+                    return;
+                }
+
+                var labels = container.timeline.getLabels();
+                for (var i = 0; i < labels.length; i ++) {
+                    if (labels[i].label === label) {
+                        container.gotoAndPlay(label);
+                    }
+                }
+
+                this.forEachNamedChild(container, function(child) {
+                    this.jumpToFrame(label, child);
+                }.bind(this));
             },
 
             /**
@@ -317,6 +341,20 @@ define(
                     results.push(container[name]);
                 }
 
+                this.forEachNamedChild(container, function(child) {
+                    this.findFromNameInContainer(child, name, results);
+                }.bind(this));
+
+                return results;
+            },
+
+            /**
+             * Loop through all named children
+             * @param container
+             * @param callback
+             */
+            forEachNamedChild: function(container, callback)
+            {
                 // Look for named properties (defined by adobe animate)
                 for (var key in container) {
 
@@ -331,11 +369,11 @@ define(
                     }
 
                     if (container[key] instanceof createjs.DisplayObject) {
-                        this.findFromNameInContainer(container[key], name, results);
+                        if (callback(container[key]) === false) {
+                            return;
+                        }
                     }
                 }
-
-                return results;
             },
 
             /**
