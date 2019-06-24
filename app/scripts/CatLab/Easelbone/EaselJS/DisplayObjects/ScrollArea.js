@@ -112,15 +112,16 @@ define(
 
         p.focus = function (element, delay, ease) {
 
-            var deffered = new Deferred();
+            var state = new Deferred();
 
             if (!this.parent.getBounds()) {
-                deffered.resolve();
-                return deffered;
+                state.resolve();
+                return state.promise();
             }
 
-            if (typeof (delay) === 'undefined')
+            if (typeof (delay) === 'undefined') {
                 delay = 0;
+            }
 
             var y = element.y;
             //this.setScroll (y);
@@ -132,23 +133,25 @@ define(
             }
 
             // y should be in the middle of the screen, so...
-            if (height < this.parent.getBounds().height)
+            if (height < this.parent.getBounds().height) {
                 y -= (this.parent.getBounds().height / 2) - (height / 2);
+            }
 
-            if (this.getDistance() === 0.0001) {
+            if (this.getDistance() <= 1) {
                 // Do nothing.
-                deffered.resolve();
-            }
-
-            else if (delay > 0) {
-                createjs.Tween.get(this).to({'scroll': y}, delay, ease).call(deffered.resolve);
-            }
-            else {
+                state.resolve();
+            } else if (delay > 0) {
+                createjs.Tween.get(this)
+                    .to({'scroll': y}, delay, ease)
+                    .call(function() {
+                        state.resolve()
+                    }.bind(this));
+            } else {
                 this.scroll = y;
-                deffered.resolve();
+                state.resolve();
             }
 
-            return deffered;
+            return state.promise();
         };
 
         p.scrollTo = function (percentage) {
