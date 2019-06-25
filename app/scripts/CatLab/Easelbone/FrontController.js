@@ -16,6 +16,7 @@ define(
         'CatLab/Easelbone/Controls/ScrollArea',
         'CatLab/Easelbone/Controls/List',
         'CatLab/Easelbone/Controls/FloatContainer',
+        'CatLab/Easelbone/Controls/GridFill',
 
         'CatLab/Easelbone/EaselJS/DisplayObjects/BigText',
         'CatLab/Easelbone/EaselJS/DisplayObjects/Placeholder',
@@ -33,17 +34,22 @@ define(
         BaseView,
         LayerView,
         NavigatableView,
+
         SliderControl,
         CheckboxControl,
         ButtonControl,
         SelectboxControl,
+
         ScrollBar,
         ScrollArea,
         ListControl,
         FloatContainer,
+        GridFill,
+
         BigText,
         Placeholder,
         Background,
+
         DisabledButtonHelper,
         GlobalProperties,
         KeyboardUser
@@ -75,14 +81,14 @@ define(
                 'ScrollBar': ScrollBar,
                 'ScrollArea': ScrollArea,
                 'List': ListControl,
-                'FloatContainer': FloatContainer
+                'FloatContainer': FloatContainer,
+                'GridFill' : GridFill
             },
 
             'EaselJS': {
                 'BigText': BigText,
                 'Placeholder': Placeholder,
                 'Fill': Background,
-
                 'DisabledButtonHelper': DisabledButtonHelper
             },
 
