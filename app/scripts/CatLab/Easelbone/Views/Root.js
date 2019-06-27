@@ -63,7 +63,7 @@ define(
             },
 
             createStage : function() {
-                return new createjs.StageGL(this.canvas)
+                return new createjs.Stage(this.canvas)
             },
 
             setMaxCanvasSize: function(width, height)

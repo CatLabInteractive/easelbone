@@ -299,27 +299,33 @@ define(
                 }
 
                 var results = [];
+                var name;
+                var nameParts;
+                var rootName;
 
-                // Check for dot notation
-                names.forEach(function (name) {
+                // Loop through the names and return the first resultset with matches
+                for (var i = 0; i < names.length; i ++) {
 
-                    var nameParts = name.split('.');
-                    var rootName = nameParts.shift();
+                    name = names[i];
+
+                    // Check for dot notation
+                    nameParts = name.split('.');
+                    rootName = nameParts.shift();
 
                     // Go through all containers
                     containers.forEach(function (container) {
-                        var elements = this.findFromNameInContainer(container, rootName);
+                        results = this.findFromNameInContainer(container, rootName);
 
                         // Do we need to go further down the rabbithole?
                         if (nameParts.length > 0) {
-                            elements = this.findFromNames(nameParts.join('.'), elements);
+                            results = this.findFromNames(nameParts.join('.'), results);
                         }
-
-                        results = results.concat(elements);
-
                     }.bind(this));
 
-                }.bind(this));
+                    if (results.length > 0) {
+                        return results;
+                    }
+                }
 
                 return results;
             },
