@@ -314,7 +314,7 @@ define(
 
                     // Go through all containers
                     containers.forEach(function (container) {
-                        results = this.findFromNameInContainer(container, rootName);
+                        results = results.concat(this.findFromNameInContainer(container, rootName));
 
                         // Do we need to go further down the rabbithole?
                         if (nameParts.length > 0) {
