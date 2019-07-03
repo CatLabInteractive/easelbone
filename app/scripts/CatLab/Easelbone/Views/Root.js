@@ -42,7 +42,7 @@ define(
 
                 }
 
-                this.stage = this.createStage();
+                this.stage = this.createStage(options);
 
                 // Create the main layer.
                 this.layers = [];
@@ -62,8 +62,12 @@ define(
                 this.resize();
             },
 
-            createStage : function() {
-                return new createjs.Stage(this.canvas)
+            createStage : function(options) {
+                if (typeof(options.webgl) !== 'undefined' && options.webgl) {
+                    return new createjs.StageGL(this.canvas)
+                } else {
+                    return new createjs.Stage(this.canvas)
+                }
             },
 
             setMaxCanvasSize: function(width, height)
