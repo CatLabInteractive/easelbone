@@ -287,9 +287,26 @@ define(
                                     .fail(function () {
                                         df.reject(arguments);
                                     });
+                            } else if (args[j].then) {
+                                args[j].then(function () {
+                                    rp[j] = (arguments.length < 2) ? arguments[0] : arguments;
+                                    if (++done == size) {
+                                        df.resolve.apply(df, rp);
+                                    }
+                                });
+
+                                if (args[j].fail) {
+                                    args[j].fail(function () {
+                                        df.reject(arguments);
+                                    });
+                                } else if (args[j].catch) {
+                                    args[j].catch(function() {
+                                        df.reject(arguments);
+                                    });
+                                }
                             } else {
                                 obj = args[j];
-                                args[j] = new Deferred();
+                                args[j] = new D();
 
                                 args[j].done(function () {
                                     rp[j] = (arguments.length < 2) ? arguments[0] : arguments;

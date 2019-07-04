@@ -1,6 +1,7 @@
 define(
     [
         'CatLab/Easelbone/Utilities/Loader',
+        'CatLab/Easelbone/Utilities/LoadingScreen',
 
         'CatLab/Easelbone/Views/Root',
         'CatLab/Easelbone/Views/Base',
@@ -30,6 +31,8 @@ define(
     ],
     function (
         Loader,
+        LoadingScreen,
+
         RootView,
         BaseView,
         LayerView,
@@ -96,7 +99,8 @@ define(
                 'KeyboardUser': KeyboardUser
             },
 
-            'Loader': new Loader()
+            'Loader': Loader,
+            'LoadingScreen' : LoadingScreen
 
         };
 

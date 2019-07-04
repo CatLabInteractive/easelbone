@@ -97,11 +97,21 @@ module.exports = function (grunt) {
         'clean': [
             'dist/package.json',
             'dist/scripts/CatLab/'
-        ]
+        ],
+
+        watch: {
+            js: {
+                files: ['app/**/*.js'],
+                tasks: ['default']
+            }
+        }
     });
 
     // Requirejs
     grunt.loadNpmTasks('grunt-contrib-requirejs');
+
+    grunt.loadNpmTasks('grunt-contrib-watch');
+
 
 
     // Cleaner
