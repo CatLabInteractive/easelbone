@@ -6,33 +6,38 @@ define (
 	{
 		var GridFill = function (placeholder) {
 
-
 			this.initialize ();
 
 			this.placeholder = placeholder;
 			this.grid = [];
+			this.floaters = [];
 			this.rows = 0;
 			this.columns = 0;
 
 			this.paddingX = 0;
 			this.paddingY = 0;
 
+			this.forceRatio = null;
+			this.cellSize = null;
+
 			this.placeholder.on('bounds:change', function() {
-
 				this.redrawGrid();
+			}.bind(this));
 
+			this.placeholder.on('tick', function() {
+				this.update();
 			}.bind(this));
 		};
 
 		var p = GridFill.prototype = new createjs.Container ();
 
 		/**
-		 * @param row
-		 * @param column
+		 * @param {integer} column
+		 * @param {integer} row
 		 * @param element
 		 * @returns {GridFill}
 		 */
-		p.set = function (row, column, element) {
+		p.set = function (column, row, element) {
 
 			if (typeof(this.grid[row]) === 'undefined') {
 				this.grid[row] = [];
@@ -40,6 +45,49 @@ define (
 			this.grid[row][column] = element;
 
 			this.resetSize();
+			return this;
+		};
+
+		/**
+		 * Floating elements float on top of the grid and can take position,
+		 * even decimal numbers.
+		 * @param x
+		 * @param y
+		 * @param element
+		 * @param offsetX
+		 * @param offsetY
+		 */
+		p.float = function(x, y, element, offsetX, offsetY) {
+
+			if (typeof(offsetX) === 'undefined'){
+				offsetX = 0;
+			}
+
+			if (typeof(offsetY) === 'undefined') {
+				offsetY = 0;
+			}
+
+			element.gx = x;
+			element.gy = y;
+
+			var el = {
+				ox: offsetX,
+				oy: offsetY,
+				e: element
+			};
+
+			this.floaters.push(el);
+			return el;
+		};
+
+		/**
+		 * If set, make sure each cell has the given ratio (width / height)
+		 * The grid will not fill the whole placeholder, but instead
+		 * it will use the most space as possible.
+		 * @param ratio
+		 */
+		p.forceCellRatio = function(ratio) {
+			this.forceRatio = ratio;
 			return this;
 		};
 
@@ -89,9 +137,86 @@ define (
 			this.paddingY = paddingFactorY;
 		};
 
+		p.getCellSize = function() {
+			if (this.cellSize === null) {
+				this.recalculateCellSize();
+			}
+
+			return this.cellSize;
+		};
+
+		p.recalculateCellSize = function() {
+
+			var bounds = this.placeholder.getBounds();
+			if (!bounds) {
+				return;
+			}
+
+			var cellWidth;
+			var cellHeight;
+
+			var marginX = 0;
+			var marginY = 0;
+
+			cellWidth = bounds.width / this.columns;
+			cellHeight = bounds.height / this.rows;
+
+			if (this.forceRatio !== null) {
+
+				var currentRatio = cellWidth / cellHeight;
+				if (currentRatio > this.forceRatio) {
+					// need to add horizontal padding
+					cellWidth = cellHeight * this.forceRatio;
+					marginX = (bounds.width - (cellWidth * this.columns)) / 2;
+				} else if (currentRatio < this.forceRatio) {
+					// need to add vertical padding
+					cellHeight = cellWidth * this.forceRatio;
+					marginY = (bounds.height - (cellHeight * this.rows)) / 2;
+				}
+
+			}
+
+			var paddingX = cellWidth * this.paddingX;
+			var paddingY = cellHeight * this.paddingY;
+
+			var cellInnerWidth = cellWidth - (paddingX * 2);
+			var cellInnerHeight = cellHeight - (paddingY * 2);
+
+			this.cellSize = {
+				width: cellWidth,
+				height: cellHeight,
+				marginX: marginX,
+				marginY: marginY,
+				innerWidth: cellInnerWidth,
+				innerHeight: cellInnerHeight,
+				paddingX: paddingX,
+				paddingY: paddingY
+			};
+
+		};
+
+		p.getCellPosition = function(col, row)
+		{
+			var cellSize = this.getCellSize();
+			if (!cellSize) {
+				return null;
+			}
+
+			return {
+				x: cellSize.marginX + (col * cellSize.width) + cellSize.paddingX,
+				y: cellSize.marginY + (row * cellSize.height) + cellSize.paddingY,
+				innerWidth: cellSize.innerWidth,
+				innerHeight: cellSize.innerHeight
+			};
+		};
+
+		/**
+		 *
+		 */
 		p.redrawGrid = function() {
 
 			this.placeholder.removeAllChildren();
+
 			var bounds = this.placeholder.getBounds();
 
 			if (this.rows === 0 || this.columns === 0) {
@@ -102,14 +227,7 @@ define (
 				return;
 			}
 
-			var cellWidth = bounds.width / this.columns;
-			var cellHeight = bounds.height / this.rows;
-
-			var paddingX = cellWidth * this.paddingX;
-			var paddingY = cellHeight * this.paddingY;
-
-			var cellInnerWidth = cellWidth - (paddingX * 2);
-			var cellInnerHeight = cellHeight - (paddingY * 2);
+			this.recalculateCellSize();
 
 			for (var row = 0; row < this.rows; row ++) {
 				for (var col = 0; col < this.columns; col ++) {
@@ -122,15 +240,58 @@ define (
 					var container = new createjs.Container();
 					this.placeholder.addChild(container);
 
-					container.y = (row * cellHeight) + paddingY;
-					container.x = (col * cellWidth) + paddingX;
-					container.setBounds(0, 0, cellInnerWidth, cellInnerHeight);
+					var pos = this.getCellPosition(col, row);
+
+					container.y = pos.y;
+					container.x = pos.x;
+					container.setBounds(0, 0, pos.innerWidth, pos.innerHeight);
 
 					container.addChild(element);
 
 				}
 			}
 
+			// Add the floaters
+			this.floaters.forEach(function(element) {
+
+				var container = new createjs.Container();
+				this.placeholder.addChild(container);
+
+				var pos = this.getCellPosition(
+					element.e.gx + element.ox,
+					element.e.gy + element.oy
+				);
+
+				container.y = pos.y;
+				container.x = pos.x;
+				container.setBounds(0, 0, pos.innerWidth, pos.innerHeight);
+
+				container.addChild(element.e);
+
+			}.bind(this));
+
+		};
+
+		p.update = function() {
+
+			// Add the floaters
+			this.floaters.forEach(function(element) {
+
+				if (!element.e || !element.e.parent) {
+					return;
+				}
+
+				var pos = this.getCellPosition(
+					element.e.gx + element.ox,
+					element.e.gy + element.oy
+				);
+
+				if (pos) {
+					element.e.parent.x = pos.x;
+					element.e.parent.y = pos.y;
+				}
+
+			}.bind(this));
 		};
 
 		return GridFill;
