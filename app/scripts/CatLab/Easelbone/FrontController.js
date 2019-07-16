@@ -26,6 +26,7 @@ define(
         'CatLab/Easelbone/EaselJS/DisabledButtonHelper',
 
         'CatLab/Easelbone/Utilities/GlobalProperties',
+        'CatLab/Easelbone/Utilities/MovieClipHelper',
 
         'CatLab/FakeWebremote/Models/KeyboardUser'
     ],
@@ -54,53 +55,60 @@ define(
         Background,
 
         DisabledButtonHelper,
+
         GlobalProperties,
+        MovieClipHelper,
+
         KeyboardUser
     ) {
 
         return {
 
-            'initialize': function () {
+            initialize: function () {
 
 
             },
 
-            'setProperties': function (properties) {
+            setProperties: function (properties) {
                 GlobalProperties.set(properties);
             },
 
-            'Views': {
-                'Root': RootView,
-                'Base': BaseView,
-                'Layer': LayerView,
-                'Navigatable': NavigatableView
+            Views: {
+                Root: RootView,
+                Base: BaseView,
+                Layer: LayerView,
+                Navigatable: NavigatableView
             },
 
-            'Controls': {
-                'Slider': SliderControl,
-                'Checkbox': CheckboxControl,
-                'Button': ButtonControl,
-                'Selectbox': SelectboxControl,
-                'ScrollBar': ScrollBar,
-                'ScrollArea': ScrollArea,
-                'List': ListControl,
-                'FloatContainer': FloatContainer,
-                'GridFill' : GridFill
+            Controls: {
+                Slider: SliderControl,
+                Checkbox: CheckboxControl,
+                Button: ButtonControl,
+                Selectbox: SelectboxControl,
+                ScrollBar: ScrollBar,
+                ScrollArea: ScrollArea,
+                List: ListControl,
+                FloatContainer: FloatContainer,
+                GridFill : GridFill
             },
 
-            'EaselJS': {
-                'BigText': BigText,
-                'Placeholder': Placeholder,
-                'Fill': Background,
-                'DisabledButtonHelper': DisabledButtonHelper
+            EaselJS: {
+                BigText: BigText,
+                Placeholder: Placeholder,
+                Fill: Background,
+                DisabledButtonHelper: DisabledButtonHelper
             },
 
-            'FakeWebremote': {
-                'KeyboardUser': KeyboardUser
+            FakeWebremote: {
+                KeyboardUser: KeyboardUser
             },
 
-            'Loader': Loader,
-            'LoadingScreen' : LoadingScreen
+            Loader: Loader,
+            LoadingScreen : LoadingScreen,
+
+            Helpers: {
+                MovieClipHelper: MovieClipHelper
+            }
 
         };
 

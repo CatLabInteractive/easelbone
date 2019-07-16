@@ -3,13 +3,13 @@ define(
         'backbone',
         'easeljs',
         'CatLab/Easelbone/Utilities/GlobalProperties',
-        'CatLab/Easelbone/EaselJS/DisplayObjects/Placeholder'
+        'CatLab/Easelbone/Utilities/MovieClipHelper'
     ],
     function (
         Backbone,
         createjs,
         GlobalProperties,
-        Placeholder
+        MovieClipHelper
     ) {
         "use strict";
 
@@ -265,12 +265,14 @@ define(
              * @returns {Array}
              */
             findPlaceholders: function (name, container) {
-                var out = [];
-                var placeholders = this.findFromNames(name, container);
-                placeholders.forEach(function (element) {
-                    out.push(new Placeholder(element));
-                });
-                return out;
+                if (typeof(container) === 'undefined') {
+                    container = [];
+                    if (this.easelScreen) {
+                        container.push(this.easelScreen);
+                    }
+                }
+
+                return MovieClipHelper.findPlaceholders(name, container);
             },
 
             /**
@@ -290,44 +292,7 @@ define(
                     }
                 }
 
-                if (!Array.isArray(containers)) {
-                    containers = [containers];
-                }
-
-                if (!Array.isArray(names)) {
-                    names = [names];
-                }
-
-                var results = [];
-                var name;
-                var nameParts;
-                var rootName;
-
-                // Loop through the names and return the first resultset with matches
-                for (var i = 0; i < names.length; i ++) {
-
-                    name = names[i];
-
-                    // Check for dot notation
-                    nameParts = name.split('.');
-                    rootName = nameParts.shift();
-
-                    // Go through all containers
-                    containers.forEach(function (container) {
-                        results = results.concat(this.findFromNameInContainer(container, rootName));
-
-                        // Do we need to go further down the rabbithole?
-                        if (nameParts.length > 0) {
-                            results = this.findFromNames(nameParts.join('.'), results);
-                        }
-                    }.bind(this));
-
-                    if (results.length > 0) {
-                        return results;
-                    }
-                }
-
-                return results;
+                return MovieClipHelper.findFromNames(names, containers);
             },
 
             /**
@@ -339,19 +304,7 @@ define(
              * @returns {Array}
              */
             findFromNameInContainer: function (container, name, results) {
-                if (typeof (results) === 'undefined') {
-                    results = [];
-                }
-
-                if (container[name] instanceof createjs.DisplayObject) {
-                    results.push(container[name]);
-                }
-
-                this.forEachNamedChild(container, function(child) {
-                    this.findFromNameInContainer(child, name, results);
-                }.bind(this));
-
-                return results;
+                return MovieClipHelper.findFromNameInContainer(container, name, results);
             },
 
             /**
@@ -359,27 +312,8 @@ define(
              * @param container
              * @param callback
              */
-            forEachNamedChild: function(container, callback)
-            {
-                // Look for named properties (defined by adobe animate)
-                for (var key in container) {
-
-                    if (!container.hasOwnProperty(key)) {
-                        continue;
-                    }
-
-                    switch (key) {
-                        case 'parent':
-                        case 'mask':
-                            continue;
-                    }
-
-                    if (container[key] instanceof createjs.DisplayObject) {
-                        if (callback(container[key]) === false) {
-                            return;
-                        }
-                    }
-                }
+            forEachNamedChild: function(container, callback) {
+                return MovieClipHelper.forEachNamedChild(container, callback);
             },
 
             /**
