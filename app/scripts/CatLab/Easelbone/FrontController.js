@@ -23,6 +23,8 @@ define(
         'CatLab/Easelbone/EaselJS/DisplayObjects/Placeholder',
         'CatLab/Easelbone/EaselJS/DisplayObjects/Background',
 
+        'CatLab/Easelbone/EaselJS/Filters/ColorSwapFilter',
+
         'CatLab/Easelbone/EaselJS/DisabledButtonHelper',
 
         'CatLab/Easelbone/Utilities/GlobalProperties',
@@ -53,6 +55,8 @@ define(
         BigText,
         Placeholder,
         Background,
+
+        ColorSwapFilter,
 
         DisabledButtonHelper,
 
@@ -96,7 +100,10 @@ define(
                 BigText: BigText,
                 Placeholder: Placeholder,
                 Fill: Background,
-                DisabledButtonHelper: DisabledButtonHelper
+                DisabledButtonHelper: DisabledButtonHelper,
+                Filters: {
+                    ColorSwapFilter: ColorSwapFilter
+                }
             },
 
             FakeWebremote: {
