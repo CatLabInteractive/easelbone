@@ -37,9 +37,10 @@ define(
          * to deprecated/alternative names when providing an array.
          * @param {string|Array} names
          * @param containers
+         * @param {{ all: boolean }} options
          * @returns {Array}
          */
-        p.findFromNames = function (names, containers) {
+        p.findFromNames = function (names, containers, options) {
 
             if (!Array.isArray(containers)) {
                 containers = [containers];
@@ -65,7 +66,7 @@ define(
 
                 // Go through all containers
                 containers.forEach(function (container) {
-                    results = results.concat(this.findFromNameInContainer(container, rootName));
+                    results = results.concat(this.findFromNameInContainer(container, rootName, options));
 
                     // Do we need to go further down the rabbithole?
                     if (nameParts.length > 0) {
@@ -86,21 +87,28 @@ define(
          * and all child named elements and return them.
          * @param container
          * @param name
+         * @param {{ all: boolean }} options
          * @param results
          * @returns {Array}
          */
-        p.findFromNameInContainer = function (container, name, results) {
+        p.findFromNameInContainer = function (container, name, options, results) {
             if (typeof (results) === 'undefined') {
                 results = [];
+            }
+
+            if (typeof (options) === 'undefined') {
+                options = {};
             }
 
             if (container[name] instanceof createjs.DisplayObject) {
                 results.push(container[name]);
             }
 
-            this.forEachNamedChild(container, function(child) {
-                this.findFromNameInContainer(child, name, results);
-            }.bind(this));
+            if (options.all && results.length === 0) {
+                this.forEachNamedChild(container, function (child) {
+                    this.findFromNameInContainer(child, name, options, results);
+                }.bind(this));
+            }
 
             return results;
         };
