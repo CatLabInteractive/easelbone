@@ -80,31 +80,15 @@ define(
                     throw new Error('hasLabeledFrame requires a screen to be set or a container to be provided.');
                 }
 
-                if (typeof(container.timeline) === 'undefined') {
-                    return false;
-                }
-
-                var labels = container.timeline.getLabels();
-                for (var i = 0; i < labels.length; i ++) {
-                    if (labels[i].label === label) {
-                        return true;
-                    }
-                }
-
-                // Also take a look in the children
-                var result = false;
-
-                this.forEachNamedChild(container, function(child) {
-                    if (this.hasLabeledFrame(label, child)) {
-                        result = true;
-                        return false; // return false will stop the loop.
-                    }
-                }.bind(this));
-
-                return result;
+                return MovieClipHelper.jumpToFrame(label, container);
 
             },
 
+            /**
+             * @param label
+             * @param container
+             * @returns {*|undefined|void}
+             */
             jumpToFrame: function(label, container) {
                 if (typeof(container) === 'undefined') {
                     container = this.easelScreen;
@@ -114,20 +98,7 @@ define(
                     throw new Error('hasLabeledFrame requires a screen to be set or a container to be provided.');
                 }
 
-                if (!container.timeline) {
-                    return;
-                }
-
-                var labels = container.timeline.getLabels();
-                for (var i = 0; i < labels.length; i ++) {
-                    if (labels[i].label === label) {
-                        container.gotoAndPlay(label);
-                    }
-                }
-
-                this.forEachNamedChild(container, function(child) {
-                    this.jumpToFrame(label, child);
-                }.bind(this));
+                return MovieClipHelper.jumpToFrame(label, container);
             },
 
             /**

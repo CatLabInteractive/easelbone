@@ -92,6 +92,7 @@ define(
          * @returns {Array}
          */
         p.findFromNameInContainer = function (container, name, options, results) {
+
             if (typeof (results) === 'undefined') {
                 results = [];
             }
@@ -104,7 +105,7 @@ define(
                 results.push(container[name]);
             }
 
-            if (options.all && results.length === 0) {
+            if (results.length === 0 || options.all) {
                 this.forEachNamedChild(container, function (child) {
                     this.findFromNameInContainer(child, name, options, results);
                 }.bind(this));
@@ -172,6 +173,50 @@ define(
         };
 
         /**
+         * @param container
+         * @param label
+         * @returns {boolean}
+         */
+        p.hasLabeledFrame  = function(label, container) {
+            if (container.timeline) {
+                var labels = container.timeline.getLabels();
+                for (var i = 0; i < labels.length; i++) {
+                    if (labels[i].label === label) {
+                        return true;
+                    }
+                }
+            }
+
+            // Also take a look in the children
+            var result = false;
+
+            this.forEachNamedChild(container, function(child) {
+                if (this.hasLabeledFrame(label, child)) {
+                    result = true;
+                    return false; // return false will stop the loop.
+                }
+            }.bind(this));
+
+            return result;
+
+        };
+
+        p.jumpToFrame = function(label, container) {
+            if (container.timeline) {
+                var labels = container.timeline.getLabels();
+                for (var i = 0; i < labels.length; i++) {
+                    if (labels[i].label === label) {
+                        container.gotoAndPlay(label);
+                    }
+                }
+            }
+
+            this.forEachNamedChild(container, function(child) {
+                this.jumpToFrame(label, child);
+            }.bind(this));
+        };
+
+        /**
          * Attach helper methods to the createjs MovieClip prototype
          */
         p.attach = function(createjs) {
@@ -193,6 +238,14 @@ define(
 
             p.applySpriteFilters = function(filters) {
                 return helper.applySpriteFilters(filters, this);
+            };
+
+            p.hasLabeledFrame = function(label) {
+                return helper.hasLabeledFrame(label, this);
+            };
+
+            p.jumpToFrame = function(label) {
+                return helper.jumpToFrame(label, this);
             };
         };
 
