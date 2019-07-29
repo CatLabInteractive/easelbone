@@ -12,7 +12,7 @@
     "grunt-contrib-copy": "x",
     "grunt-contrib-requirejs": "x",
     "grunt-contrib-watch": "^1.1.0",
-    "terser": "^4.0.0"
+    "terser": "^4.1.2"
   },
   "dependencies": {
     "backbone": "^1.*",
@@ -21,6 +21,7 @@
     "preloadjs": "^1.0.1",
     "soundjs": "^1.0.1",
     "tweenjs": "^1.0.2",
-    "underscore": "^1.*"
+    "underscore": "^1.*",
+    "lodash": ">=4.17.13"
   }
 }
