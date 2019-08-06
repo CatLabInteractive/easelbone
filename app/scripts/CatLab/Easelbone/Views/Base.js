@@ -80,7 +80,7 @@ define(
                     throw new Error('hasLabeledFrame requires a screen to be set or a container to be provided.');
                 }
 
-                return MovieClipHelper.jumpToFrame(label, container);
+                return MovieClipHelper.hasLabeledFrame(label, container);
 
             },
 
