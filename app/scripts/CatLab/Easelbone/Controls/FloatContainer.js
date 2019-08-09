@@ -9,8 +9,6 @@ define(
 
             this.initialize();
 
-            this.listItems = [];
-
             if (typeof (childElement) !== 'undefined') {
                 this.setChildElement(childElement);
             }
@@ -83,7 +81,6 @@ define(
         p.createElement = function (options) {
 
             var child = new ListElement(this.getChildElement(options));
-            this.listItems.push(child);
 
             this.addChild(child.element);
 
@@ -105,6 +102,7 @@ define(
 
             this.currentColumn = 0;
             this.rows = 0;
+            this.curY = 0;
 
             this.removeAllChildren_container.apply(this, arguments);
 
