@@ -18,6 +18,12 @@ define (
 
         p.initializePlaceholder = function (element) {
 
+            if (element.easelPlaceholderInitialized) {
+                console.error('Element is already initialized as placeholder.', element);
+                return;
+            }
+            element.easelPlaceholderInitialized = true;
+
             var innerPlaceholder = this;
             var boundHash = '0:0';
             var oldBoundHash = '0:0';
@@ -63,6 +69,11 @@ define (
             };
 
             element.updateZIndex = function() {
+
+                if (!element.children) {
+                    return;
+                }
+
                 // check if order is still correct
                 innerIndex = element.parent.getChildIndex(innerPlaceholder);
                 originalIndex = element.parent.getChildIndex(element);

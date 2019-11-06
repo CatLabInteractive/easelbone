@@ -8,6 +8,7 @@ define(
         var List = function (childElement, columns) {
 
             this.initialize();
+            this.listItems = [];
 
             if (typeof (childElement) !== 'undefined') {
                 this.setChildElement(childElement);
@@ -27,7 +28,7 @@ define(
         p.setChildElement = function (element) {
             this.childElement = element;
 
-            var tmpElement = this.getChildElement();
+            var tmpElement = this.getChildElement({}, this.listItems.length);
             this.boundary = {
                 'x': tmpElement.boundary.x,
                 'y': tmpElement.boundary.y
@@ -36,7 +37,7 @@ define(
             this.rowHeight = this.boundary.y;
         };
 
-        p.getChildElement = function (options) {
+        p.getChildElement = function (options, index) {
             if (typeof (this.childElement) === 'undefined') {
                 throw "No child element set.";
             }
@@ -81,6 +82,7 @@ define(
         p.createElement = function (options) {
 
             var child = new ListElement(this.getChildElement(options));
+            this.listItems.push(child);
 
             this.addChild(child.element);
 
