@@ -81,7 +81,7 @@ define(
 
         p.createElement = function (options) {
 
-            var child = new ListElement(this.getChildElement(options));
+            var child = new ListElement(this.getChildElement(options, this.listItems.length));
             this.listItems.push(child);
 
             this.addChild(child.element);
