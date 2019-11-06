@@ -28,7 +28,7 @@ define(
         p.setChildElement = function (element) {
             this.childElement = element;
 
-            var tmpElement = this.getChildElement({}, this.listItems.length);
+            var tmpElement = this.getChildElement(null, this.listItems.length);
             this.boundary = {
                 'x': tmpElement.boundary.x,
                 'y': tmpElement.boundary.y
