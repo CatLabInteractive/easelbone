@@ -256,7 +256,6 @@ define (
             this.textElement = text;
 
             text.textBaseline = 'top';
-            text.textAlign = this.align;
 
             updateCurrentSize(text);
 
@@ -264,6 +263,7 @@ define (
             currentWidth = currentSize.width;
 
             if (this.align === 'center') {
+                text.textAlign = 'center';
                 text.x = ((space.width - currentWidth) / 2) + (currentWidth / 2);
             }
             else if (this.align === 'left') {
