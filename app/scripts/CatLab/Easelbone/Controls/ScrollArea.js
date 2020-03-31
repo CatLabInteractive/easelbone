@@ -1,5 +1,6 @@
 define (
 	[
+		'underscore',
 	    'backbone',
 
 		'CatLab/Easelbone/Controls/ScrollBar',
@@ -7,7 +8,7 @@ define (
 
 		'CatLab/Easelbone/Utilities/Mousewheel'
 	],
-	function (Backbone, ScrollBar, ScrollAreaDisplayObject, Mousewheel) {
+	function (_, Backbone, ScrollBar, ScrollAreaDisplayObject, Mousewheel) {
 
 		var ScrollArea = function (element) {
 
