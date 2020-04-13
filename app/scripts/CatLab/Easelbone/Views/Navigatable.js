@@ -72,17 +72,16 @@ define (
 
             setWebremoteControls : function(user)
             {
-                user.setView ("catlab-nes");
-                user.clearEvents ();
+                var view = user.setView ("catlab-nes");
 
                 // Focus next and previous
-                user.control(this._controls.navigation[0]).click(function () { this.previous(); }.bind(this));
-                user.control(this._controls.navigation[1]).click(function () { this.next(); }.bind(this));
+                view.control(this._controls.navigation[0]).click(function () { this.previous(); }.bind(this));
+                view.control(this._controls.navigation[1]).click(function () { this.next(); }.bind(this));
 
                 // Toggle
                 for (var i = 0; i < this._controls.toggle.length; i ++ ) {
                     (function(i) {
-                        user.control(this._controls.toggle[i]).click (function () {
+                        view.control(this._controls.toggle[i]).click (function () {
                             this.keyInput(this._controls.toggle[i]);
                         }.bind(this));
                     }.bind(this))(i);
@@ -91,15 +90,15 @@ define (
                 // Back
                 for (i = 0; i < this._controls.back.length; i ++ ) {
                     (function(i) {
-                        user.control(this._controls.back[i]).click (function () {
+                        view.control(this._controls.back[i]).click (function () {
                             this.triggerBack();
                         }.bind(this));
                     }.bind(this))(i);
                 }
 
                 // Increase or decreate
-                user.control(this._controls.manipulation[0]).click(function () { this.keyInput('down'); }.bind(this));
-                user.control(this._controls.manipulation[1]).click(function () { this.keyInput('up'); }.bind(this));
+                view.control(this._controls.manipulation[0]).click(function () { this.keyInput('down'); }.bind(this));
+                view.control(this._controls.manipulation[1]).click(function () { this.keyInput('up'); }.bind(this));
             },
 
             /**
