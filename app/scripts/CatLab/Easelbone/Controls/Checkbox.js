@@ -24,16 +24,22 @@ define(
         Checkbox.prototype.toggle = function () {
             this.checked = !this.checked;
             this.update();
+
+            this.trigger('update', this.checked);
         };
 
         Checkbox.prototype.check = function () {
             this.checked = true;
             this.update();
+
+            this.trigger('update', this.checked);
         };
 
         Checkbox.prototype.uncheck = function () {
             this.checked = false;
             this.update();
+
+            this.trigger('update', this.checked);
         };
 
         Checkbox.prototype.keyInput = function (input) {
