@@ -10,6 +10,7 @@ define (
         var hash;
         var hasChanged = false;
         var zooms = {};
+        var bounds;
 
         var Background = function (background, options)
         {
@@ -74,8 +75,11 @@ define (
 
             else if (this.parent)
             {
-                width = this.parent.getBounds ().width;
-                height = this.parent.getBounds ().height
+                bounds = this.parent.getBounds();
+                if (bounds) {
+                    width = bounds.width;
+                    height = bounds.height
+                }
             }
             else if (this.getBounds ())
             {
@@ -88,7 +92,7 @@ define (
                 height = 100;
             }
 
-            return { 'width' : width, 'height' : height };
+            return { width : width, height : height };
         };
 
         p.Container_draw = p.draw;
