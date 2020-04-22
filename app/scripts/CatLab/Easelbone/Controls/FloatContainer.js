@@ -106,6 +106,8 @@ define(
             this.rows = 0;
             this.curY = 0;
 
+            this.listItems = [];
+
             this.removeAllChildren_container.apply(this, arguments);
 
         };
