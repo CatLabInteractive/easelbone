@@ -168,7 +168,15 @@ define (
                     'y' : (space.height / this.displayobject.getBounds ().height)
                 };
 
-                switch (this.fillOptions.zoom) {
+            	var zoomStrategy = this.fillOptions.zoom;
+
+            	// Is overridden in a parent container?
+            	var parentZoomStrategy = this.findAttributeInParents('zoomStrategy', 3);
+            	if (parentZoomStrategy) {
+                    zoomStrategy = parentZoomStrategy;
+                }
+
+                switch (zoomStrategy) {
 
                     case 'minimum':
                         this.displayobject.scaleX = this.displayobject.scaleY = Math.min (zooms.x, zooms.y);
@@ -193,6 +201,25 @@ define (
             }
 
             return this.Container_draw (ctx, ignoreCache);
+        };
+
+        p.findAttributeInParents = function(attribute, maxDepth, object)
+        {
+            if (typeof(object) === 'undefined') {
+                object = this;
+            }
+
+            if (!object.parent) {
+                return null;
+            }
+
+            if (object.parent[attribute]) {
+                return object.parent[attribute];
+            }
+
+            if (maxDepth > 0) {
+                return this.findAttributeInParents(attribute, maxDepth, object.parent);
+            }
         };
 
         createjs.Background = Background;
