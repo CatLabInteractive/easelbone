@@ -32,9 +32,14 @@ define (
             var innerIndex;
             var originalIndex;
 
+            // take effects with us.
+            innerPlaceholder.filters = element.filters;
+
+            element.filters = [];
+            element.uncache();
+
             element.original_draw = element.draw;
             element.original_tick = element._tick;
-
 
             // Override the draw method of the original placeholder.
             element.draw = function (ctx, ignoreCache) {
@@ -131,6 +136,8 @@ define (
             if (element.timeline) {
                 element.timeline = new createjs.Timeline(null, [], {paused:true, position:0, useTicks:true});
             }
+
+            //console.log(this.filters);
 
             //element.visible = false;
 

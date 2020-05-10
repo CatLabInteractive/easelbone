@@ -200,6 +200,7 @@ define (
 
             }
 
+            this.applyFilterCacheInParents(5);
             return this.Container_draw (ctx, ignoreCache);
         };
 
@@ -221,6 +222,33 @@ define (
                 return this.findAttributeInParents(attribute, maxDepth, object.parent);
             }
         };
+
+        /**
+         * Check if any of our parents have cache that needs to be cleared.
+         * @param maxDepth
+         * @param object
+         * @returns {null|undefined}
+         */
+        p.applyFilterCacheInParents = function (maxDepth, object) {
+            if (typeof(object) === 'undefined') {
+                object = this;
+            }
+
+            if (!object.parent) {
+                return null;
+            }
+
+            if (object.parent.filters) {
+                var bounds = object.parent.getBounds();
+                if (bounds) {
+                    object.parent.cache(bounds.x, bounds.y, bounds.width, bounds.height);
+                }
+            }
+
+            if (maxDepth > 0) {
+                return this.applyFilterCacheInParents(maxDepth, object.parent);
+            }
+        }
 
         createjs.Background = Background;
         return Background;
