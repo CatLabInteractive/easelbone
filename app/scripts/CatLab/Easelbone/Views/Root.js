@@ -53,6 +53,10 @@ define(
                 // Ticker
                 //createjs.Ticker.timingMode = createjs.Ticker.RAF_SYNCHED;
                 createjs.Ticker.addEventListener('tick', function (e) {
+                    if (createjs.Ticker.paused) {
+                        return;
+                    }
+
                     this.tick(e)
                 }.bind(this));
 
