@@ -154,6 +154,10 @@ define (
             var self = this;
 
             var fontsize = 5;
+            var fontSizeStep = Math.ceil(availableHeight / 2); // this is how far we want to jump with each try
+
+            //console.log(availableWidth, availableHeight);
+
             var stable = new createjs.Text(
                 "" + String(textstring),
                 fontsize + "px " + this.font,
@@ -164,34 +168,48 @@ define (
                 return stable;
             }
 
-            var maxSteps = 500;
+            var steps = 0;
+            var current;
 
-            function bigger ()
-            {
-                maxSteps --;
-
-                if (maxSteps < 0) {
+            function bigger () {
+                steps ++;
+                if (steps > 500) {
                     return false;
                 }
 
-                var text = new createjs.Text (textstring, fontsize + "px " + self.font, self.color);
-                text.lineWidth = availableWidth;
-                text.lineHeight = getFontLineheight(text);
+                current = new createjs.Text (textstring, fontsize + "px " + self.font, self.color);
+                current.lineWidth = availableWidth;
+                current.lineHeight = getFontLineheight(current);
 
-                updateCurrentSize(text);
+                updateCurrentSize(current);
 
+                // Does current size still match the available space?
                 if (
                     currentSize.height < availableHeight &&
                     currentSize.width <= availableWidth
                 ) {
-                    stable = text;
-                    fontsize ++;
+                    stable = current;
+                    fontsize += fontSizeStep;
+                    return true;
+                } else {
+                    // We grew too big :o
+
+                    // Are we increasing with 1 already?
+                    if (fontSizeStep === 1) {
+                        return false;
+                    }
+
+                    // Decimate the font step
+                    fontSizeStep = Math.ceil(fontSizeStep / 2);
+
+                    fontsize -= fontSizeStep;
                     return true;
                 }
-                return false;
             }
 
             while (bigger ()) {}
+
+            //console.log('Text draw took ' + steps + ' steps, got size ' + fontsize);
 
             this.fontsize = fontsize;
             return stable;
@@ -205,10 +223,10 @@ define (
         p.getLocationHash = function ()
         {
             hash = this.getAvailableSpace();
-            hash = hash.width + ':' + hash.height + ':' + this.textstring;
+            hash = parseInt(hash.width) + ':' + parseInt(hash.height) + ':' + this.textstring + ':' + this.align;
 
-            location = this.localToGlobal(this.x, this.y);
-            hash = location.x + ':' + location.y + ':' + hash + ':' + this.align;
+            //location = this.localToGlobal(this.x, this.y);
+            //hash = location.x + ':' + location.y + ':' + hash + ':' + this.align;
 
             return hash;
         };
