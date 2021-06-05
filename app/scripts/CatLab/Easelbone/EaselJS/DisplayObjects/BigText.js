@@ -260,6 +260,10 @@ define (
                 return;
             }
 
+            if (this.parent) {
+                this.adaptToParentsProperties(this.parent);
+            }
+
             // Draw container size
             if (this.debug) {
                 var border = new createjs.Shape();
@@ -321,6 +325,50 @@ define (
                 this.drawText();
             } else if (this.hasChanged()) {
                 this.redrawText();
+            }
+        };
+
+        /**
+         * Go through the first 2 levels op parents and check if we need to parse certain properties.
+         * @param parent
+         * @param level
+         */
+        p.adaptToParentsProperties = function(parent, level) {
+            if (!parent) {
+                return;
+            }
+
+            if (typeof(level) === 'undefined') {
+                level = 0;
+            }
+
+            if (level > 1) {
+                return;
+            }
+
+            // check two levels, for ... reasons
+            if (parent.parent) {
+                this.adaptToParentsProperties(parent.parent, level + 1);
+            }
+
+            this.adaptToParentProperties(parent);
+        };
+
+        /**
+         * Check a parent and set properties that we might want to take over.
+         * @param parent
+         */
+        p.adaptToParentProperties = function(parent) {
+            if (parent.color) {
+                this.color = parent.color;
+            }
+
+            if (parent.align) {
+                this.align = parent.align;
+            }
+
+            if (parent.font) {
+                this.font = parent.font;
             }
         };
 
