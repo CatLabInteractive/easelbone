@@ -1,9 +1,12 @@
 define (
 	[
-		'easeljs'
+		'easeljs',
+        'CatLab/Easelbone/Utilities/CustomAttributes'
 	],
-	function (createjs)
-	{
+	function (
+	    createjs,
+        CustomAttributes
+    ) {
 		var Placeholder = function (element) {
 
 			if (typeof (element) !== 'undefined') {
@@ -31,6 +34,23 @@ define (
 
             var innerIndex;
             var originalIndex;
+
+            // Create getters for custom properties
+            CustomAttributes.forEach(function(customAttribute) {
+                Object.defineProperty(this, customAttribute, {
+                    get: function() {
+                        if (typeof(element[customAttribute]) !== 'undefined') {
+                            return element[customAttribute];
+                        }
+                        return undefined;
+                    },
+
+                    set: function(value) {
+                        console.log('setting', customAttribute, value);
+                        // not settable
+                    }
+                });
+            }.bind(this));
 
             // take effects with us.
             innerPlaceholder.filters = element.filters;
@@ -70,6 +90,7 @@ define (
 
             element._tick = function() {
                 this.updateZIndex();
+
                 return element.original_tick.apply(element, arguments);
             };
 
@@ -173,7 +194,6 @@ define (
             }
             */
         };
-
 
 		return Placeholder;
 	}

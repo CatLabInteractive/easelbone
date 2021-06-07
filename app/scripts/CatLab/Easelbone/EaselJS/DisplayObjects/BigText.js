@@ -261,7 +261,7 @@ define (
             }
 
             if (this.parent) {
-                this.adaptToParentsProperties(this.parent);
+                this.adaptToParentProperties(this.parent);
             }
 
             // Draw container size
@@ -329,46 +329,20 @@ define (
         };
 
         /**
-         * Go through the first 2 levels op parents and check if we need to parse certain properties.
-         * @param parent
-         * @param level
-         */
-        p.adaptToParentsProperties = function(parent, level) {
-            if (!parent) {
-                return;
-            }
-
-            if (typeof(level) === 'undefined') {
-                level = 0;
-            }
-
-            if (level > 1) {
-                return;
-            }
-
-            // check two levels, for ... reasons
-            if (parent.parent) {
-                this.adaptToParentsProperties(parent.parent, level + 1);
-            }
-
-            this.adaptToParentProperties(parent);
-        };
-
-        /**
          * Check a parent and set properties that we might want to take over.
          * @param parent
          */
         p.adaptToParentProperties = function(parent) {
-            if (parent.color) {
-                this.color = parent.color;
+            if (parent.textColor) {
+                this.color = parent.textColor;
             }
 
-            if (parent.align) {
-                this.align = parent.align;
+            if (parent.textAlign) {
+                this.align = parent.textAlign;
             }
 
-            if (parent.font) {
-                this.font = parent.font;
+            if (parent.textFont) {
+                this.font = parent.textFont;
             }
         };
 
