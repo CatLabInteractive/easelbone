@@ -118,8 +118,6 @@ define (
                     Math.ceil (this.scaleY * 100)
                 );
 
-                console.log(this.transformMatrix);
-
                 innerPlaceholder.x = this.x - (this.regX * this.scaleX);
                 innerPlaceholder.y = this.y - (this.regY * this.scaleY);
 
