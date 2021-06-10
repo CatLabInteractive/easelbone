@@ -118,8 +118,10 @@ define (
                     Math.ceil (this.scaleY * 100)
                 );
 
-                innerPlaceholder.x = this.x;
-                innerPlaceholder.y = this.y;
+                console.log(this.transformMatrix);
+
+                innerPlaceholder.x = this.x - (this.regX * this.scaleX);
+                innerPlaceholder.y = this.y - (this.regY * this.scaleY);
 
                 innerPlaceholder.rotation = this.rotation;
 

@@ -1,10 +1,9 @@
-define (
+define(
     [
         'easeljs',
         'CatLab/Easelbone/Utilities/GlobalProperties'
     ],
-    function (createjs, GlobalProperties)
-    {
+    function (createjs, GlobalProperties) {
         var width;
         var height;
         var debug = false;
@@ -17,8 +16,8 @@ define (
 
         var currentBounds;
         var currentSize = {
-            'width' : 0,
-            'height' : 0
+            'width': 0,
+            'height': 0
         };
 
         var fontLineheightCache = {};
@@ -27,14 +26,13 @@ define (
 
         var fontSize;
 
-        var BigText = function (aTextstring, aFont, aColor, align)
-        {
+        var BigText = function (aTextstring, aFont, aColor, align) {
             this.textstring = aTextstring;
-            this.font = GlobalProperties.ifUndefined (aFont, GlobalProperties.getDefaultFont ());
-            this.color = GlobalProperties.ifUndefined (aColor, GlobalProperties.getDefaultTextColor ());
+            this.font = GlobalProperties.ifUndefined(aFont, GlobalProperties.getDefaultFont());
+            this.color = GlobalProperties.ifUndefined(aColor, GlobalProperties.getDefaultTextColor());
             this.align = typeof (align) === 'undefined' ? 'center' : align;
 
-            this.initialize ();
+            this.initialize();
             this.initialized = false;
             this.limits = null;
 
@@ -42,32 +40,28 @@ define (
             this.fontsize = 0;
         };
 
-        BigText.setFontOffset = function(font, x, y)
-        {
+        BigText.setFontOffset = function (font, x, y) {
             fontOffsets[font] = {
-                'x' : x,
-                'y' : y
+                'x': x,
+                'y': y
             };
         };
 
-        function updateCurrentSize(text)
-        {
+        function updateCurrentSize(text) {
             currentBounds = text.getMetrics();
 
             currentSize.height = currentBounds.height;
             currentSize.width = currentBounds.width;
         }
 
-        function measureLineHeight(text)
-        {
+        function measureLineHeight(text) {
             return Math.max(
                 measureLetter(text, "M").width,
                 measureLetter(text, "m").width
             ) * 1.2;
         }
 
-        function measureLetter(text, letter)
-        {
+        function measureLetter(text, letter) {
             var ctx = createjs.Text._workingContext;
             ctx.save();
             var size = text._prepContext(ctx).measureText(letter);
@@ -75,44 +69,40 @@ define (
             return size;
         }
 
-        function getFontLineheight(text)
-        {
-            if (typeof(fontLineheightCache[text.font]) === 'undefined') {
+        function getFontLineheight(text) {
+            if (typeof (fontLineheightCache[text.font]) === 'undefined') {
                 fontLineheightCache[text.font] = measureLineHeight(text);
             }
 
             return fontLineheightCache[text.font];
         }
 
-        var p = BigText.prototype = new createjs.Container ();
+        var p = BigText.prototype = new createjs.Container();
 
         p.Container_initialize = p.initialize;
         p.Container_tick = p._tick;
 
-        p.getFontOffset = function(font)
-        {
+        p.getFontOffset = function (font) {
             var fontName = font.split(' ');
             fontName.shift();
             fontName = fontName.join(' ');
 
-            if (typeof(fontOffsets[fontName]) === 'undefined') {
-                return { 'x' : 0, 'y' : 0 };
+            if (typeof (fontOffsets[fontName]) === 'undefined') {
+                return {'x': 0, 'y': 0};
             } else {
                 return fontOffsets[fontName];
             }
         };
 
-        p.initialize = function() {
-            this.Container_initialize ();
+        p.initialize = function () {
+            this.Container_initialize();
         };
 
-        p.isVisible = function ()
-        {
+        p.isVisible = function () {
             return true;
         };
 
-        p.setText = function (text)
-        {
+        p.setText = function (text) {
             this.textstring = text;
 
             if (this.textElement) {
@@ -120,27 +110,25 @@ define (
             }
         };
 
-        p.setLimits = function (width, height)
-        {
-            this.limits = { 'width' : width, 'height' : height };
+        p.setLimits = function (width, height) {
+            this.limits = {'width': width, 'height': height};
         };
 
-        p.getAvailableSpace = function ()
-        {
+        p.getAvailableSpace = function () {
             if (this.limits !== null) {
                 return this.limits;
-            } else if (this.getBounds ()) {
-                width = this.getBounds ().width;
-                height = this.getBounds ().height;
-            } else if (this.parent && this.parent.getBounds ()) {
-                width = this.parent.getBounds ().width;
-                height = this.parent.getBounds ().height
+            } else if (this.getBounds()) {
+                width = this.getBounds().width;
+                height = this.getBounds().height;
+            } else if (this.parent && this.parent.getBounds()) {
+                width = this.parent.getBounds().width;
+                height = this.parent.getBounds().height
             } else {
                 width = 0;
                 height = 0;
             }
 
-            return { 'width' : width, 'height' : height };
+            return {'width': width, 'height': height};
         };
 
         /**
@@ -149,8 +137,7 @@ define (
          * @param availableWidth
          * @param availableHeight
          */
-        p.goBigOrGoHome = function (textstring, availableWidth, availableHeight)
-        {
+        p.goBigOrGoHome = function (textstring, availableWidth, availableHeight) {
             var self = this;
 
             var fontsize = 5;
@@ -171,13 +158,13 @@ define (
             var steps = 0;
             var current;
 
-            function bigger () {
-                steps ++;
+            function bigger() {
+                steps++;
                 if (steps > 500) {
                     return false;
                 }
 
-                current = new createjs.Text (textstring, fontsize + "px " + self.font, self.color);
+                current = new createjs.Text(textstring, fontsize + "px " + self.font, self.color);
                 current.lineWidth = availableWidth;
                 current.lineHeight = getFontLineheight(current);
 
@@ -207,7 +194,8 @@ define (
                 }
             }
 
-            while (bigger ()) {}
+            while (bigger()) {
+            }
 
             //console.log('Text draw took ' + steps + ' steps, got size ' + fontsize);
 
@@ -220,8 +208,7 @@ define (
         /**
          * @returns {string|*}
          */
-        p.getLocationHash = function ()
-        {
+        p.getLocationHash = function () {
             hash = this.getAvailableSpace();
             hash = parseInt(hash.width) + ':' + parseInt(hash.height) + ':' + this.textstring + ':' + this.align;
 
@@ -235,9 +222,8 @@ define (
          * Determine if the dimensions have changed since last frame.
          * @returns {boolean}
          */
-        p.hasChanged = function ()
-        {
-            hash = this.getLocationHash ();
+        p.hasChanged = function () {
+            hash = this.getLocationHash();
 
             hasChanged = this.lastHash !== hash;
             this.lastHash = hash;
@@ -248,14 +234,13 @@ define (
         /**
          * Draw text (for the first time)
          */
-        p.drawText = function()
-        {
+        p.drawText = function () {
             this.initialized = true;
-            this.removeAllChildren ();
+            this.removeAllChildren();
 
             this.uncache();
 
-            var space = this.getAvailableSpace ();
+            var space = this.getAvailableSpace();
             if (space.width === 0 || space.height === 0) {
                 return;
             }
@@ -271,10 +256,10 @@ define (
                 border.graphics.setStrokeStyle(1);
                 border.snapToPixel = true;
                 border.graphics.drawRect(0, 0, space.width, space.height);
-                this.addChild (border);
+                this.addChild(border);
             }
 
-            var text = this.goBigOrGoHome (this.textstring, space.width, space.height);
+            var text = this.goBigOrGoHome(this.textstring, space.width, space.height);
             this.textElement = text;
 
             text.textBaseline = 'top';
@@ -287,11 +272,9 @@ define (
             if (this.align === 'center') {
                 text.textAlign = 'center';
                 text.x = ((space.width - currentWidth) / 2) + (currentWidth / 2);
-            }
-            else if (this.align === 'left') {
+            } else if (this.align === 'left') {
                 text.x = 0;
-            }
-            else if (this.align === 'right') {
+            } else if (this.align === 'right') {
                 //text.x = ((space.width - text.getBounds ().width)) + text.getBounds ().width;
                 text.x = space.width - currentWidth;
             }
@@ -301,14 +284,14 @@ define (
             var offset = this.getFontOffset(text.font);
             text.y = (text.lineHeight * offset.y) + ((space.height - currentHeight) / 2);
 
-            this.addChild (text);
+            this.addChild(text);
             //this.cache(-15, -15, space.width + 30, space.height + this.fontsize);
         };
 
         /**
          * Called when dimensions or content changes.
          */
-        p.redrawText = function() {
+        p.redrawText = function () {
             this.drawText();
         };
 
@@ -317,7 +300,7 @@ define (
          * @param evt
          * @private
          */
-        p._tick = function(evt) {
+        p._tick = function (evt) {
             // container tick
             this.Container_tick(evt);
 
@@ -332,7 +315,7 @@ define (
          * Check a parent and set properties that we might want to take over.
          * @param parent
          */
-        p.adaptToParentProperties = function(parent) {
+        p.adaptToParentProperties = function (parent) {
             if (parent.textColor) {
                 this.color = parent.textColor;
             }
