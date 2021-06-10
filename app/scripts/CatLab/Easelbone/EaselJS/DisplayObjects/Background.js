@@ -22,7 +22,7 @@ define(
             this.limits = null;
             this.initialized = false;
             this.debug = debug;
-            this.childBounds = {};
+            this.childBounds = null;
 
             if (
                 background instanceof Image ||
