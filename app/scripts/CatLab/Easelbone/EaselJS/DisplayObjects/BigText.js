@@ -28,9 +28,9 @@ define(
 
         var BigText = function (aTextstring, aFont, aColor, align) {
             this.textstring = aTextstring;
-            this.font = GlobalProperties.ifUndefined(aFont, GlobalProperties.getDefaultFont());
-            this.color = GlobalProperties.ifUndefined(aColor, GlobalProperties.getDefaultTextColor());
-            this.align = typeof (align) === 'undefined' ? 'center' : align;
+            this._font = GlobalProperties.ifUndefined(aFont, GlobalProperties.getDefaultFont());
+            this._color = GlobalProperties.ifUndefined(aColor, GlobalProperties.getDefaultTextColor());
+            this._align = typeof (align) === 'undefined' ? 'center' : align;
 
             this.initialize();
             this.initialized = false;
@@ -110,6 +110,13 @@ define(
             }
         };
 
+        p.setColor = function (color) {
+            this._color = color;
+            if (this.textElement) {
+                this.textElement.color = color;
+            }
+        };
+
         p.setLimits = function (width, height) {
             this.limits = {'width': width, 'height': height};
         };
@@ -147,8 +154,8 @@ define(
 
             var stable = new createjs.Text(
                 "" + String(textstring),
-                fontsize + "px " + this.font,
-                this.color
+                fontsize + "px " + this._font,
+                this._color
             );
 
             if (!stable.getBounds()) {
@@ -164,7 +171,7 @@ define(
                     return false;
                 }
 
-                current = new createjs.Text(textstring, fontsize + "px " + self.font, self.color);
+                current = new createjs.Text(textstring, fontsize + "px " + self._font, self._color);
                 current.lineWidth = availableWidth;
                 current.lineHeight = getFontLineheight(current);
 
@@ -210,10 +217,10 @@ define(
          */
         p.getLocationHash = function () {
             hash = this.getAvailableSpace();
-            hash = parseInt(hash.width) + ':' + parseInt(hash.height) + ':' + this.textstring + ':' + this.align;
+            hash = parseInt(hash.width) + ':' + parseInt(hash.height) + ':' + this.textstring + ':' + this._align;
 
             //location = this.localToGlobal(this.x, this.y);
-            //hash = location.x + ':' + location.y + ':' + hash + ':' + this.align;
+            //hash = location.x + ':' + location.y + ':' + hash + ':' + this._align;
 
             return hash;
         };
@@ -269,12 +276,12 @@ define(
             currentHeight = currentSize.height;
             currentWidth = currentSize.width;
 
-            if (this.align === 'center') {
+            if (this._align === 'center') {
                 text.textAlign = 'center';
                 text.x = ((space.width - currentWidth) / 2) + (currentWidth / 2);
-            } else if (this.align === 'left') {
+            } else if (this._align === 'left') {
                 text.x = 0;
-            } else if (this.align === 'right') {
+            } else if (this._align === 'right') {
                 //text.x = ((space.width - text.getBounds ().width)) + text.getBounds ().width;
                 text.x = space.width - currentWidth;
             }
@@ -317,17 +324,44 @@ define(
          */
         p.adaptToParentProperties = function (parent) {
             if (parent.textColor) {
-                this.color = parent.textColor;
+                this._color = parent.textColor;
             }
 
             if (parent.textAlign) {
-                this.align = parent.textAlign;
+                this._align = parent.textAlign;
             }
 
             if (parent.textFont) {
-                this.font = parent.textFont;
+                this._font = parent.textFont;
             }
         };
+
+        Object.defineProperty(BigText, 'color', {
+            get: function () {
+                return this._color;
+            },
+            set: function (color) {
+                this.setColor(color)
+            }
+        });
+
+        Object.defineProperty(BigText, 'font', {
+            get: function () {
+                return this._font;
+            },
+            set: function (font) {
+                this._font = font;
+            }
+        });
+
+        Object.defineProperty(BigText, 'align', {
+            get: function () {
+                return this._align;
+            },
+            set: function (align) {
+                this._align = align;
+            }
+        });
 
         createjs.BigText = BigText;
         return BigText;

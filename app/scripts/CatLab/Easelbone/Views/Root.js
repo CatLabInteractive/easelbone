@@ -194,6 +194,23 @@ define(
                 }
 
                 this.render();
+            },
+
+            /**
+             * Show an alert message
+             */
+            alert(message, callback) {
+                alert(message);
+                callback();
+            },
+
+            /**
+             * Show a confirmation message
+             * @param message
+             * @param callback
+             */
+            confirm(message, callback) {
+                callback(confirm(message));
             }
         });
     }
