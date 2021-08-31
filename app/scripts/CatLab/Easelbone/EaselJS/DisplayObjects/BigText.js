@@ -150,8 +150,6 @@ define(
             var fontsize = 5;
             var fontSizeStep = Math.ceil(availableHeight / 2); // this is how far we want to jump with each try
 
-            //console.log(availableWidth, availableHeight);
-
             var stable = new createjs.Text(
                 "" + String(textstring),
                 fontsize + "px " + this._font,
@@ -203,8 +201,6 @@ define(
 
             while (bigger()) {
             }
-
-            //console.log('Text draw took ' + steps + ' steps, got size ' + fontsize);
 
             this.fontsize = fontsize;
             return stable;
@@ -336,7 +332,7 @@ define(
             }
         };
 
-        Object.defineProperty(BigText, 'color', {
+        Object.defineProperty(p, 'color', {
             get: function () {
                 return this._color;
             },
@@ -345,7 +341,7 @@ define(
             }
         });
 
-        Object.defineProperty(BigText, 'font', {
+        Object.defineProperty(p, 'font', {
             get: function () {
                 return this._font;
             },
@@ -354,12 +350,21 @@ define(
             }
         });
 
-        Object.defineProperty(BigText, 'align', {
+        Object.defineProperty(p, 'align', {
             get: function () {
                 return this._align;
             },
             set: function (align) {
                 this._align = align;
+            }
+        });
+
+        Object.defineProperty(p, 'text', {
+            get: function () {
+                return this.textstring;
+            },
+            set: function (text) {
+                this.setText(text);
             }
         });
 
