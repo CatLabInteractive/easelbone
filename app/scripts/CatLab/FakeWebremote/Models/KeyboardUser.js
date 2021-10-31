@@ -122,6 +122,8 @@ define (
 			this.setView = function (id) {
 				// Clear controls
 				this.clearControls();
+
+				return this;
 			};
 
 			this.emit = function (method, data) {

@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head lang="en">
+    <meta charset="UTF-8">
+
+    <link rel="stylesheet" href="fonts/fonts.css" />
+
+    <script src="https://twemoji.maxcdn.com/v/latest/twemoji.min.js" crossorigin="anonymous"></script>
 
 </head>
 
@@ -63,13 +68,16 @@
 
 
 					// Load assets
-                    var loader = new easelbone.Loader();
+					var loader = new easelbone.Loader();
 					loader.loadAssets (assets, '../examples/assets/');
 
 					// Prepare our "users"
 					var users = [
 						new easelbone.FakeWebremote.KeyboardUser ()
 					];
+
+					// Set font settings
+					createjs.BigText.setFontOffset('Designers', 0, 0.15);
 
 					// And actually do load them.
 					loader.load (function () {
@@ -80,44 +88,62 @@
 						// An example settings view.slider1
 						var ExampleView = easelbone.Views.Navigatable.extend ({
 
-							'initialize' : function () {
-
-								// First call the parent.
+							initialize : function () {
 								this.initializeNavigatable ({ 'orientation' : 'vertical' });
-
-								// Now set the view
-								this.view = new assets.ExampleScrollArea ();
-
-								this.list = new easelbone.Controls.List (assets.ExampleListElement, 2);
-								this.scroll = new easelbone.Controls.ScrollArea (this.view.scrollcontent);
-								var scroll = this.scroll;
-
-								this.scroll.content.addChild (this.list);
-
-								this.list.createElement ().element.text.text = 'Item 1';
-								this.list.createElement ().element.text.text = 'Item 2';
-								this.list.createElement ().element.text.text = 'Item 3';
-								this.list.createElement ().element.text.text = 'Item 4';
-								this.list.createElement ().element.text.text = 'Item 5';
-								this.list.createElement ().element.text.text = 'Item 6';
-								this.list.createElement ().element.text.text = 'Item 7';
-								this.list.createElement ().element.text.text = 'Item 8';
-								this.list.createElement ().element.text.text = 'Item 9';
-
-								var item10 = this.list.createElement ();
-								item10.element.text.text = 'Item 10';
-
-								setTimeout(function ()
-								{
-									scroll.focus(item10.element);
-								}, 1000);
-
-
 							},
 
 							'render' : function () {
 
-								this.addCenter (this.view);
+								var self = this;
+
+								function printLine(x, y, width, height)
+								{
+									var container = new createjs.Container ();
+									container.setBounds (0, 0, width, height);
+
+									container.x = x;
+									container.y = y;
+
+									var text = new createjs.BigText (
+                                        "Test message with Multiple lines 🇧🇪 and a smiley",
+                                        "Designers",
+                                        "#666666"
+									);
+
+									text.debug = true;
+									container.addChild (text);
+
+									self.el.addChild (container);
+								}
+
+								var posy = 0;
+								var posx = 0;
+								var height = 50;
+
+								var maxWidth = 1024;
+								var maxHeight = 768;
+
+								//while (posy < maxHeight - 11) {
+									posx = 0;
+									height = Math.max(Math.random(), 0.5) * 200;
+
+									if ((posy + height) > maxHeight) {
+										height = maxHeight - posy - 1;
+									}
+
+									//while (posx < maxWidth) {
+										var width = Math.max(0.2, Math.random()) * 3 * height;
+
+										if ((posx + width)  > maxWidth) {
+											width = maxWidth - posx - 1;
+										}
+
+										printLine(posx, posy, width, height);
+										posx += width + 10;
+									//}
+
+									posy += height + 10;
+								//}
 
 							}
 

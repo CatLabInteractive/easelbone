@@ -39,7 +39,7 @@
 		// We'll also need the assets.
 		require ([
 					'backbone',
-					'EaselJS',
+					'easeljs',
 					'assets'
 				],
 				function (
@@ -63,7 +63,8 @@
 
 
 					// Load assets
-					easelbone.Loader.loadAssets (assets, '../examples/assets/');
+                    var loader = new easelbone.Loader();
+                    loader.loadAssets (assets, '../examples/assets/');
 
 					// Prepare our "users"
 					var users = [
@@ -79,7 +80,7 @@
                     createjs.BigText.setFontOffset('Designers', 0, 0.15);
 
 					// And actually do load them.
-					easelbone.Loader.load (function () {
+					loader.load (function () {
 
 						// NOW WE ARE READY FOR THE REAL SHIZZLE
 						// Create a view and add it to the root.
@@ -87,9 +88,8 @@
 						// An example settings view.slider1
 						var ExampleView = easelbone.Views.Navigatable.extend ({
 
-							'initialize' : function () {
-
-
+							initialize : function () {
+                                this.initializeNavigatable ({ 'orientation' : 'vertical' });
 							},
 
 							'render' : function () {

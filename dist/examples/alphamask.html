@@ -41,7 +41,7 @@
 				// We'll also need the assets.
 				require ([
 					'backbone',
-					'EaselJS',
+					'easeljs',
 					'assets'
 				],
 				function (
@@ -66,7 +66,8 @@
 
 
 					// Load assets
-					easelbone.Loader.loadAssets (assets, '../examples/alphamask/');
+					var loader = new easelbone.Loader();
+					loader.loadAssets (assets, '../examples/alphamask/');
 
 					// Prepare our "users"
 					var users = [
@@ -74,7 +75,7 @@
 					];
 
 					// And actually do load them.
-					easelbone.Loader.load (function () {
+					loader.load (function () {
 
 						// NOW WE ARE READY FOR THE REAL SHIZZLE
 						// Create a view and add it to the root.

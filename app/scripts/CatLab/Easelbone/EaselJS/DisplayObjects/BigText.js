@@ -1,9 +1,10 @@
 define(
     [
         'easeljs',
-        'CatLab/Easelbone/Utilities/GlobalProperties'
+        'CatLab/Easelbone/Utilities/GlobalProperties',
+        'CatLab/Easelbone/EaselJS/DisplayObjects/EmojiText'
     ],
-    function (createjs, GlobalProperties) {
+    function (createjs, GlobalProperties, EmojiText) {
         var width;
         var height;
         var debug = false;
@@ -26,8 +27,11 @@ define(
 
         var fontSize;
 
+        //var TextClass = createjs.Text;
+        var TextClass = EmojiText;
+
         var BigText = function (aTextstring, aFont, aColor, align) {
-            this.textstring = aTextstring;
+            this.setText(aTextstring);
             this._font = GlobalProperties.ifUndefined(aFont, GlobalProperties.getDefaultFont());
             this._color = GlobalProperties.ifUndefined(aColor, GlobalProperties.getDefaultTextColor());
             this._align = typeof (align) === 'undefined' ? 'center' : align;
@@ -150,7 +154,7 @@ define(
             var fontsize = 5;
             var fontSizeStep = Math.ceil(availableHeight / 2); // this is how far we want to jump with each try
 
-            var stable = new createjs.Text(
+            var stable = new TextClass(
                 "" + String(textstring),
                 fontsize + "px " + this._font,
                 this._color
@@ -169,7 +173,7 @@ define(
                     return false;
                 }
 
-                current = new createjs.Text(textstring, fontsize + "px " + self._font, self._color);
+                current = new TextClass(textstring, fontsize + "px " + self._font, self._color);
                 current.lineWidth = availableWidth;
                 current.lineHeight = getFontLineheight(current);
 
@@ -288,7 +292,7 @@ define(
             text.y = (text.lineHeight * offset.y) + ((space.height - currentHeight) / 2);
 
             this.addChild(text);
-            //this.cache(-15, -15, space.width + 30, space.height + this.fontsize);
+            this.cache(-15, -15, space.width + 30, space.height + this.fontsize);
         };
 
         /**

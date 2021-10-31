@@ -1,14 +1,14 @@
 require.config ({
 	paths: {
-		easeljs: "../../node_modules/EaselJS/lib/easeljs",
-		preloadjs: "../../node_modules/PreloadJS/lib/preloadjs",
-		soundjs: "../../node_modules/SoundJS/lib/soundjs",
-		tweenjs: "../../node_modules/TweenJS/lib/tweenjs",
-		jquery: "../../node_modules/jquery/dist/jquery",
-		requirejs: "../../node_modules/requirejs/require",
-		underscore: "../../node_modules/underscore/underscore",
-		backbone: "../../node_modules/backbone/backbone",
-		easelhacks: "../../node_modules/easelhacks/dist/scripts/easelhacks"
+		easeljs: "vendor/EaselJS/lib/easeljs",
+		preloadjs: "vendor/PreloadJS/lib/preloadjs",
+		soundjs: "vendor/SoundJS/lib/soundjs",
+		tweenjs: "vendor/TweenJS/lib/tweenjs",
+		jquery: "vendor/jquery/dist/jquery",
+		requirejs: "vendor/requirejs/require",
+		underscore: "vendor/underscore/underscore",
+		backbone: "vendor/backbone/backbone",
+		easelhacks: "vendor/easelhacks/dist/scripts/easelhacks"
 	},
 	shim: {
 		easeljs: {

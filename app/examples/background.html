@@ -39,7 +39,7 @@
 		// We'll also need the assets.
 		require ([
 					'backbone',
-					'EaselJS',
+					'easeljs',
 					'assets'
 				],
 				function (
@@ -61,9 +61,10 @@
 					// Ticker
 					//createjs.Ticker.setFPS (assets.properties.fps);
 
+                    var loader = new easelbone.Loader();
 
 					// Load assets
-					easelbone.Loader.loadAssets (assets, '../examples/assets/');
+					loader.loadAssets (assets, '../examples/assets/');
 
 					// Prepare our "users"
 					var users = [
@@ -71,7 +72,7 @@
 					];
 
 					// And actually do load them.
-					easelbone.Loader.load (function () {
+					loader.load (function () {
 
 						// An example settings view.slider1
 						var ExampleView = easelbone.Views.Navigatable.extend ({
