@@ -20,6 +20,7 @@ define(
         'CatLab/Easelbone/Controls/GridFill',
 
         'CatLab/Easelbone/EaselJS/DisplayObjects/BigText',
+        'CatLab/Easelbone/EaselJS/DisplayObjects/EmojiText',
         'CatLab/Easelbone/EaselJS/DisplayObjects/Placeholder',
         'CatLab/Easelbone/EaselJS/DisplayObjects/Background',
 
@@ -53,6 +54,7 @@ define(
         GridFill,
 
         BigText,
+        EmojiText,
         Placeholder,
         Background,
 
@@ -98,6 +100,7 @@ define(
 
             EaselJS: {
                 BigText: BigText,
+                EmojiText: EmojiText,
                 Placeholder: Placeholder,
                 Fill: Background,
                 DisabledButtonHelper: DisabledButtonHelper,

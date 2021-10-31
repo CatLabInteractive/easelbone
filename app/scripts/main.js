@@ -8,7 +8,8 @@ require.config ({
 		requirejs: "vendor/requirejs/require",
 		underscore: "vendor/underscore/underscore",
 		backbone: "vendor/backbone/backbone",
-		easelhacks: "vendor/easelhacks/dist/scripts/easelhacks"
+		easelhacks: "vendor/easelhacks/dist/scripts/easelhacks",
+		'emoji-regex' : "vendor/emoji-regex/index"
 	},
 	shim: {
 		easeljs: {

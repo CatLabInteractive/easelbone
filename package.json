@@ -18,10 +18,10 @@
     "backbone": "^1.*",
     "easelhacks": "^1.0.0",
     "easeljs": "^1.0.2",
+    "lodash": ">=4.17.13",
     "preloadjs": "^1.0.1",
     "soundjs": "^1.0.1",
     "tweenjs": "^1.0.2",
-    "underscore": "^1.*",
-    "lodash": ">=4.17.13"
+    "underscore": "^1.*"
   }
 }

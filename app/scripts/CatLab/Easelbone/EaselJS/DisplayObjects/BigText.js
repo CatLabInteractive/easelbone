@@ -9,8 +9,8 @@ define(
         var height;
         var debug = false;
         var hash;
-        var location;
         var hasChanged = false;
+        var cacheAfterDraw = true;
 
         var currentHeight;
         var currentWidth;
@@ -27,8 +27,8 @@ define(
 
         var fontSize;
 
-        //var TextClass = createjs.Text;
-        var TextClass = EmojiText;
+        var TextClass = createjs.Text;
+        //var TextClass = EmojiText;
 
         var BigText = function (aTextstring, aFont, aColor, align) {
             this.setText(aTextstring);
@@ -44,6 +44,11 @@ define(
             this.fontsize = 0;
         };
 
+        /**
+         * @param font
+         * @param x
+         * @param y
+         */
         BigText.setFontOffset = function (font, x, y) {
             fontOffsets[font] = {
                 'x': x,
@@ -51,6 +56,20 @@ define(
             };
         };
 
+        /**
+         * @param textClass
+         */
+        BigText.setTextClass = function(textClass) {
+            TextClass = textClass;
+        };
+
+        BigText.autoCache = function(autoCache) {
+            cacheAfterDraw = autoCache;
+        };
+
+        /**
+         * @param text
+         */
         function updateCurrentSize(text) {
             currentBounds = text.getMetrics();
 
@@ -230,6 +249,11 @@ define(
          * @returns {boolean}
          */
         p.hasChanged = function () {
+            if (this.textElement && this.textElement._redrawRequested) {
+                this.textElement._redrawRequested = false;
+                return true;
+            }
+
             hash = this.getLocationHash();
 
             hasChanged = this.lastHash !== hash;
@@ -245,7 +269,9 @@ define(
             this.initialized = true;
             this.removeAllChildren();
 
-            this.uncache();
+            if (cacheAfterDraw) {
+                this.uncache();
+            }
 
             var space = this.getAvailableSpace();
             if (space.width === 0 || space.height === 0) {
@@ -292,7 +318,10 @@ define(
             text.y = (text.lineHeight * offset.y) + ((space.height - currentHeight) / 2);
 
             this.addChild(text);
-            this.cache(-15, -15, space.width + 30, space.height + this.fontsize);
+
+            if (cacheAfterDraw) {
+                this.cache(-15, -15, space.width + 30, space.height + this.fontsize);
+            }
         };
 
         /**

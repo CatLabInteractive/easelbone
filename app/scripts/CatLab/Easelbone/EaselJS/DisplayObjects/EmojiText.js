@@ -1,18 +1,25 @@
 define(
     [
-        'easeljs'
+        'easeljs',
+        'CatLab/Easelbone/Utilities/EmojiRegex'
     ],
-    function (createjs) {
+    function (createjs, EmojiRegex) {
 
         var U200D = String.fromCharCode(0x200D);
         var UFE0Fg = /\uFE0F/g;
+        var loadedImages = {};
+
+        var emojiList = {};
+        var emojiPlaceholder = ' ';
 
         var Text = createjs.Text;
         function EmojiText(text, font, color) {
             this.Text_constructor(text, font, color);
         }
 
-        var cTextAlign;
+        EmojiText.setEmojis = function(aEmojis) {
+            emojiList = aEmojis;
+        };
 
         var p = createjs.extend(EmojiText, Text);
 
@@ -35,7 +42,7 @@ define(
             }
             var lineHeight = this.lineHeight||this.getMeasuredLineHeight();
 
-            var text = this._replaceEmoji(String(this.text));
+            var text = this._replaceEmojis(String(this.text));
 
             var maxW = 0, count = 0;
             var hardLines = text.split(/(?:\r\n|\r|\n)/);
@@ -56,7 +63,7 @@ define(
                         var wordW = ctx.measureText(words[j] + words[j+1]).width;
                         if (w + wordW > this.lineWidth) {
                             if (paint) {
-                                this._drawLineWithEmoji(ctx, str, count*lineHeight, charCount);
+                                this._drawLineWithEmoji(ctx, str, count*lineHeight, charCount, lineHeight);
                                 charCount += str.length + 1;
                             }
                             if (lines) { lines.push(str); }
@@ -71,7 +78,7 @@ define(
                     }
                 }
 
-                if (paint) { this._drawLineWithEmoji(ctx, str, count*lineHeight, charCount); }
+                if (paint) { this._drawLineWithEmoji(ctx, str, count*lineHeight, charCount, lineHeight); }
                 if (lines) { lines.push(str); }
                 if (o && w == null) { w = ctx.measureText(str).width; }
                 if (w > maxW) { maxW = w; }
@@ -91,9 +98,10 @@ define(
          * @param str
          * @param y
          * @param charCount
+         * @param lineHeight
          * @private
          */
-        p._drawLineWithEmoji = function(ctx, str, y, charCount) {
+        p._drawLineWithEmoji = function(ctx, str, y, charCount, lineHeight) {
             // check if we need to draw any emoji
             this._drawTextLine(ctx, str, y);
 
@@ -109,7 +117,8 @@ define(
                         this._emoji[index],
                         ctx.measureText(str).width * Text.H_OFFSETS[this.textAlign||"left"]
                             + ctx.measureText(str.substring(0, index - charCount)).width,
-                        y
+                        y,
+                        lineHeight
                     );
                 }
             }
@@ -120,31 +129,26 @@ define(
          * @param emoji
          * @param x
          * @param y
+         * @param lineHeight
          * @private
          */
-        p._drawEmoji = function(ctx, emoji, x, y)
+        p._drawEmoji = function(ctx, emoji, x, y, lineHeight)
         {
-
-
-            /*
-
             var imageSize = ctx.measureText(' ');
+            this._getEmojiImage(emoji, imageSize.width, function(img) {
 
-            var image = new createjs.Bitmap(emoji);
-            image.x = x;
-            image.y = y;
-            this.parent.addChild(image);
+                var targetWidth = imageSize.width
+                var targetHeight = imageSize.width * (img.width / img.height);
 
-             */
+                ctx.drawImage(
+                    img,
+                    0, 0,
+                    img.width, img.height,
+                    x, y - (lineHeight - targetHeight),
+                    targetWidth, targetHeight
+                );
 
-            cTextAlign = ctx.textAlign;
-            ctx.textAlign = 'start';
-            if (this.outline) {
-                ctx.strokeText(emoji.raw, x, y, this.maxWidth||0xFFFF);
-            } else {
-                ctx.fillText(emoji.raw, x, y, this.maxWidth||0xFFFF);
-            }
-            ctx.textAlign = cTextAlign;
+            }.bind(this));
         }
 
         /**
@@ -153,27 +157,135 @@ define(
          * @returns {Array}
          * @private
          */
-        p._splitWords = function(str) {
+        p._splitWords = function(str)
+        {
             // originally the string was split on \s, but we don't want to break on non breaking spaces
             // \s is: /(\f\n\r\t\v\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff)/
             // we are removing no-break space u00a0
-            return str.split(/([ \f\n\r\t\v\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff])/);
+            // we are also removing \2003 (emspace) as we use that to replace the emojis)
+            return str.split(/([ \f\n\r\t\v\u1680\u2000-\u2002\u2004-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff])/);
         };
 
-        p._replaceEmoji = function(text) {
+        p._replaceEmojis = function(text)
+        {
             this._emoji = [];
 
-            return twemoji.replace(text, function(emoji, unknown, index, str) {
-                var iconId = twemoji.convert.toCodePoint(emoji.indexOf(U200D) < 0 ? emoji.replace(UFE0Fg, '') : emoji);
-                var iconSrc = this._getEmojiSource(iconId);
+            var emojis = text.matchAll(EmojiRegex);
+            var charOffset = 0;
+            for (var match of emojis) {
+                var emoji = match[0];
+                var emojiLength = emoji.length;
 
-                this._emoji[index] = { raw: emoji, src: iconSrc };
-                return ' ';
-            }.bind(this));
+                var replaced = this._replaceEmoji(emoji);
+
+                // no replacement found / no emoji set? Ignore and fall back to the browser emoji rendering.
+                if (!replaced) {
+                    continue;
+                }
+
+                this._emoji[match.index - charOffset] = replaced;
+
+                var replacement = replaced.replacement;
+                text = text.slice(0, match.index - charOffset) +
+                    replacement +
+                    text.slice(match.index + emojiLength - charOffset);
+
+                charOffset += emojiLength - replacement.length;
+            }
+
+            return text;
         };
 
-        p._getEmojiSource = function(icon) {
-            return 'https://twemoji.maxcdn.com/v/13.1.0/72x72/' + icon + '.png';
+        /**
+         * @param emoji
+         * @returns {string}
+         * @private
+         */
+        p._replaceEmoji = function(emoji) {
+
+            var name = getEmoticonName(emoji);
+            if (typeof(emojiList[name]) === 'undefined') {
+                return false;
+            }
+
+            return {
+                replacement: emojiPlaceholder,
+                src: emojiList[name]
+            };
+        };
+
+        /**
+         * @param emoji
+         * @param desiredWidth
+         * @param callback
+         * @private
+         */
+        p._getEmojiImage = function(emoji, desiredWidth, callback) {
+
+            if (typeof(loadedImages[emoji]) !== 'undefined') {
+                if (loadedImages[emoji].complete && loadedImages[emoji].naturalHeight !== 0) {
+                    callback(loadedImages[emoji]);
+                } else {
+                    loadedImages[emoji].addEventListener('load', function() {
+                        this._requestRedraw();
+                    }.bind(this));
+                }
+
+                return;
+            }
+
+            var img = new Image();
+            loadedImages[emoji] = img;
+
+            img.src = emoji.src;
+
+            img.addEventListener('load', function() {
+                this._requestRedraw();
+            }.bind(this));
+
+            img.addEventListener('error', function() {
+                delete loadedImages[emoji];
+            });
+        };
+
+        p._requestRedraw = function() {
+            this._redrawRequested = true;
+        };
+
+        /**
+         * @param emoticon
+         * @returns {string}
+         */
+        function getEmoticonName(emoticon) {
+            return toCodePoint(emoticon.indexOf(U200D) < 0 ?
+                emoticon.replace(UFE0Fg, '') :
+                emoticon
+            );
+        }
+
+        /**
+         * @param unicodeSurrogates
+         * @param sep
+         * @returns {string}
+         */
+        function toCodePoint(unicodeSurrogates, sep) {
+            var
+                r = [],
+                c = 0,
+                p = 0,
+                i = 0;
+            while (i < unicodeSurrogates.length) {
+                c = unicodeSurrogates.charCodeAt(i++);
+                if (p) {
+                    r.push((0x10000 + ((p - 0xD800) << 10) + (c - 0xDC00)).toString(16));
+                    p = 0;
+                } else if (0xD800 <= c && c <= 0xDBFF) {
+                    p = c;
+                } else {
+                    r.push(c.toString(16));
+                }
+            }
+            return r.join(sep || '-');
         }
 
         return createjs.promote(EmojiText, "Text");
