@@ -74,9 +74,13 @@
 						new easelbone.FakeWebremote.KeyboardUser ()
 					];
 
+                    /*
                     easelbone.EaselJS.EmojiText.setEmojis({
                         '1f1e7-1f1ea' : 'https://twemoji.maxcdn.com/v/13.1.0/72x72/1f1e7-1f1ea.png'
-                    });
+                    });*/
+
+                    easelbone.EaselJS.EmojiText.setEmojiFont('Noto Color Emoji');
+                    //easelbone.EaselJS.EmojiText.setEmojiFont('Twemoji');
 
                     createjs.BigText.setTextClass(easelbone.EaselJS.EmojiText);
 

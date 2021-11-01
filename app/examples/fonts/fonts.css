@@ -22,3 +22,17 @@
         url(Life+Savers_700_normal.ttf) format('truetype'), /* http://fonts.gstatic.com/s/lifesavers/v6/THQKqChyYUm97rNPVFdGGTdGNerWpg2Hn6A-BxWgZ_I.ttf */
         url(Life+Savers_700_normal.svg#Life+Savers_700_normal) format('svg'); /* http://fonts.gstatic.com/l/font?kit=THQKqChyYUm97rNPVFdGGXtNmQEE9wZ6UZlmiISB1pg&skey=5d3096418c414e64#LifeSavers */
 }
+
+@font-face {
+    font-family: 'Noto Color Emoji';
+    font-style: normal;
+    font-weight: 700;
+    src: url('NotoColorEmoji.ttf');
+}
+
+@font-face {
+    font-family: 'Twemoji';
+    font-style: normal;
+    font-weight: 700;
+    src: url('twemoji.ttf');
+}

@@ -10,7 +10,8 @@ define(
         var loadedImages = {};
 
         var emojiList = {};
-        var emojiPlaceholder = ' ';
+        var emojiPlaceholder = '  ';
+        var emojiFont = null;
 
         var Text = createjs.Text;
         function EmojiText(text, font, color) {
@@ -19,6 +20,10 @@ define(
 
         EmojiText.setEmojis = function(aEmojis) {
             emojiList = aEmojis;
+        };
+
+        EmojiText.setEmojiFont = function(aEmojiFont) {
+            emojiFont = aEmojiFont;
         };
 
         var p = createjs.extend(EmojiText, Text);
@@ -105,6 +110,10 @@ define(
             // check if we need to draw any emoji
             this._drawTextLine(ctx, str, y);
 
+            if (this._emoji.length === 0) {
+                return;
+            }
+
             for (var index in this._emoji) {
                 index = parseInt(index);
                 if (
@@ -126,6 +135,29 @@ define(
 
         /**
          * @param ctx
+         * @private
+         */
+        p._setEmojiContext = function(ctx) {
+            this._prevAlign = ctx.textAlign;
+            this._prevFont = ctx.font;
+
+            var fontSize = this._prevFont.split(' ')[0];
+
+            ctx.textAlign = 'left';
+            ctx.font = fontSize + ' ' + emojiFont;
+        };
+
+        /**
+         * @param ctx
+         * @private
+         */
+        p._unsetEmojiContext = function(ctx) {
+            ctx.textAlign = this._prevAlign;
+            ctx.font = this._prevFont;
+        };
+
+        /**
+         * @param ctx
          * @param emoji
          * @param x
          * @param y
@@ -134,21 +166,41 @@ define(
          */
         p._drawEmoji = function(ctx, emoji, x, y, lineHeight)
         {
-            var imageSize = ctx.measureText(' ');
-            this._getEmojiImage(emoji, imageSize.width, function(img) {
+            var spacerSize = ctx.measureText(emojiPlaceholder);
 
-                var targetWidth = imageSize.width
-                var targetHeight = imageSize.width * (img.width / img.height);
+            if (typeof(emoji.src) !== 'undefined') {
+                var imageSize = ctx.measureText('😀');
 
-                ctx.drawImage(
-                    img,
-                    0, 0,
-                    img.width, img.height,
-                    x, y - (lineHeight - targetHeight),
-                    targetWidth, targetHeight
-                );
+                this._getEmojiImage(emoji, imageSize.width, function (img) {
 
-            }.bind(this));
+                    var targetWidth = imageSize.width
+                    var targetHeight = imageSize.width * (img.width / img.height);
+
+                    ctx.drawImage(
+                        img,
+                        0, 0,
+                        img.width, img.height,
+                        x + ((spacerSize.width - imageSize.width) / 2), y - (targetHeight - lineHeight),
+                        targetWidth, targetHeight
+                    );
+
+                }.bind(this));
+            }
+
+            if (typeof(emoji.font) !== 'undefined' && emoji.raw) {
+
+                this._setEmojiContext(ctx);
+
+                var emojiSize = ctx.measureText(emoji.raw);
+
+                x += (spacerSize.width - emojiSize.width) / 2;
+
+                if (this.outline) { ctx.strokeText(emoji.raw, x, y, 0xFFFF); }
+                else { ctx.fillText(emoji.raw, x, y, 0xFFFF); }
+
+                this._unsetEmojiContext(ctx);
+
+            }
         }
 
         /**
@@ -205,6 +257,15 @@ define(
 
             var name = getEmoticonName(emoji);
             if (typeof(emojiList[name]) === 'undefined') {
+
+                // do we have an emoji font?
+                if (emojiFont !== null) {
+                    return {
+                        replacement: emojiPlaceholder,
+                        font: emojiFont,
+                        raw: emoji
+                    };
+                }
                 return false;
             }
 
