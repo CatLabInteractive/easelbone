@@ -36,3 +36,8 @@
     font-weight: 700;
     src: url('twemoji.ttf');
 }
+
+@font-face {
+    font-family: 'OpenMoji';
+    src: url('OpenMoji-Color.ttf') format('truetype');
+}

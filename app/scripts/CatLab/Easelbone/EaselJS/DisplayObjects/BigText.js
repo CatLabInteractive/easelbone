@@ -188,7 +188,6 @@ define(
             var fontSizeStep = Math.ceil(availableHeight / 2); // this is how far we want to jump with each try
 
             var stable = this.createTextObject(textstring, fontsize, this._font, this._color);
-
             if (!stable.getBounds()) {
                 return stable;
             }
