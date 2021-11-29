@@ -27,7 +27,7 @@ define(
 
         var fontSize;
 
-        var TextClass = createjs.Text;
+        var DefaultTextClass = createjs.Text;
         //var TextClass = EmojiText;
 
         var BigText = function (aTextstring, aFont, aColor, align) {
@@ -42,6 +42,8 @@ define(
 
             this.debug = debug;
             this.fontsize = 0;
+
+            this.textConstructor = DefaultTextClass;
         };
 
         /**
@@ -60,7 +62,7 @@ define(
          * @param textClass
          */
         BigText.setTextClass = function(textClass) {
-            TextClass = textClass;
+            DefaultTextClass = textClass;
         };
 
         BigText.autoCache = function(autoCache) {
@@ -162,6 +164,18 @@ define(
         };
 
         /**
+         * @param text
+         * @param fontSize
+         * @param font
+         * @param color
+         * @returns {*}
+         */
+        p.createTextObject = function(text, fontSize, font, color)
+        {
+            return new this.textConstructor("" + String(text), fontSize + "px " + font, color);
+        };
+
+        /**
          * Return an array of createjs.Text elements that should be displayed below eachother.
          * @param textstring
          * @param availableWidth
@@ -173,11 +187,7 @@ define(
             var fontsize = 5;
             var fontSizeStep = Math.ceil(availableHeight / 2); // this is how far we want to jump with each try
 
-            var stable = new TextClass(
-                "" + String(textstring),
-                fontsize + "px " + this._font,
-                this._color
-            );
+            var stable = this.createTextObject(textstring, fontsize, this._font, this._color);
 
             if (!stable.getBounds()) {
                 return stable;
@@ -192,7 +202,8 @@ define(
                     return false;
                 }
 
-                current = new TextClass(textstring, fontsize + "px " + self._font, self._color);
+                current = self.createTextObject(textstring, fontsize, self._font, self._color)
+
                 current.lineWidth = availableWidth;
                 current.lineHeight = getFontLineheight(current);
 
