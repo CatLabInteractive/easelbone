@@ -283,11 +283,11 @@ define(
          */
         p._getEmojiImage = function(emoji, desiredWidth, callback) {
 
-            if (typeof(loadedImages[emoji]) !== 'undefined') {
-                if (loadedImages[emoji].complete && loadedImages[emoji].naturalHeight !== 0) {
-                    callback(loadedImages[emoji]);
+            if (typeof(loadedImages[emoji.src]) !== 'undefined') {
+                if (loadedImages[emoji.src].complete && loadedImages[emoji.src].naturalHeight !== 0) {
+                    callback(loadedImages[emoji.src]);
                 } else {
-                    loadedImages[emoji].addEventListener('load', function() {
+                    loadedImages[emoji.src].addEventListener('load', function() {
                         this._requestRedraw();
                     }.bind(this));
                 }
@@ -296,7 +296,7 @@ define(
             }
 
             var img = new Image();
-            loadedImages[emoji] = img;
+            loadedImages[emoji.src] = img;
 
             img.src = emoji.src;
 
@@ -305,7 +305,7 @@ define(
             }.bind(this));
 
             img.addEventListener('error', function() {
-                delete loadedImages[emoji];
+                delete loadedImages[emoji.src];
             });
         };
 
