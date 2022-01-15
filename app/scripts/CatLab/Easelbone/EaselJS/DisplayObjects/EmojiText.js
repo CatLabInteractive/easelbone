@@ -218,11 +218,23 @@ define(
             return str.split(/([ \f\n\r\t\v\u1680\u2000-\u2002\u2004-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff])/);
         };
 
+        // Polyfill for matchAll
+        p._matchAll = function(rx, text) {
+
+            if (typeof rx === "string") rx = new RegExp(rx, "g"); // coerce a string to be a global regex
+            rx = new RegExp(rx); // Clone the regex so we don't update the last index on the regex they pass us
+            let cap = []; // the single capture
+            let all = []; // all the captures (return this)
+            while ((cap = rx.exec(text)) !== null) all.push(cap); // execute and add
+            return all; // profit!
+
+        };
+
         p._replaceEmojis = function(text)
         {
             this._emoji = [];
 
-            var emojis = text.matchAll(EmojiRegex);
+            var emojis = this._matchAll(EmojiRegex, text);
             var charOffset = 0;
             for (var match of emojis) {
                 var emoji = match[0];
