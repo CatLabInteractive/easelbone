@@ -236,7 +236,13 @@ define(
 
             var emojis = this._matchAll(EmojiRegex, text);
             var charOffset = 0;
-            for (var match of emojis) {
+            for (var matchKey in emojis) {
+                if (!emojis.hasOwnProperty(matchKey)) {
+                    continue;
+                }
+
+                var match = emojis[matchKey];
+
                 var emoji = match[0];
                 var emojiLength = emoji.length;
 
