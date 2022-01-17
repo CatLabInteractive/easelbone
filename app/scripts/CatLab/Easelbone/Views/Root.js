@@ -199,7 +199,7 @@ define(
             /**
              * Show an alert message
              */
-            alert(message, callback) {
+            alert: function(message, callback) {
                 alert(message);
                 callback();
             },
@@ -209,7 +209,7 @@ define(
              * @param message
              * @param callback
              */
-            confirm(message, callback) {
+            confirm: function(message, callback) {
                 callback(confirm(message));
             }
         });
