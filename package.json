@@ -12,7 +12,7 @@
     "grunt-contrib-copy": "x",
     "grunt-contrib-requirejs": "x",
     "grunt-contrib-watch": "^1.1.0",
-    "terser": "^4.1.2"
+    "terser": "^4.8.1"
   },
   "dependencies": {
     "backbone": "^1.*",
