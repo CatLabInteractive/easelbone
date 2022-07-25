@@ -1,9 +1,9 @@
 define(
     [
-        'easelbone'
+        'CatLab/Easelbone/Views/Base'
     ],
     function (
-        easelbone
+        Base
     ) {
         "use strict";
 
@@ -54,7 +54,7 @@ define(
         var points = [];
         var flipper = false;
 
-        return easelbone.Views.Base.extend({
+        return Base.extend({
 
             initialize: function(options) {
                 this.gameVersion = options.gameVersion;
