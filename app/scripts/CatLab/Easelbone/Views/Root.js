@@ -22,6 +22,9 @@ define(
 
             maxCanvasSize: null,
 
+            width: null,
+            height: null,
+
             /**
              * @param options
              */
@@ -29,7 +32,10 @@ define(
 
                 if (typeof (options.canvas) !== 'undefined') {
                     this.canvas = options.canvas;
-                    this.container = this.canvas.parentNode;
+
+                    if (this.canvas.parentNode) {
+                        this.container = this.canvas.parentNode;
+                    }
                 }
                 else {
                     if (typeof (options.container) === 'undefined') {
@@ -40,6 +46,11 @@ define(
                     this.container = options.container;
                     this.container.appendChild(this.canvas);
 
+                }
+
+                if (typeof(options.width) !== 'undefined' && typeof(options.height) !== 'undefined') {
+                    this.width = options.width;
+                    this.height = options.height;
                 }
 
                 this.stage = this.createStage(options);
@@ -180,7 +191,14 @@ define(
              *
              */
             resize: function () {
-                if (typeof (this.container) !== 'undefined') {
+
+                if (
+                    typeof(this.width) !== 'undefined' &&
+                    typeof(this.height) !== 'undefined'
+                ) {
+                    this.canvas.width = this.width;
+                    this.canvas.height = this.height;
+                } else if (typeof (this.container) !== 'undefined') {
                     this.canvas.width = this.container.offsetWidth;
                     this.canvas.height = this.container.offsetHeight;
                 } else {
