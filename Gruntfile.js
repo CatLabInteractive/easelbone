@@ -104,7 +104,22 @@ module.exports = function (grunt) {
                 files: ['app/**/*.js'],
                 tasks: ['default']
             }
-        }
+        },
+
+        bump: {
+            options: {
+                files: [
+                    'package.json'
+                ],
+                updateConfigs: [],
+                commit: true,
+                createTag: true,
+                push: false,
+                globalReplace: true,
+                prereleaseName: false,
+                regExp: false
+            }
+        },
     });
 
     // Requirejs
@@ -112,7 +127,7 @@ module.exports = function (grunt) {
 
     grunt.loadNpmTasks('grunt-contrib-watch');
 
-
+    grunt.loadNpmTasks('grunt-bump');
 
     // Cleaner
     grunt.loadNpmTasks('grunt-contrib-clean');
