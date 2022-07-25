@@ -1,6 +1,6 @@
 {
   "name": "easelbone",
-  "version": "1.0.21",
+  "version": "1.0.39",
   "main": "dist/scripts/easelbone.js",
   "author": "CatLab Interactive",
   "devDependencies": {
@@ -17,7 +17,7 @@
   "dependencies": {
     "backbone": "^1.*",
     "easelhacks": "^1.0.0",
-    "easeljs": "^1.0.2",
+    "catlab-easeljs": "^1.0.2",
     "lodash": ">=4.17.21",
     "preloadjs": "^1.0.1",
     "soundjs": "^1.0.1",
