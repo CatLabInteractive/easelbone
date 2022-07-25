@@ -9,8 +9,6 @@ define(
         var i;
         var layer;
 
-        var dirty = false;
-
         return Backbone.View.extend({
 
             stage: null,
@@ -32,10 +30,7 @@ define(
 
                 if (typeof (options.canvas) !== 'undefined') {
                     this.canvas = options.canvas;
-
-                    if (this.canvas.parentNode) {
-                        this.container = this.canvas.parentNode;
-                    }
+                    this.container = this.canvas.parentNode;
                 }
                 else {
                     if (typeof (options.container) === 'undefined') {
@@ -48,7 +43,10 @@ define(
 
                 }
 
-                if (typeof(options.width) !== 'undefined' && typeof(options.height) !== 'undefined') {
+                if (
+                    typeof(options.width) !== 'undefined' &&
+                    typeof(options.height) !== 'undefined'
+                ) {
                     this.width = options.width;
                     this.height = options.height;
                 }
@@ -59,6 +57,7 @@ define(
                 this.layers = [];
                 this.layerMap = {};
 
+                this.dirty = false;
                 this.mainLayer = this.nextLayer('main');
 
                 // Ticker
@@ -138,16 +137,16 @@ define(
                 // Listen to the voice
                 //Speech.onRenderFrame ();
                 this.trigger('tick:before', event);
-                dirty = false;
+                this.dirty = false;
 
                 for (i = 0; i < this.layers.length; i++) {
                     layer = this.layers[i];
                     if (layer.tick(event)) {
-                        dirty = true;
+                        this.dirty = true;
                     }
                 }
 
-                if (dirty) {
+                if (this.dirty) {
                     this.update();
                 }
 
@@ -193,8 +192,8 @@ define(
             resize: function () {
 
                 if (
-                    typeof(this.width) !== 'undefined' &&
-                    typeof(this.height) !== 'undefined'
+                    this.width &&
+                    this.height
                 ) {
                     this.canvas.width = this.width;
                     this.canvas.height = this.height;
