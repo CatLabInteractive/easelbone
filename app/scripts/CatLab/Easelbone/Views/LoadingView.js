@@ -201,7 +201,7 @@ define(
              * @param percentage Between 0 and 1
              */
             setProgress: function (percentage) {
-                percentage = Math.floor(percentage);
+                percentage = Math.floor(percentage * 100);
 
                 this.loadingText.text = 'Loading\n' + percentage + '%';
                 this.loadingText.cache(-100, -100, 200, 200);
