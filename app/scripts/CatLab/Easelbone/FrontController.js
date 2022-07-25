@@ -1,7 +1,7 @@
 define(
     [
         'CatLab/Easelbone/Utilities/Loader',
-        'CatLab/Easelbone/Utilities/LoadingScreen',
+        'CatLab/Easelbone/Views/LoadingView',
 
         'CatLab/Easelbone/Views/Root',
         'CatLab/Easelbone/Views/Base',
@@ -35,7 +35,7 @@ define(
     ],
     function (
         Loader,
-        LoadingScreen,
+        LoadingView,
 
         RootView,
         BaseView,
@@ -83,7 +83,8 @@ define(
                 Root: RootView,
                 Base: BaseView,
                 Layer: LayerView,
-                Navigatable: NavigatableView
+                Navigatable: NavigatableView,
+                Loading: LoadingView
             },
 
             Controls: {
@@ -114,7 +115,6 @@ define(
             },
 
             Loader: Loader,
-            LoadingScreen : LoadingScreen,
 
             Helpers: {
                 MovieClipHelper: MovieClipHelper
