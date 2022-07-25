@@ -57,7 +57,12 @@ define(
         return Base.extend({
 
             initialize: function(options) {
-                this.gameVersion = options.gameVersion;
+
+                this.gameVersion = null;
+                if (typeof(options.gameVersion) !== 'undefined') {
+                    this.gameVersion = options.gameVersion;
+                }
+
                 this.dRotation = 0.0;
             },
 
@@ -83,7 +88,7 @@ define(
                 this.el.addChild(this.versionText);
 
                 this.versionText.cache(-100, 0, 100, 200);
-                this.loadingText.cache(-100, 0, 100, 200);
+                this.loadingText.cache(-100, -100, 200, 200);
 
                 this.el.setBounds(0, 0, this.el.stage.canvas.width, this.el.stage.canvas.height);
                 this.updatePositions();
@@ -142,7 +147,7 @@ define(
             },
 
             updatePositions: function() {
-                this.loadingText.x = (this.el.getBounds().width / 2) - 25;
+                this.loadingText.x = (this.el.getBounds().width / 2);
                 this.loadingText.y = this.el.getBounds().height / 2;
 
                 this.versionText.x = this.el.getBounds().width - 60;
