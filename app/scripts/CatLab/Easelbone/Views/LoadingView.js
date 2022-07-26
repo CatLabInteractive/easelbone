@@ -43,14 +43,6 @@ define(
             'y': limits.y.end / 2
         };
 
-        var dx = Math.random();
-        var dy = 1 - dx;
-
-        var speed = 10;
-
-        dx *= speed;
-        dy *= speed;
-
         var points = [];
         var flipper = false;
 
@@ -64,6 +56,16 @@ define(
                 }
 
                 this.dRotation = 0.0;
+
+                this.speed = 10;
+                this.angle = Math.random() * Math.PI * 2;
+                this.targetAngle = null;
+
+                this.flippedX = false;
+                this.flippedY = false;
+
+                this.rotationSpeedRad = 0.2;
+                this.screenMargin = 50;
             },
 
             render: function() {
@@ -94,8 +96,8 @@ define(
                 this.updatePositions();
 
                 position = {
-                    x: Math.random() * limits.x.end,
-                    y: Math.random() * limits.y.end
+                    x: (Math.random() * (limits.x.end - this.screenMargin * 2)) + this.screenMargin,
+                    y: (Math.random() * (limits.y.end - this.screenMargin * 2)) + this.screenMargin
                 };
 
                 /*
@@ -106,30 +108,72 @@ define(
             tick: function() {
                 this.updatePositions();
 
+                let baseAngle = this.angle;
+                if (this.targetAngle !== null) {
+                    baseAngle = this.targetAngle;
+                }
+
+                if (
+                    position.x < limits.x.start + this.screenMargin &&
+                    Math.cos(baseAngle) < 0
+                ) {
+                    this.targetAngle = Math.PI - baseAngle;
+                } else if (
+                    position.x > limits.x.end - this.screenMargin &&
+                    Math.cos(baseAngle) > 0
+                ) {
+                    this.targetAngle = Math.PI - baseAngle;
+                }
+
+                if (
+                    position.y < limits.y.start + this.screenMargin &&
+                    Math.sin(baseAngle) < 0
+                ) {
+                    this.targetAngle = (Math.PI * 2) - baseAngle;
+                } else if (
+                    position.y > limits.y.end - this.screenMargin &&
+                    Math.sin(baseAngle) > 0
+                ) {
+                    this.targetAngle = (Math.PI * 2) - baseAngle;
+                }
+
+                if (this.targetAngle !== null) {
+                    //this.targetAngle = (this.targetAngle + Math.PI * 2) % (Math.PI * 2);
+
+                    if ((this.targetAngle - this.angle) > this.rotationSpeedRad) {
+                        this.angle += this.rotationSpeedRad;
+                    } else if ((this.targetAngle - this.angle) < 0 - this.rotationSpeedRad) {
+                        this.angle -= this.rotationSpeedRad;
+                    } else {
+                        this.targetAngle = null;
+                    }
+                }
+
+                var dx = Math.cos(this.angle) * this.speed;
+                var dy = Math.sin(this.angle) * this.speed;
+
                 position.x += dx;
                 position.y += dy;
-
-                if (position.x < limits.x.start) {
-                    dx *= -1;
-                }
-
-                if (position.x > limits.x.end) {
-                    dx *= -1;
-                }
-
-                if (position.y < limits.y.start) {
-                    dy *= -1;
-                }
-
-                if (position.y > limits.y.end) {
-                    dy *= -1;
-                }
 
                 step ++;
                 if (step % 6 === 0) {
                     this.addPaw();
                 }
 
+                // Debug
+                /*
+                var g = new createjs.Graphics();
+                g.setStrokeStyle(1);
+                g.beginStroke("#000000");
+                g.beginFill("yellow");
+                g.drawCircle(0,0,3);
+
+                var shape = new createjs.Shape(g);
+                shape.x = position.x;
+                shape.y = position.y;
+                this.el.addChild(shape);
+
+                 */
 
                 for (var i = 0; i < points.length; i++) {
                     points[i].alpha -= (1 / 40);
@@ -185,7 +229,7 @@ define(
                  */
 
                 var pawImage = new createjs.Bitmap(img);
-                var atan = Math.atan2(dy, dx);
+                var atan = this.angle;
 
                 pawImage.regX = pawsize.width / 2;
                 pawImage.regY = pawsize.height / 2;
