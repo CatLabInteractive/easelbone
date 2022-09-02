@@ -1,11 +1,13 @@
 define(
     [
         'easeljs',
-        'CatLab/Easelbone/EaselJS/DisplayObjects/Placeholder'
+        'CatLab/Easelbone/EaselJS/DisplayObjects/Placeholder',
+        'CatLab/Easelbone/Utilities/Deferred'
     ],
     function(
         createjs,
-        Placeholder
+        Placeholder,
+        Deferred
     ) {
         "use strict";
 
@@ -201,19 +203,86 @@ define(
 
         };
 
-        p.jumpToFrame = function(label, container) {
+        /**
+         * @param container
+         * @param label
+         * @returns {boolean}
+         */
+        p.countLabeledFrames  = function(label, container) {
+            var frameCount = 0;
             if (container.timeline) {
                 var labels = container.timeline.getLabels();
                 for (var i = 0; i < labels.length; i++) {
                     if (labels[i].label === label) {
-                        container.gotoAndPlay(label);
+                        frameCount ++;
                     }
                 }
             }
 
             this.forEachNamedChild(container, function(child) {
-                this.jumpToFrame(label, child);
+                frameCount += this.countLabeledFrames(label, child);
             }.bind(this));
+
+            return frameCount;
+
+        };
+
+        /**
+         * @param label
+         * @param container
+         */
+        p.jumpToFrame = function(label, container)
+        {
+            var promises = [];
+
+            if (this._timelineHasLabel(container.timeline, label)) {
+                promises.push(this._jumpToFrameUntilFinished(label, container));
+            }
+
+            this.forEachNamedChild(container, function(child) {
+                promises.push(this.jumpToFrame(label, child));
+            }.bind(this));
+
+            return Deferred.when.apply(this, promises);
+        };
+
+        /**
+         * @param label
+         * @param container
+         * @returns {*}
+         * @private
+         */
+        p._jumpToFrameUntilFinished = function(label, container)
+        {
+            var state = new Deferred();
+
+            container.gotoAndPlay(label);
+            container.timeline.on('complete', function() {
+                state.resolve();
+            });
+
+            return state.promise();
+        }
+
+        /**
+         * @param timeline
+         * @param label
+         * @returns {boolean}
+         * @private
+         */
+        p._timelineHasLabel = function(timeline, label)
+        {
+            if (!timeline) {
+                return false;
+            }
+
+            var labels = timeline.getLabels();
+            for (var i = 0; i < labels.length; i++) {
+                if (labels[i].label === label) {
+                    return true;
+                }
+            }
+            return false;
         };
 
         /**

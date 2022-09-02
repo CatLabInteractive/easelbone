@@ -191,7 +191,7 @@ define(
             },
 
             updatePositions: function() {
-                this.loadingText.x = (this.el.getBounds().width / 2);
+                this.loadingText.x = this.el.getBounds().width / 2;
                 this.loadingText.y = this.el.getBounds().height / 2;
 
                 this.versionText.x = this.el.getBounds().width - 60;
