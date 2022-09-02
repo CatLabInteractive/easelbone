@@ -101,6 +101,32 @@ define(
                 return MovieClipHelper.jumpToFrame(label, container);
             },
 
+            pause: function(container)
+            {
+                if (typeof(container) === 'undefined') {
+                    container = this.easelScreen;
+                }
+
+                if (!container) {
+                    throw new Error('pause requires a screen to be set or a container to be provided.');
+                }
+
+                return MovieClipHelper.pause(this.easelScreen);
+            },
+
+            resume: function(container)
+            {
+                if (typeof(container) === 'undefined') {
+                    container = this.easelScreen;
+                }
+
+                if (!container) {
+                    throw new Error('resume requires a screen to be set or a container to be provided.');
+                }
+
+                return MovieClipHelper.resume(this.easelScreen);
+            },
+
             /**
              * @param element
              */

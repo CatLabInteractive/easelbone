@@ -203,6 +203,30 @@ define(
 
         };
 
+        p.pause  = function(container)
+        {
+            if (container.timeline) {
+                container.timeline._was_paused = container.timeline.paused;
+                container.timeline.paused = true;
+            }
+
+            this.forEachNamedChild(container, function(child) {
+                this.pause(child);
+            }.bind(this));
+        };
+
+        p.resume = function(container)
+        {
+            if (container.timeline) {
+                container.timeline.paused = container.timeline._was_paused;
+                delete container.timeline._was_paused;
+            }
+
+            this.forEachNamedChild(container, function(child) {
+                this.resume(child);
+            }.bind(this));
+        }
+
         /**
          * @param container
          * @param label
@@ -254,12 +278,16 @@ define(
          */
         p._jumpToFrameUntilFinished = function(label, container)
         {
+            // Don't jump to elements that are not visible.
             var state = new Deferred();
-
-            container.gotoAndPlay(label);
-            container.timeline.on('complete', function() {
+            if (container.parent) {
+                container.gotoAndPlay(label);
+                container.timeline.on('complete', function() {
+                    state.resolve();
+                });
+            } else {
                 state.resolve();
-            });
+            }
 
             return state.promise();
         }

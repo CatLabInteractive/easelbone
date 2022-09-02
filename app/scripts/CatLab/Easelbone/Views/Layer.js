@@ -53,27 +53,16 @@ define(
                 this.container.setChildIndex(oldView.el, this.container.children.length - 1);
             }
 
-            // First, wait for any 'view:destroy' event that we might have
-            var paused = false;
-            if (this.view.el.timeline) {
-                paused = this.view.el.timeline.paused;
-                this.view.el.timeline.paused = true;
-            }
-
             this._waitForViewDestroy(oldView)
                 .then(function() {
                     if (oldView !== null) {
                         oldView.trigger('stage:removed');
                         this.container.removeChild(oldView.el);
                     }
-
-                    if (this.view.el.timeline) {
-                        this.view.el.timeline.paused = paused;
-                    }
-
-                    // Clear the container
-                    //this.container.removeChild(oldView.el);
-                    //this.container.addChild(container);
+                    /*
+                    if (this.view.easelScreen) {
+                        this.view.resume();
+                    }*/
 
                 }.bind(this));
         };
