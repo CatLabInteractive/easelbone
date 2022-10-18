@@ -110,12 +110,12 @@ define(
             return size;
         }
 
-        function getFontLineheight(text) {
+        function getFontLineheight(text, font) {
             if (typeof (fontLineheightCache[text.font]) === 'undefined') {
                 fontLineheightCache[text.font] = measureLineHeight(text);
             }
 
-            return fontLineheightCache[text.font] * BigText.getFontLineHeightFactor(text.font);
+            return fontLineheightCache[text.font] * BigText.getFontLineHeightFactor(font);
         }
 
         var p = BigText.prototype = new createjs.Container();
@@ -220,7 +220,7 @@ define(
                 current = self.createTextObject(textstring, fontsize, self._font, self._color)
 
                 current.lineWidth = availableWidth;
-                current.lineHeight = getFontLineheight(current);
+                current.lineHeight = getFontLineheight(current, self._font);
 
                 updateCurrentSize(current);
 
