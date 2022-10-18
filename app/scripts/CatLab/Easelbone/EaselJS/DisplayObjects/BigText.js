@@ -24,6 +24,7 @@ define(
         var fontLineheightCache = {};
 
         var fontOffsets = {};
+        var fontLineHeights = {};
 
         var fontSize;
 
@@ -57,6 +58,21 @@ define(
                 'y': y
             };
         };
+
+        BigText.setFontLineHeightFactor = function(font, lineHeightFactor) {
+            fontLineHeights[font] = lineHeightFactor;
+        };
+
+        /**
+         * @param font
+         * @returns {number|*}
+         */
+        BigText.getFontLineHeightFactor = function(font) {
+            if (typeof(fontLineHeights[font]) !== 'undefined') {
+                return fontLineHeights[font];
+            }
+            return 1.0;
+        }
 
         /**
          * @param textClass
@@ -99,7 +115,7 @@ define(
                 fontLineheightCache[text.font] = measureLineHeight(text);
             }
 
-            return fontLineheightCache[text.font];
+            return fontLineheightCache[text.font] * BigText.getFontLineHeightFactor(text.font);
         }
 
         var p = BigText.prototype = new createjs.Container();
