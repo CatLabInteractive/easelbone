@@ -90,6 +90,17 @@ define (
 			}
 		}
 
+		p.clearFloats = function(x, y)
+		{
+			for (var i = 0; i < this.floaters.length; i++) {
+				var el = this.floaters[i];
+				if (el.e.gx === x && el.e.gy === y) {
+					this.floaters.splice(i, 1);
+					i--;
+				}
+			}
+		}
+
 		/**
 		 * If set, make sure each cell has the given ratio (width / height)
 		 * The grid will not fill the whole placeholder, but instead
