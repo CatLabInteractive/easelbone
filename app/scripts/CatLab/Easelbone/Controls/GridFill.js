@@ -267,8 +267,8 @@ define (
 
 						var hit = new createjs.Shape();
 						hit.graphics.beginFill("#000").drawRect(
-							0 - cellSize.marginX, 0 - cellSize.marginY,
-							pos.innerWidth + cellSize.marginX, pos.innerHeight + cellSize.marginY
+							0, 0,
+							pos.innerWidth, pos.innerHeight
 						);
 						container.hitArea = hit;
 					}
