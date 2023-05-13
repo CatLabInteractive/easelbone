@@ -81,6 +81,15 @@ define (
 			return el;
 		};
 
+		p.removeFloat = function(element) {
+			let index = this.floaters.findIndex(function(el) {
+				return el.e === element;
+			});
+			if (index > -1) {
+				this.floaters.splice(index, 1);
+			}
+		}
+
 		/**
 		 * If set, make sure each cell has the given ratio (width / height)
 		 * The grid will not fill the whole placeholder, but instead
