@@ -19,6 +19,7 @@ define (
 
 			this.forceRatio = null;
 			this.cellSize = null;
+			this.cellEvents = {};
 
 			this.placeholder.on('bounds:change', function() {
 				this.redrawGrid();
@@ -210,6 +211,17 @@ define (
 			};
 		};
 
+		p.addCellEventListener = function(col, row, event, callback) {
+			if (typeof(this.cellEvents[col + '-' + row]) === 'undefined') {
+				this.cellEvents[col + '-' + row] = [];
+			}
+
+			this.cellEvents[col + '-' + row].push({
+				event: event,
+				callback: callback
+			});
+		}
+
 		/**
 		 *
 		 */
@@ -228,6 +240,8 @@ define (
 			}
 
 			this.recalculateCellSize();
+			var cellSize = this.getCellSize();
+
 
 			for (var row = 0; row < this.rows; row ++) {
 				for (var col = 0; col < this.columns; col ++) {
@@ -245,6 +259,19 @@ define (
 					container.y = pos.y;
 					container.x = pos.x;
 					container.setBounds(0, 0, pos.innerWidth, pos.innerHeight);
+
+					if (typeof(this.cellEvents[col + '-' + row]) !== 'undefined') {
+						this.cellEvents[col + '-' + row].forEach(function(event) {
+							container.addEventListener(event.event, event.callback);
+						});
+
+						var hit = new createjs.Shape();
+						hit.graphics.beginFill("#000").drawRect(
+							0 - cellSize.marginX, 0 - cellSize.marginY,
+							pos.innerWidth + cellSize.marginX, pos.innerHeight + cellSize.marginY
+						);
+						container.hitArea = hit;
+					}
 
 					container.addChild(element);
 
