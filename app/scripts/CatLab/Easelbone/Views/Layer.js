@@ -58,6 +58,9 @@ define(
                     if (oldView !== null) {
                         oldView.trigger('stage:removed');
                         this.container.removeChild(oldView.el);
+
+                        // let's not confuse the garbage collector
+                        oldView = null;
                     }
                     /*
                     if (this.view.easelScreen) {
