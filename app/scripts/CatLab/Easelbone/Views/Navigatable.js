@@ -17,7 +17,7 @@ define (
             DefaultControls : {
 
                 navigation : [ 'left' , 'right' ],
-                toggle : [ 'start', 'a' ],
+                toggle : [ 'a' ],
                 manipulation : [ 'down', 'up' ],
                 back : [ 'b', 'back' ]
 
