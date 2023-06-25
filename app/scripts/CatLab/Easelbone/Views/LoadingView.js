@@ -108,7 +108,7 @@ define(
             tick: function() {
                 this.updatePositions();
 
-                let baseAngle = this.angle;
+                var baseAngle = this.angle;
                 if (this.targetAngle !== null) {
                     baseAngle = this.targetAngle;
                 }
