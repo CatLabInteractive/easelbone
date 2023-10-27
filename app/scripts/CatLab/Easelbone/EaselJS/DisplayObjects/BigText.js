@@ -266,7 +266,8 @@ define(
          */
         p.getLocationHash = function () {
             hash = this.getAvailableSpace();
-            hash = parseInt(hash.width) + ':' + parseInt(hash.height) + ':' + this.textstring + ':' + this._align;
+            hash = parseInt(hash.width) + ':' + parseInt(hash.height) + ':' + this.textstring
+                + ':' + this._align + ':' + this._font + ':' + this._color
 
             //location = this.localToGlobal(this.x, this.y);
             //hash = location.x + ':' + location.y + ':' + hash + ':' + this._align;
