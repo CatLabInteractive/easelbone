@@ -3,5 +3,5 @@ TARGET_PATH=$1
 
 echo $TARGET_PATH;
 
-grunt
+npm run build
 cp dist $TARGET_PATH -r -T

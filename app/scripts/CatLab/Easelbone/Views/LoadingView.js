@@ -86,11 +86,14 @@ define(
                 this.loadingText.lineHeight = 20;
                 this.el.addChild(this.loadingText);
 
-                this.versionText = new createjs.Text('v' + this.gameVersion, '12px monospace', '#ffffff');
-                this.el.addChild(this.versionText);
+                this.versionText = null;
+                if (this.gameVersion) {
+                    this.versionText = new createjs.Text('v' + this.gameVersion, '12px monospace', '#ffffff');
+                    this.el.addChild(this.versionText);
 
-                this.versionText.cache(-100, 0, 100, 200);
-                this.loadingText.cache(-100, -100, 200, 200);
+                    this.versionText.cache(-100, -100, 200, 200);
+                    this.loadingText.cache(-100, -100, 200, 200);
+                }
 
                 this.el.setBounds(0, 0, this.el.stage.canvas.width, this.el.stage.canvas.height);
                 this.updatePositions();
@@ -99,10 +102,6 @@ define(
                     x: (Math.random() * (limits.x.end - this.screenMargin * 2)) + this.screenMargin,
                     y: (Math.random() * (limits.y.end - this.screenMargin * 2)) + this.screenMargin
                 };
-
-                /*
-                this.versionText = new createjs.Text('v1.0.0', '12px monospace', '#ffffff');
-                this.el.addChild(this.versionText);*/
             },
 
             tick: function() {
@@ -194,8 +193,10 @@ define(
                 this.loadingText.x = this.el.getBounds().width / 2;
                 this.loadingText.y = this.el.getBounds().height / 2;
 
-                this.versionText.x = this.el.getBounds().width - 60;
-                this.versionText.y = this.el.getBounds().height - 20;
+                if (this.versionText) {
+                    this.versionText.x = this.el.getBounds().width - 60;
+                    this.versionText.y = this.el.getBounds().height - 20;
+                }
             },
 
             stop: function() {
