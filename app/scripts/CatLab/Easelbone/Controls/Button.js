@@ -29,10 +29,8 @@ define(
         Button.prototype = Object.create(Base.prototype);
         Button.prototype.constructor = Button;
 
-        Button.prototype.setText = function (text, font, color)
-        {
-            var bigtext = new BigText(text, font, color);
-            this.text.addChild(bigtext);
+        Button.prototype.setText = function (text, font, color) {
+            this.text.addChild(new BigText(text, font, color));
         };
 
         Button.prototype.convertText = function ()

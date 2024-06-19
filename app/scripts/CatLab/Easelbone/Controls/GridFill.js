@@ -82,7 +82,7 @@ define (
 		};
 
 		p.removeFloat = function(element) {
-			let index = this.floaters.findIndex(function(el) {
+			var index = this.floaters.findIndex(function(el) {
 				return el.e === element;
 			});
 			if (index > -1) {

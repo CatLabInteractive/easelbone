@@ -17,7 +17,7 @@ define (
             DefaultControls : {
 
                 navigation : [ 'left' , 'right' ],
-                toggle : [ 'start', 'a' ],
+                toggle : [ 'a' ],
                 manipulation : [ 'down', 'up' ],
                 back : [ 'b', 'back' ]
 
@@ -70,10 +70,13 @@ define (
                 }
             },
 
-            setWebremoteControls : function(user)
-            {
+            setWebremoteControls : function(user) {
                 var view = user.setView ("catlab-nes");
+                this.setWebremoteControlsInView(view);
+            },
 
+            setWebremoteControlsInView: function(view)
+            {
                 // Focus next and previous
                 view.control(this._controls.navigation[0]).click(function () { this.previous(); }.bind(this));
                 view.control(this._controls.navigation[1]).click(function () { this.next(); }.bind(this));

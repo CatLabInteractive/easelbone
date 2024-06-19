@@ -163,14 +163,18 @@ define(
         };
 
         p.getAvailableSpace = function () {
+
             if (this.limits !== null) {
                 return this.limits;
-            } else if (this.getBounds()) {
-                width = this.getBounds().width;
-                height = this.getBounds().height;
+            } else if (this._bounds) {
+                width = this._bounds.width;
+                height = this._bounds.height;
             } else if (this.parent && this.parent.getBounds()) {
                 width = this.parent.getBounds().width;
                 height = this.parent.getBounds().height
+            } else if (this.getBounds()) {
+                width = this.getBounds().width;
+                height = this.getBounds().height;
             } else {
                 width = 0;
                 height = 0;
@@ -262,7 +266,8 @@ define(
          */
         p.getLocationHash = function () {
             hash = this.getAvailableSpace();
-            hash = parseInt(hash.width) + ':' + parseInt(hash.height) + ':' + this.textstring + ':' + this._align;
+            hash = parseInt(hash.width) + ':' + parseInt(hash.height) + ':' + this.textstring
+                + ':' + this._align + ':' + this._font + ':' + this._color
 
             //location = this.localToGlobal(this.x, this.y);
             //hash = location.x + ':' + location.y + ':' + hash + ':' + this._align;
