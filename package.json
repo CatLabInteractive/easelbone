@@ -5,7 +5,8 @@
   "author": "CatLab Interactive",
   "devDependencies": {
     "bower": "^1.8.8",
-    "grunt": "^1.5.3",
+    "bower-npm-resolver": "github:ibcooley/bower-npm-resolver",
+    "grunt": "^1.6.1",
     "grunt-bower-requirejs": "^2.0.0",
     "grunt-bump": "^0.8.0",
     "grunt-cache-breaker": "^1.0.1",
@@ -24,5 +25,12 @@
     "soundjs": "^1.0.1",
     "tweenjs": "^1.0.2",
     "underscore": "^1.*"
+  },
+  "scripts": {
+    "postinstall": "node_modules/.bin/bower install",
+    "update": "node_modules/.bin/bower update",
+    "start" : "grunt",
+    "build" : "grunt",
+    "bump" : "grunt bump"
   }
 }
