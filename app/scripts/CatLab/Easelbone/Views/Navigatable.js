@@ -70,9 +70,26 @@ define (
                 }
             },
 
+            clearUsers : function() {
+
+                for (var i = 0; i < this._users.length; i ++) {
+                    this.clearWebremoteControls(this._users[i]);
+                }
+                this._users = [];
+
+            },
+
             setWebremoteControls : function(user) {
+
                 var view = user.setView ("catlab-nes");
                 this.setWebremoteControlsInView(view);
+
+            },
+
+            clearWebremoteControls : function(user) {
+
+                this.clearWebremoteControlsInView(view);
+
             },
 
             setWebremoteControlsInView: function(view)
@@ -99,9 +116,34 @@ define (
                     }.bind(this))(i);
                 }
 
-                // Increase or decreate
+                // Increase or decrease
                 view.control(this._controls.manipulation[0]).click(function () { this.keyInput('down'); }.bind(this));
                 view.control(this._controls.manipulation[1]).click(function () { this.keyInput('up'); }.bind(this));
+            },
+
+            clearWebremoteControlsInView: function(view)
+            {
+                // Focus next and previous
+                view.control(this._controls.navigation[0]).off('click');
+                view.control(this._controls.navigation[1]).off('click');
+
+                // Toggle
+                for (var i = 0; i < this._controls.toggle.length; i ++ ) {
+                    (function(i) {
+                        view.control(this._controls.toggle[i]).off('click');
+                    }.bind(this))(i);
+                }
+
+                // Back
+                for (i = 0; i < this._controls.back.length; i ++ ) {
+                    (function(i) {
+                        view.control(this._controls.back[i]).off('click');
+                    }.bind(this))(i);
+                }
+
+               // Increase or decrease
+                view.control(this._controls.manipulation[0]).off('click');
+                view.control(this._controls.manipulation[1]).off('click');
             },
 
             /**
