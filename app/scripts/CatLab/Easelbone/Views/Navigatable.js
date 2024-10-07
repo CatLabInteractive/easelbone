@@ -33,6 +33,8 @@ define (
                 options = options || {};
 
                 this._users = [];
+                this._remoteViews = [];
+
                 this._currentIndex = -1;
                 this._current = null;
                 this._options = [];
@@ -72,23 +74,21 @@ define (
 
             clearUsers : function() {
 
-                for (var i = 0; i < this._users.length; i ++) {
-                    this.clearWebremoteControls(this._users[i]);
+                for (var i = 0; i < this._remoteViews.length; i ++) {
+                    this.clearWebremoteControlsInView(this._remoteViews[i]);
                 }
+
                 this._users = [];
+                this._remoteViews = [];
 
             },
 
             setWebremoteControls : function(user) {
 
                 var view = user.setView ("catlab-nes");
+                this._remoteViews.push(view);
+
                 this.setWebremoteControlsInView(view);
-
-            },
-
-            clearWebremoteControls : function(user) {
-
-                this.clearWebremoteControlsInView(view);
 
             },
 
@@ -141,7 +141,7 @@ define (
                     }.bind(this))(i);
                 }
 
-               // Increase or decrease
+                // Increase or decrease
                 view.control(this._controls.manipulation[0]).off('click');
                 view.control(this._controls.manipulation[1]).off('click');
             },
