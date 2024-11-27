@@ -1,6 +1,6 @@
 {
   "name": "easelbone",
-  "version": "1.0.66",
+  "version": "1.1.0",
   "main": "dist/scripts/easelbone.js",
   "author": "CatLab Interactive",
   "devDependencies": {
