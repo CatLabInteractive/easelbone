@@ -27,7 +27,6 @@
     "underscore": "^1.*"
   },
   "scripts": {
-    "postinstall": "node_modules/.bin/bower install",
     "update": "node_modules/.bin/bower update",
     "start" : "grunt",
     "build" : "grunt",
