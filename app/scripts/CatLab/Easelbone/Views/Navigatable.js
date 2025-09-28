@@ -222,7 +222,9 @@ define (
                 this._currentIndex = controlIndex;
                 this._options[controlIndex].activate(animate);
                 this._current = this._options[controlIndex];
-            }
+
+				this.scrollIntoView(this._current.element);
+            },
 
         });
     }

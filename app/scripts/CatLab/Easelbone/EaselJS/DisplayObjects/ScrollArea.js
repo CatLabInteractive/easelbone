@@ -45,6 +45,12 @@ define(
         var p = ScrollArea.prototype = new Placeholder();
         var event;
 
+		p.addChild = function (child) {
+			Placeholder.prototype.addChild.call(this, child);
+
+			child._parentScrollArea = this;
+		};
+
         p.isActive = function () {
             return this.getBounds() !== null &&
                 this.parent !== null &&
@@ -123,7 +129,13 @@ define(
                 delay = 0;
             }
 
+			// Sum y until we reach this scroll area.
             var y = element.y;
+			var pElement = element;
+			while (pElement.parent && pElement.parent !== this) {
+				y += pElement.parent.y;
+				pElement = pElement.parent;
+			}
             //this.setScroll (y);
 
             // Center around this y position.

@@ -371,7 +371,22 @@ define(
              */
             onRemove: function () {
 
-            }
+            },
+
+			/**
+			 * Check if the element is in a scrolarea and if so, focus on it.
+			 * @param element
+			 */
+			scrollIntoView: function(element) {
+				var el = element;
+				while (el.parent) {
+					if (typeof(el._parentScrollArea) !== 'undefined') {
+						el._parentScrollArea.focus(element, 200);
+						return;
+					}
+					el = el.parent;
+				}
+			}
 
         });
     }
