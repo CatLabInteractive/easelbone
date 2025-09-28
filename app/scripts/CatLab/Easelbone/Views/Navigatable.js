@@ -95,14 +95,14 @@ define (
             setWebremoteControlsInView: function(view)
             {
                 // Focus next and previous
-                view.control(this._controls.navigation[0]).click(function () { this.previous(); }.bind(this));
-                view.control(this._controls.navigation[1]).click(function () { this.next(); }.bind(this));
+                view.control(this._controls.navigation[0]).click(function (actor) { this.previous(actor); }.bind(this));
+                view.control(this._controls.navigation[1]).click(function (actor) { this.next(actor); }.bind(this));
 
                 // Toggle
                 for (var i = 0; i < this._controls.toggle.length; i ++ ) {
                     (function(i) {
-                        view.control(this._controls.toggle[i]).click (function () {
-                            this.keyInput(this._controls.toggle[i]);
+                        view.control(this._controls.toggle[i]).click (function (actor) {
+                            this.keyInput(this._controls.toggle[i], actor);
                         }.bind(this));
                     }.bind(this))(i);
                 }
@@ -110,15 +110,15 @@ define (
                 // Back
                 for (i = 0; i < this._controls.back.length; i ++ ) {
                     (function(i) {
-                        view.control(this._controls.back[i]).click (function () {
-                            this.triggerBack();
+                        view.control(this._controls.back[i]).click (function (actor) {
+                            this.triggerBack(actor);
                         }.bind(this));
                     }.bind(this))(i);
                 }
 
                 // Increase or decrease
-                view.control(this._controls.manipulation[0]).click(function () { this.keyInput('down'); }.bind(this));
-                view.control(this._controls.manipulation[1]).click(function () { this.keyInput('up'); }.bind(this));
+                view.control(this._controls.manipulation[0]).click(function (actor) { this.keyInput('down', actor); }.bind(this));
+                view.control(this._controls.manipulation[1]).click(function (actor) { this.keyInput('up', actor); }.bind(this));
             },
 
             clearWebremoteControlsInView: function(view)
@@ -157,19 +157,19 @@ define (
             /**
              *
              */
-            triggerBack : function()
+            triggerBack : function(actor)
             {
                 if (this._backCallback !== null) {
-                    this._backCallback.apply();
+                    this._backCallback(actor);
                 }
             },
 
-            next : function ()
+            next : function (actor)
             {
                 this.activate ((this._currentIndex + 1) % this._options.length);
             },
 
-            previous : function ()
+            previous : function (actor)
             {
                 var previous = this._currentIndex - 1;
                 if (previous < 0) {
@@ -178,10 +178,10 @@ define (
                 this.activate (previous);
             },
 
-            keyInput : function (button)
+            keyInput : function (button, actor)
             {
                 if (this._current) {
-                    this._current.keyInput(button);
+                    this._current.keyInput(button, actor);
                 }
             },
 

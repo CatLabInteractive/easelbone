@@ -50,12 +50,12 @@ define(
 
         };
 
-        Button.prototype.keyInput = function (input) {
+        Button.prototype.keyInput = function (input, actor) {
             switch (input) {
                 case 'a':
                 case 'start':
 
-                    this.trigger('click');
+                    this.trigger('click', actor);
 
                     break;
             }
