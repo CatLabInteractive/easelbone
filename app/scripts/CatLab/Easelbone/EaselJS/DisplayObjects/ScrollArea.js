@@ -144,23 +144,24 @@ define(
                 height = element.getBounds().height;
             }
 
-            // y should be in the middle of the screen, so...
-            if (height < this.parent.getBounds().height) {
-                y -= (this.parent.getBounds().height / 2) - (height / 2);
-            }
+			// Center element in scroll area
+			if (height < this.parent.getBounds().height) {
+				y -= (this.parent.getBounds().height / 2) - (height / 2);
+			}
 
-            if (delay > 0) {
-                createjs.Tween.get(this)
-                    .to({'scroll': y}, delay, ease)
-                    .call(function() {
-                        state.resolve()
-                    }.bind(this));
-            } else {
-                this.scroll = y;
-                state.resolve();
-            }
+			if (delay > 0) {
+				createjs.Tween.get(this)
+					.to({scroll: y}, delay, ease)
+					.call(function() {
+						state.resolve();
+					}.bind(this));
+			} else {
+				this.scroll = y;
+				state.resolve();
+			}
 
             return state.promise();
+
         };
 
         p.scrollTo = function (percentage) {
@@ -177,6 +178,7 @@ define(
 
             event = new createjs.Event('scroll');
             this.dispatchEvent(event);
+
         };
 
         return ScrollArea;
