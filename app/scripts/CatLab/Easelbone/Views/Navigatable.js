@@ -40,7 +40,7 @@ define (
                 this._options = [];
                 this._backCallback = null;
 
-                this._controls = _.extend(this.DefaultControls, {});
+                this._controls = _.extend({}, this.DefaultControls);
 
                 if (typeof (options.orientation) !== 'undefined') {
                     // Is orientation vertical?
