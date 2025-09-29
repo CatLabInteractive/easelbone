@@ -53,22 +53,39 @@ define(
                 this.container.setChildIndex(oldView.el, this.container.children.length - 1);
             }
 
-            this._waitForViewDestroy(oldView)
-                .then(function() {
-                    if (oldView !== null) {
-                        oldView.trigger('stage:removed');
-                        this.container.removeChild(oldView.el);
-
-                        // let's not confuse the garbage collector
-                        oldView = null;
-                    }
-                    /*
-                    if (this.view.easelScreen) {
-                        this.view.resume();
-                    }*/
-
-                }.bind(this));
+			if (oldView) {
+				this._destroyView(oldView)
+					.then(function () {
+						oldView = null;
+					});
+			}
         };
+
+		Layer.prototype.clearView = function ()
+		{
+			if (!this.view) {
+				return;
+			}
+
+			this._destroyView(this.view)
+				.pipe(function() {
+					this.view = null;
+				}.bind(this));
+		};
+
+		Layer.prototype._destroyView = function (view)
+		{
+			return this._waitForViewDestroy(view)
+				.pipe(function() {
+					if (view !== null) {
+						view.trigger('stage:removed');
+						this.container.removeChild(view.el);
+
+						// let's not confuse the garbage collector
+						view = null;
+					}
+				}.bind(this));
+		}
 
         /**
          * @param oldView

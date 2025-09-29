@@ -33,6 +33,10 @@ define(
             this.text.addChild(new BigText(text, font, color));
         };
 
+		Button.prototype.click = function(callback) {
+			this.on('click', callback);
+		};
+
         Button.prototype.convertText = function ()
         {
 

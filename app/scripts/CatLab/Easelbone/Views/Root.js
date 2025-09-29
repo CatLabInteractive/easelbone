@@ -23,10 +23,14 @@ define(
             width: null,
             height: null,
 
+			initialize: function (options) {
+				this.initializeRootView(options);
+			},
+
             /**
              * @param options
              */
-            initialize: function (options) {
+            initializeRootView: function (options) {
 
                 if (typeof (options.canvas) !== 'undefined') {
                     this.canvas = options.canvas;
