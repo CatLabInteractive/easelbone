@@ -26,8 +26,6 @@ define(
         var fontOffsets = {};
         var fontLineHeights = {};
 
-        var fontSize;
-
         var DefaultTextClass = createjs.Text;
         //var TextClass = EmojiText;
 
@@ -195,13 +193,18 @@ define(
             return new this.textConstructor("" + String(text), fontSize + "px " + font, color);
         };
 
+		p.goBigOrGoHome = function (textstring, availableWidth, availableHeight) {
+			//return this.goBigOrGoHomeLinear(textstring, availableWidth, availableHeight);
+			return this.goBigOrGoHomeBinary(textstring, availableWidth, availableHeight);
+		};
+
         /**
          * Return an array of createjs.Text elements that should be displayed below eachother.
          * @param textstring
          * @param availableWidth
          * @param availableHeight
          */
-        p.goBigOrGoHome = function (textstring, availableWidth, availableHeight) {
+        p.goBigOrGoHomeLinear = function (textstring, availableWidth, availableHeight) {
             var self = this;
 
             var fontsize = 5;
@@ -255,9 +258,42 @@ define(
             while (bigger()) {
             }
 
-            this.fontsize = fontsize;
+			this.fontsize = fontsize;
             return stable;
         };
+
+		/**
+		 * Find the largest font size that fits the available space using binary search.
+		 * @param textstring
+		 * @param availableWidth
+		 * @param availableHeight
+		 */
+		p.goBigOrGoHomeBinary = function (textstring, availableWidth, availableHeight) {
+			var minFontSize = 5;
+			var maxFontSize = availableHeight;
+			var bestFit = null;
+
+			var steps = 0;
+			while (minFontSize <= maxFontSize) {
+				var midFontSize = Math.floor((minFontSize + maxFontSize) / 2);
+				var textObj = this.createTextObject(textstring, midFontSize, this._font, this._color);
+				textObj.lineWidth = availableWidth;
+				textObj.lineHeight = getFontLineheight(textObj, this._font);
+				updateCurrentSize(textObj);
+
+				if (currentSize.height <= availableHeight && currentSize.width <= availableWidth) {
+					bestFit = textObj;
+					minFontSize = midFontSize + 1;
+				} else {
+					maxFontSize = midFontSize - 1;
+				}
+
+				steps ++;
+			}
+
+			this.fontsize = bestFit ? parseInt(bestFit.font.split('px')[0]) : 0;
+			return bestFit;
+		};
 
         p.Container_draw = p.draw;
 
