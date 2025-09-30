@@ -100,6 +100,17 @@ define(
 			// A label can have multiple children; grandchildren are included as well
 			container._mh_timeline_label_map = {};
 
+			// Generate the timeline labels for this child.
+			if (container.timeline) {
+				var labels = container.timeline.getLabels();
+				for (var i = 0; i < labels.length; i++) {
+					if (typeof(container._mh_timeline_label_map[labels[i].label]) === 'undefined') {
+						container._mh_timeline_label_map[labels[i].label] = [];
+					}
+					container._mh_timeline_label_map[labels[i].label].push(container);
+				}
+			}
+
 			this.forEachNamedChild(container, function(child, name) {
 				container._mh_named_children_map[name] = child;
 
@@ -113,17 +124,6 @@ define(
 							container._mh_timeline_label_map[k] = [];
 						}
 						container._mh_timeline_label_map[k] = container._mh_timeline_label_map[k].concat(child._mh_timeline_label_map[k]);
-					}
-				}
-
-				// Generate the timeline labels for this child.
-				if (child.timeline) {
-					var labels = child.timeline.getLabels();
-					for (var i = 0; i < labels.length; i++) {
-						if (typeof(container._mh_timeline_label_map[labels[i].label]) === 'undefined') {
-							container._mh_timeline_label_map[labels[i].label] = [];
-						}
-						container._mh_timeline_label_map[labels[i].label].push(child);
 					}
 				}
 
