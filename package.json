@@ -1,6 +1,6 @@
 {
   "name": "easelbone",
-  "version": "1.1.7",
+  "version": "1.2.0",
   "main": "dist/scripts/easelbone.js",
   "author": "CatLab Interactive",
   "devDependencies": {
@@ -30,6 +30,7 @@
     "update": "node_modules/.bin/bower update",
     "start" : "grunt",
     "build" : "grunt",
-    "bump" : "grunt bump"
+    "bump" : "grunt bump",
+    "bump:minor" : "grunt bump:minor"
   }
 }
