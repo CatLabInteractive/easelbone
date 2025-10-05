@@ -186,9 +186,13 @@ define(
 
                 var scale = this.getScale(originalwidth, originalheight, zoom);
 
+
 				// Only scale if needed (ie. not 1.0)
 				var shouldScale = true;
-				if (scale.x === 1.0 && scale.y === 1.0) {
+				if (
+					this.getWidth() === originalwidth &&
+					this.getHeight() === originalheight
+				) {
 					shouldScale = false;
 				}
 
