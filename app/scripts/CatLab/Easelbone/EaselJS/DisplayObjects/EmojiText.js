@@ -53,16 +53,18 @@ define(
 			var maxW = 0, count = 0;
 			var hardLines = text.split(/(?:\r\n|\r|\n)/);
 			var charCount = 0;
+			var hasWrap = this.lineWidth != null;
+			var wrapLimit = this.lineWidth;
 
 			for (var i = 0, l = hardLines.length; i < l; i++) {
 				var str = hardLines[i];
 				var w = null;
 
-				if (this.lineWidth != null) {
+				if (hasWrap) {
 					w = ctx.measureText(str).width;
-					if (w > this.lineWidth) {
+					if (w > wrapLimit) {
 						var words = this._splitWords(str);
-						var wordWidths = [];
+						var wordWidths = new Array(words.length);
 						for (var wi = 0; wi < words.length; wi++) {
 							wordWidths[wi] = ctx.measureText(words[wi]).width;
 						}
@@ -70,9 +72,8 @@ define(
 						w = wordWidths[0];
 
 						for (var j = 1, jl = words.length; j < jl; j += 2) {
-							var nextWord = words[j] + (words[j + 1] || "");
 							var wordW = (wordWidths[j] || 0) + (wordWidths[j + 1] || 0);
-							if (w + wordW > this.lineWidth) {
+							if (w + wordW > wrapLimit) {
 								if (paint) {
 									this._drawLineWithEmoji(ctx, str, count * lineHeight, charCount, lineHeight);
 									charCount += str.length + 1;
@@ -90,14 +91,17 @@ define(
 					}
 				}
 
+				var lineW;
 				if (paint) {
-					this._drawLineWithEmoji(ctx, str, count * lineHeight, charCount, lineHeight);
+					lineW = this._drawLineWithEmoji(ctx, str, count * lineHeight, charCount, lineHeight);
 					charCount += str.length + 1;
+				} else {
+					// When not painting, reuse computed width if available, else measure once.
+					lineW = (w == null) ? ctx.measureText(str).width : w;
 				}
 
 				if (lines) lines.push(str);
-				if (o && w == null) w = ctx.measureText(str).width;
-				if (w > maxW) maxW = w;
+				if (lineW > maxW) maxW = lineW;
 				count++;
 			}
 
@@ -109,22 +113,18 @@ define(
 			return o;
 		};
 
-		/**
-		 * @param ctx
-		 * @param str
-		 * @param y
-		 * @param charCount
-		 * @param lineHeight
-		 * @private
-		 */
+		// Returns measured line width to avoid re-measuring in caller.
 		p._drawLineWithEmoji = function (ctx, str, y, charCount, lineHeight) {
-
-			// check if we need to draw any emoji
+			// Draw base text
 			this._drawTextLine(ctx, str, y);
 
 			if (this._emoji.length === 0) {
-				return;
+				// Still compute width once for alignment/maxW reuse by caller.
+				return ctx.measureText(str).width;
 			}
+
+			var strW = ctx.measureText(str).width;
+			var alignOffset = Text.H_OFFSETS[this.textAlign || "left"];
 
 			for (var index in this._emoji) {
 				index = parseInt(index);
@@ -136,14 +136,15 @@ define(
 					this._drawEmoji(
 						ctx,
 						this._emoji[index],
-						ctx.measureText(str).width * Text.H_OFFSETS[this.textAlign || "left"]
-						+ ctx.measureText(str.substring(0, index - charCount)).width,
+						strW * alignOffset + ctx.measureText(str.substring(0, index - charCount)).width,
 						y,
 						lineHeight
 					);
 				}
 			}
-		}
+
+			return strW;
+		};
 
 		// JavaScript
 		p._drawEmoji = function (ctx, emoji, x, y, lineHeight) {
