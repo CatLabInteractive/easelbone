@@ -188,7 +188,10 @@ define(
                         continue;
                 }
 
-                if (container[key] instanceof createjs.DisplayObject) {
+                if (
+					container[key] instanceof createjs.DisplayObject &&
+					!(container[key] instanceof createjs.Shape)
+				) {
                     if (callback(container[key], key, container) === false) {
                         return;
                     }

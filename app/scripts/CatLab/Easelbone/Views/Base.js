@@ -161,7 +161,7 @@ define(
 
                 var s = zoom ? Math.max(sx, sy) : Math.min(sx, sy);
 
-                return {'x': s, 'y': s};
+                return {x: s, y: s};
             },
 
             /**
@@ -186,32 +186,47 @@ define(
 
                 var scale = this.getScale(originalwidth, originalheight, zoom);
 
-                scale.x = scale.x * altScale;
-                scale.y = scale.y * altScale;
+				// Only scale if needed (ie. not 1.0)
+				var shouldScale = true;
+				if (scale.x === 1.0 && scale.y === 1.0) {
+					shouldScale = false;
+				}
 
-                element.x = ((this.getWidth() - (originalwidth * scale.x)) / 2);
-                element.y = ((this.getHeight() - (originalheight * scale.y)) / 2);
+				// Do the actual scaling and putting of black borders and all that.
+				if (shouldScale) {
 
-                element.scaleX = scale.x;
-                element.scaleY = scale.y;
+					scale.x = scale.x * altScale;
+					scale.y = scale.y * altScale;
+
+					element.x = ((this.getWidth() - (originalwidth * scale.x)) / 2);
+					element.y = ((this.getHeight() - (originalheight * scale.y)) / 2);
+
+					element.scaleX = scale.x;
+					element.scaleY = scale.y;
+
+				}
 
                 this.el.addChild(element);
 
-                // Black borders
-                var g = new createjs.Graphics();
+				if (shouldScale) {
 
-                if (element.x >= 1) {
-                    g.beginFill(this.getBackground()).drawRect(0, 0, Math.ceil(element.x), this.getHeight());
-                    g.beginFill(this.getBackground()).drawRect(this.getWidth() - Math.ceil(element.x), 0, Math.ceil(element.x), this.getHeight());
-                }
+					// Black borders
+					var g = new createjs.Graphics();
 
-                if (element.y >= 1) {
-                    g.beginFill(this.getBackground()).drawRect(0, 0, this.getWidth(), Math.ceil(element.y));
-                    g.beginFill(this.getBackground()).drawRect(0, this.getHeight() - Math.ceil(element.y), this.getWidth(), Math.ceil(element.y));
-                }
+					if (element.x >= 1) {
+						g.beginFill(this.getBackground()).drawRect(0, 0, Math.ceil(element.x), this.getHeight());
+						g.beginFill(this.getBackground()).drawRect(this.getWidth() - Math.ceil(element.x), 0, Math.ceil(element.x), this.getHeight());
+					}
 
-                var s = new createjs.Shape(g);
-                this.el.addChild(s);
+					if (element.y >= 1) {
+						g.beginFill(this.getBackground()).drawRect(0, 0, this.getWidth(), Math.ceil(element.y));
+						g.beginFill(this.getBackground()).drawRect(0, this.getHeight() - Math.ceil(element.y), this.getWidth(), Math.ceil(element.y));
+					}
+
+					var s = new createjs.Shape(g);
+					this.el.addChild(s);
+
+				}
             },
 
             /**
