@@ -64,6 +64,8 @@ define(
                 this.dirty = false;
                 this.mainLayer = this.nextLayer('main');
 
+				this.snapToPixel = typeof(options.snapToPixel) !== 'undefined' ? options.snapToPixel : false;
+
                 // Ticker
                 //createjs.Ticker.timingMode = createjs.Ticker.RAF_SYNCHED;
                 createjs.Ticker.addEventListener('tick', function (e) {
@@ -81,11 +83,16 @@ define(
             },
 
             createStage : function(options) {
+				var stage;
                 if (typeof(options.webgl) !== 'undefined' && options.webgl) {
-                    return new createjs.StageGL(this.canvas)
+                    stage = new createjs.StageGL(this.canvas)
                 } else {
-                    return new createjs.Stage(this.canvas)
+                    stage = new createjs.Stage(this.canvas)
                 }
+
+				stage.snapToPixelEnabled = this.snapToPixel;
+
+				return stage;
             },
 
             setMaxCanvasSize: function(width, height)
@@ -105,7 +112,9 @@ define(
                 }
 
                 var layer = new Layer();
-                this.stage.addChild(layer.container);
+				layer.container.snapToPixel = this.snapToPixel;
+
+				this.stage.addChild(layer.container);
 
                 this.layers.push(layer);
                 this.layerMap[name] = layer;

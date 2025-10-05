@@ -19,6 +19,8 @@ define(
 			this._additionalEmojis = {};
 			this._lastReplacedText = null;
 			this._lastReplacedResult = null;
+
+			this.snapToPixel = true;
 		}
 
 		EmojiText.setEmojis = function (aEmojis) {

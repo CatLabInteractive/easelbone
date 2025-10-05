@@ -43,6 +43,7 @@ define(
             this.fontsize = 0;
 
             this.textConstructor = DefaultTextClass;
+			this.snapToPixel = true;
         };
 
         /**
