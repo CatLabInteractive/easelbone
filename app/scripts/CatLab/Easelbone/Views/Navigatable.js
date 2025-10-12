@@ -166,11 +166,19 @@ define (
 
             next : function (actor)
             {
+				if (this._options.length === 0) {
+					return;
+				}
+
                 this.activate ((this._currentIndex + 1) % this._options.length);
             },
 
             previous : function (actor)
             {
+				if (this._options.length === 0) {
+					return;
+				}
+
                 var previous = this._currentIndex - 1;
                 if (previous < 0) {
                     previous = this._options.length - 1;
