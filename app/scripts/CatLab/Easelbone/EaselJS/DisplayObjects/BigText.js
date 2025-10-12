@@ -41,6 +41,7 @@ define(
 
             this.debug = debug;
             this.fontsize = 0;
+			this.minFontSize = 5;
 
             this.textConstructor = DefaultTextClass;
 			this.snapToPixel = true;
@@ -270,7 +271,7 @@ define(
 		 * @param availableHeight
 		 */
 		p.goBigOrGoHomeBinary = function (textstring, availableWidth, availableHeight) {
-			var minFontSize = 5;
+			var minFontSize = this.minFontSize;
 			var maxFontSize = availableHeight;
 			var bestFit = null;
 
@@ -292,7 +293,15 @@ define(
 				steps ++;
 			}
 
-			this.fontsize = bestFit ? parseInt(bestFit.font.split('px')[0]) : 0;
+			if (!bestFit) {
+				// Could not find a fit, return smallest possible
+				bestFit = this.createTextObject(textstring, this.minFontSize, this._font, this._color);
+				bestFit.lineWidth = availableWidth;
+				bestFit.lineHeight = getFontLineheight(bestFit, this._font);
+				updateCurrentSize(bestFit);
+			}
+
+			this.fontsize = parseInt(bestFit.font.split('px')[0]);
 			return bestFit;
 		};
 
