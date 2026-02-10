@@ -77,7 +77,10 @@
 						// An example settings view.slider1
 						var ExampleView = easelbone.Views.Navigatable.extend ({
 
-							'initialize' : function () {
+							initialize : function () {
+
+								this.initializeNavigable();
+
 								// Now set the view
 								this.view = new assets.ExamplePlaceholder ();
 

@@ -25,10 +25,10 @@ define (
 
             initialize : function (options)
             {
-                this.initializeNavigatable (options);
+                this.initializeNavigable (options);
             },
 
-            initializeNavigatable : function (options)
+            initializeNavigable : function (options)
             {
                 options = options || {};
 
@@ -55,6 +55,11 @@ define (
 
                 // Reset the options for Navigatable
                 this.resetOptions ();
+            },
+
+            // Deprecated, use initializeNavigable instead.
+            initializeNavigatable: function (options) {
+                this.initializeNavigable(options);
             },
 
             /**
