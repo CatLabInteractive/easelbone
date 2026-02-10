@@ -68,13 +68,14 @@ define(
                 return this.childBounds;
             }
 
-            if (!this.displayobject.getBounds()) {
+            var bounds = this.displayobject.getBounds();
+            if (!bounds) {
                 return null;
             }
 
             return {
-                width: this.displayobject.getBounds().width,
-                height: this.displayobject.getBounds().height
+                width: bounds.width,
+                height: bounds.height
             };
         };
 
@@ -105,12 +106,15 @@ define(
                     width = bounds.width;
                     height = bounds.height
                 }
-            } else if (this.getBounds()) {
-                width = this.getBounds().width;
-                height = this.getBounds().height;
             } else {
-                width = 100;
-                height = 100;
+                bounds = this.getBounds();
+                if (bounds) {
+                    width = bounds.width;
+                    height = bounds.height;
+                } else {
+                    width = 100;
+                    height = 100;
+                }
             }
 
             return {width: width, height: height};
