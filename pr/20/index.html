@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EaselBone — GUI Engine for EaselJS + Backbone.js</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f8f9fa;
+        }
+
+        header {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 2rem 1rem;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            font-size: 1.1rem;
+            color: #bdc3c7;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #2c3e50;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 0.5rem;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .feature {
+            background: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 1.25rem;
+        }
+
+        .feature h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            color: #2c3e50;
+        }
+
+        .feature p {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .examples {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .example-card {
+            background: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 1.25rem;
+            text-decoration: none;
+            color: inherit;
+            transition: box-shadow 0.2s, border-color 0.2s;
+        }
+
+        .example-card:hover {
+            border-color: #3498db;
+            box-shadow: 0 2px 8px rgba(52, 152, 219, 0.15);
+        }
+
+        .example-card h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            color: #3498db;
+        }
+
+        .example-card p {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        pre {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+
+        code {
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        }
+
+        .inline-code {
+            background: #e9ecef;
+            padding: 0.15rem 0.4rem;
+            border-radius: 3px;
+            font-size: 0.85rem;
+        }
+
+        section {
+            margin-bottom: 2.5rem;
+        }
+
+        footer {
+            text-align: center;
+            padding: 1.5rem 1rem;
+            color: #999;
+            font-size: 0.85rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        footer a {
+            color: #3498db;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        .install-section p {
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>EaselBone</h1>
+        <p>A GUI engine combining EaselJS and Backbone.js for building interactive canvas-based user interfaces.</p>
+    </header>
+
+    <div class="container">
+        <section>
+            <h2>Features</h2>
+            <div class="features">
+                <div class="feature">
+                    <h3>Navigatable Views</h3>
+                    <p>Keyboard and mouse navigatable views built on Backbone.js, with support for multiple input users.</p>
+                </div>
+                <div class="feature">
+                    <h3>UI Controls</h3>
+                    <p>Sliders, checkboxes, selectboxes, and buttons with full keyboard navigation support.</p>
+                </div>
+                <div class="feature">
+                    <h3>Scrollable Containers</h3>
+                    <p>Scroll areas with list and float layout support, including programmatic scrolling and focus management.</p>
+                </div>
+                <div class="feature">
+                    <h3>Text Rendering</h3>
+                    <p>BigText auto-sizing text rendering with custom font support and emoji rendering via EmojiText.</p>
+                </div>
+                <div class="feature">
+                    <h3>Alpha Masks</h3>
+                    <p>Alpha mask support for creating complex visual effects on canvas elements.</p>
+                </div>
+                <div class="feature">
+                    <h3>Asset Loading</h3>
+                    <p>Built-in asset loader for managing spritesheets, images, and other resources with AMD/RequireJS modules.</p>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>Live Examples</h2>
+            <div class="examples">
+                <a class="example-card" href="examples/controls.html">
+                    <h3>Controls</h3>
+                    <p>Interactive sliders, checkboxes, selectboxes, and buttons with keyboard navigation.</p>
+                </a>
+                <a class="example-card" href="examples/scroll.html">
+                    <h3>Scrollable Areas</h3>
+                    <p>Scrollable container with a list of items and programmatic focus scrolling.</p>
+                </a>
+                <a class="example-card" href="examples/float.html">
+                    <h3>Float Layout</h3>
+                    <p>Float container layout for arranging elements in a flexible grid within a scroll area.</p>
+                </a>
+                <a class="example-card" href="examples/alphamask.html">
+                    <h3>Alpha Mask</h3>
+                    <p>Demonstrates alpha mask capabilities for creating visual effects on canvas.</p>
+                </a>
+                <a class="example-card" href="examples/background.html">
+                    <h3>Background &amp; Fill</h3>
+                    <p>Background fill and placeholder display objects for image rendering in containers.</p>
+                </a>
+                <a class="example-card" href="examples/bigtext.html">
+                    <h3>BigText</h3>
+                    <p>Auto-sizing text rendering with custom fonts that fills available container space.</p>
+                </a>
+                <a class="example-card" href="examples/emoji.html">
+                    <h3>Emoji Text</h3>
+                    <p>Text rendering with inline emoji support using OpenMoji font rendering.</p>
+                </a>
+            </div>
+        </section>
+
+        <section class="install-section">
+            <h2>Installation</h2>
+            <p>Install via npm:</p>
+            <pre><code>npm install easelbone</code></pre>
+            <p>Or with Bower:</p>
+            <pre><code>bower install easelbone</code></pre>
+        </section>
+
+        <section>
+            <h2>Quick Start</h2>
+            <pre><code>require(['easelbone'], function (easelbone) {
+    // Create a root view attached to a DOM container
+    var rootView = new easelbone.Views.Root({
+        container: document.getElementById('container')
+    });
+
+    // Create a navigatable view
+    var MyView = easelbone.Views.Navigatable.extend({
+        initialize: function () {
+            this.initializeNavigatable({ orientation: 'vertical' });
+        },
+        render: function () {
+            // Add your content here
+        }
+    });
+
+    var view = new MyView();
+    rootView.setView(view);
+});</code></pre>
+        </section>
+
+        <section>
+            <h2>API Overview</h2>
+            <div class="features">
+                <div class="feature">
+                    <h3>Views</h3>
+                    <p><code class="inline-code">Views.Root</code> — Root stage container<br>
+                    <code class="inline-code">Views.Navigatable</code> — Keyboard/mouse navigatable view<br>
+                    <code class="inline-code">Views.Layer</code> — View layering<br>
+                    <code class="inline-code">Views.LoadingView</code> — Loading state view</p>
+                </div>
+                <div class="feature">
+                    <h3>Controls</h3>
+                    <p><code class="inline-code">Controls.Slider</code> — Range slider<br>
+                    <code class="inline-code">Controls.Checkbox</code> — Toggle checkbox<br>
+                    <code class="inline-code">Controls.Button</code> — Clickable button<br>
+                    <code class="inline-code">Controls.Selectbox</code> — Dropdown select<br>
+                    <code class="inline-code">Controls.ScrollArea</code> — Scrollable area<br>
+                    <code class="inline-code">Controls.List</code> — List container<br>
+                    <code class="inline-code">Controls.FloatContainer</code> — Float layout</p>
+                </div>
+                <div class="feature">
+                    <h3>Display Objects</h3>
+                    <p><code class="inline-code">EaselJS.BigText</code> — Auto-sizing text<br>
+                    <code class="inline-code">EaselJS.EmojiText</code> — Emoji-enabled text<br>
+                    <code class="inline-code">EaselJS.Placeholder</code> — Placeholder container<br>
+                    <code class="inline-code">EaselJS.Fill</code> — Fill display object<br>
+                    <code class="inline-code">EaselJS.Background</code> — Background renderer</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <footer>
+        <p>
+            <a href="https://github.com/CatLabInteractive/easelbone">GitHub Repository</a> · 
+            Built by <a href="https://github.com/CatLabInteractive">CatLab Interactive</a> · 
+            Licensed under MIT
+        </p>
+    </footer>
+</body>
+</html>
