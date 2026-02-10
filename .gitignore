@@ -4,3 +4,4 @@ dist/scripts/vendor/
 node_modules/
 dist/scripts/main.js
 dist/examples
+dist/index.html

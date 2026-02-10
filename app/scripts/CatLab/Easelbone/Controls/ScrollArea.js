@@ -15,6 +15,7 @@ define (
             _.extend(this, Backbone.Events);
 
 			this.element = element;
+			this.element._scrollArea = this;
 
 			this.scrollbar = new ScrollBar (element.scrollbar);
 			this.scrollbar.link (this);
@@ -40,7 +41,7 @@ define (
 			});
 		};
 
-		p.onAdd = function () {
+		p.onAdd = function (element) {
 			this.scrollTo (0);
 		};
 

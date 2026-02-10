@@ -27,6 +27,7 @@ define(
         p.findPlaceholders = function (name, container) {
             var out = [];
             var placeholders = this.findFromNames(name, container);
+
             placeholders.forEach(function (element) {
                 out.push(new Placeholder(element));
             });
@@ -42,47 +43,113 @@ define(
          * @param {{ all: boolean }} options
          * @returns {Array}
          */
-        p.findFromNames = function (names, containers, options) {
+		p.findFromNames = function (names, containers, options) {
 
-            if (!Array.isArray(containers)) {
-                containers = [containers];
-            }
+			if (!Array.isArray(containers)) {
+				containers = [containers];
+			}
 
-            if (!Array.isArray(names)) {
-                names = [names];
-            }
+			if (!Array.isArray(names)) {
+				names = [names];
+			}
 
-            var results = [];
-            var name;
-            var nameParts;
-            var rootName;
+			var results = [];
+			var name;
+			var nameParts;
+			var rootName;
 
-            // Loop through the names and return the first resultset with matches
-            for (var i = 0; i < names.length; i ++) {
+			// Loop through the names and return the first resultset with matches
+			for (var i = 0; i < names.length; i ++) {
 
-                name = names[i];
+				name = names[i];
 
-                // Check for dot notation
-                nameParts = name.split('.');
-                rootName = nameParts.shift();
+				// Check for dot notation
+				nameParts = name.split('.');
+				rootName = nameParts.shift();
 
-                // Go through all containers
-                containers.forEach(function (container) {
-                    results = results.concat(this.findFromNameInContainer(container, rootName, options));
+				// Go through all containers
+				containers.forEach(function (container) {
+					results = results.concat(this.findFromNameInContainer(container, rootName, options));
 
-                    // Do we need to go further down the rabbithole?
-                    if (nameParts.length > 0) {
-                        results = this.findFromNames(nameParts.join('.'), results);
-                    }
-                }.bind(this));
+					// Do we need to go further down the rabbithole?
+					if (nameParts.length > 0) {
+						results = this.findFromNames(nameParts.join('.'), results);
+					}
+				}.bind(this));
 
-                if (results.length > 0) {
-                    return results;
-                }
-            }
+				if (results.length > 0) {
+					return results;
+				}
+			}
 
-            return results;
-        };
+			return results;
+		};
+
+		p.buildNamedChildMap = function(container) {
+
+			if (typeof(container._mh_named_children_map) !== 'undefined') {
+				return;
+			}
+
+			// Create a map of named children.
+			// This is a simple 1-dimensional map: name -> child.
+			container._mh_named_children_map = {};
+
+			// Create a deep map of all descendants by name for O(1) lookups.
+			// This is a 1-dimensional map: name -> [child, child, ...]
+			container._mh_deep_named_children_map = {};
+
+			// Create a map of timeline labels.
+			// This is a 2-dimensional map: label -> [child, child, ...]
+			// A label can have multiple children; grandchildren are included as well
+			container._mh_timeline_label_map = {};
+
+			// Generate the timeline labels for this child.
+			if (container.timeline) {
+				var labels = container.timeline.getLabels();
+				for (var i = 0; i < labels.length; i++) {
+					if (typeof(container._mh_timeline_label_map[labels[i].label]) === 'undefined') {
+						container._mh_timeline_label_map[labels[i].label] = [];
+					}
+					container._mh_timeline_label_map[labels[i].label].push(container);
+				}
+			}
+
+			this.forEachNamedChild(container, function(child, name) {
+				container._mh_named_children_map[name] = child;
+
+				// Generate the map recursively.
+				this.buildNamedChildMap(child);
+
+				// Copy the timeline labels to the container.
+				for (var k in child._mh_timeline_label_map) {
+					if (child._mh_timeline_label_map.hasOwnProperty(k)) {
+						if (typeof(container._mh_timeline_label_map[k]) === 'undefined') {
+							container._mh_timeline_label_map[k] = [];
+						}
+						container._mh_timeline_label_map[k] = container._mh_timeline_label_map[k].concat(child._mh_timeline_label_map[k]);
+					}
+				}
+
+				// Build the deep map: add this child under its own name
+				if (typeof(container._mh_deep_named_children_map[name]) === 'undefined') {
+					container._mh_deep_named_children_map[name] = [];
+				}
+				container._mh_deep_named_children_map[name].push(child);
+
+				// Merge child's deep map into container's deep map
+				for (var dk in child._mh_deep_named_children_map) {
+					if (child._mh_deep_named_children_map.hasOwnProperty(dk)) {
+						if (typeof(container._mh_deep_named_children_map[dk]) === 'undefined') {
+							container._mh_deep_named_children_map[dk] = [];
+						}
+						container._mh_deep_named_children_map[dk] = container._mh_deep_named_children_map[dk].concat(child._mh_deep_named_children_map[dk]);
+					}
+				}
+
+			}.bind(this));
+
+		}
 
         /**
          * Find all named elements (generated by adobe animate) in the container
@@ -103,14 +170,25 @@ define(
                 options = {};
             }
 
-            if (container[name] instanceof createjs.DisplayObject) {
-                results.push(container[name]);
-            }
+			// Cache a container map for faster lookups.
+			this.buildNamedChildMap(container);
 
+			// Direct child lookup (O(1))
+			if (typeof(container._mh_named_children_map[name]) !== 'undefined') {
+				results.push(container._mh_named_children_map[name]);
+			}
+
+			// Deep lookup using pre-built map instead of recursive search
             if (results.length === 0 || options.all) {
-                this.forEachNamedChild(container, function (child) {
-                    this.findFromNameInContainer(child, name, options, results);
-                }.bind(this));
+				if (container._mh_deep_named_children_map && container._mh_deep_named_children_map[name]) {
+					var deepResults = container._mh_deep_named_children_map[name];
+					for (var i = 0; i < deepResults.length; i++) {
+						// Avoid duplicates from direct child lookup
+						if (results.indexOf(deepResults[i]) === -1) {
+							results.push(deepResults[i]);
+						}
+					}
+				}
             }
 
             return results;
@@ -136,7 +214,10 @@ define(
                         continue;
                 }
 
-                if (container[key] instanceof createjs.DisplayObject) {
+                if (
+					container[key] instanceof createjs.DisplayObject &&
+					!(container[key] instanceof createjs.Shape)
+				) {
                     if (callback(container[key], key, container) === false) {
                         return;
                     }
@@ -144,12 +225,16 @@ define(
             }
         };
 
-        p.forAllNamedChildren = function(container, callback)
+        p.forAllNamedChildren = function(container, callback, level)
         {
+			if (typeof(level) === 'undefined') {
+				level = 0;
+			}
+
             this.forEachNamedChild(container, function(child, name) {
 
-                callback(child, name, container);
-                this.forAllNamedChildren(child, callback);
+                callback(child, name, container, level);
+                this.forAllNamedChildren(child, callback, level + 1);
 
             }.bind(this));
         };
@@ -179,29 +264,21 @@ define(
          * @param label
          * @returns {boolean}
          */
-        p.hasLabeledFrame  = function(label, container) {
-            if (container.timeline) {
-                var labels = container.timeline.getLabels();
-                for (var i = 0; i < labels.length; i++) {
-                    if (labels[i].label === label) {
-                        return true;
-                    }
-                }
-            }
+		p.hasLabeledFrame = function(label, container) {
+			// Ensure the map is built
+			this.buildNamedChildMap(container);
 
-            // Also take a look in the children
-            var result = false;
+			// Fast lookup using the cached map
+			if (
+				container._mh_timeline_label_map &&
+				container._mh_timeline_label_map[label] &&
+				container._mh_timeline_label_map[label].length > 0
+			) {
+				return true;
+			}
 
-            this.forEachNamedChild(container, function(child) {
-                if (this.hasLabeledFrame(label, child)) {
-                    result = true;
-                    return false; // return false will stop the loop.
-                }
-            }.bind(this));
-
-            return result;
-
-        };
+			return false;
+		};
 
         p.pause  = function(container)
         {
@@ -227,29 +304,22 @@ define(
             }.bind(this));
         }
 
-        /**
-         * @param container
-         * @param label
-         * @returns {boolean}
-         */
-        p.countLabeledFrames  = function(label, container) {
-            var frameCount = 0;
-            if (container.timeline) {
-                var labels = container.timeline.getLabels();
-                for (var i = 0; i < labels.length; i++) {
-                    if (labels[i].label === label) {
-                        frameCount ++;
-                    }
-                }
-            }
+		/**
+		 * @param container
+		 * @param label
+		 * @returns {number}
+		 */
+		p.countLabeledFrames = function(label, container) {
+			// Ensure the map is built
+			this.buildNamedChildMap(container);
 
-            this.forEachNamedChild(container, function(child) {
-                frameCount += this.countLabeledFrames(label, child);
-            }.bind(this));
+			var count = 0;
+			if (container._mh_timeline_label_map && container._mh_timeline_label_map[label]) {
+				count += container._mh_timeline_label_map[label].length;
+			}
 
-            return frameCount;
-
-        };
+			return count;
+		};
 
         /**
          * @param label
@@ -259,13 +329,14 @@ define(
         {
             var promises = [];
 
-            if (this._timelineHasLabel(container.timeline, label)) {
-                promises.push(this._jumpToFrameUntilFinished(label, container));
-            }
-
-            this.forEachNamedChild(container, function(child) {
-                promises.push(this.jumpToFrame(label, child));
-            }.bind(this));
+			if (
+				container._mh_timeline_label_map &&
+				container._mh_timeline_label_map[label]
+			) {
+				container._mh_timeline_label_map[label].forEach(function(child) {
+					promises.push(this._jumpToFrameUntilFinished(label, child));
+				}.bind(this));
+			}
 
             return Deferred.when.apply(this, promises);
         };
@@ -291,27 +362,6 @@ define(
 
             return state.promise();
         }
-
-        /**
-         * @param timeline
-         * @param label
-         * @returns {boolean}
-         * @private
-         */
-        p._timelineHasLabel = function(timeline, label)
-        {
-            if (!timeline) {
-                return false;
-            }
-
-            var labels = timeline.getLabels();
-            for (var i = 0; i < labels.length; i++) {
-                if (labels[i].label === label) {
-                    return true;
-                }
-            }
-            return false;
-        };
 
         /**
          * Attach helper methods to the createjs MovieClip prototype

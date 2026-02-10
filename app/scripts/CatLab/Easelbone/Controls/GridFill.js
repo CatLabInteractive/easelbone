@@ -19,6 +19,7 @@ define (
 
 			this.forceRatio = null;
 			this.cellSize = null;
+			this.cellEvents = {};
 
 			this.placeholder.on('bounds:change', function() {
 				this.redrawGrid();
@@ -79,6 +80,26 @@ define (
 			this.floaters.push(el);
 			return el;
 		};
+
+		p.removeFloat = function(element) {
+			var index = this.floaters.findIndex(function(el) {
+				return el.e === element;
+			});
+			if (index > -1) {
+				this.floaters.splice(index, 1);
+			}
+		}
+
+		p.clearFloats = function(x, y)
+		{
+			for (var i = 0; i < this.floaters.length; i++) {
+				var el = this.floaters[i];
+				if (el.e.gx === x && el.e.gy === y) {
+					this.floaters.splice(i, 1);
+					i--;
+				}
+			}
+		}
 
 		/**
 		 * If set, make sure each cell has the given ratio (width / height)
@@ -210,6 +231,17 @@ define (
 			};
 		};
 
+		p.addCellEventListener = function(col, row, event, callback) {
+			if (typeof(this.cellEvents[col + '-' + row]) === 'undefined') {
+				this.cellEvents[col + '-' + row] = [];
+			}
+
+			this.cellEvents[col + '-' + row].push({
+				event: event,
+				callback: callback
+			});
+		}
+
 		/**
 		 *
 		 */
@@ -228,6 +260,8 @@ define (
 			}
 
 			this.recalculateCellSize();
+			var cellSize = this.getCellSize();
+
 
 			for (var row = 0; row < this.rows; row ++) {
 				for (var col = 0; col < this.columns; col ++) {
@@ -245,6 +279,19 @@ define (
 					container.y = pos.y;
 					container.x = pos.x;
 					container.setBounds(0, 0, pos.innerWidth, pos.innerHeight);
+
+					if (typeof(this.cellEvents[col + '-' + row]) !== 'undefined') {
+						this.cellEvents[col + '-' + row].forEach(function(event) {
+							container.addEventListener(event.event, event.callback);
+						});
+
+						var hit = new createjs.Shape();
+						hit.graphics.beginFill("#000").drawRect(
+							0, 0,
+							pos.innerWidth, pos.innerHeight
+						);
+						container.hitArea = hit;
+					}
 
 					container.addChild(element);
 

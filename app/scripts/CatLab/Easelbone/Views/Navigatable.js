@@ -17,7 +17,7 @@ define (
             DefaultControls : {
 
                 navigation : [ 'left' , 'right' ],
-                toggle : [ 'start', 'a' ],
+                toggle : [ 'a' ],
                 manipulation : [ 'down', 'up' ],
                 back : [ 'b', 'back' ]
 
@@ -33,12 +33,14 @@ define (
                 options = options || {};
 
                 this._users = [];
+                this._remoteViews = [];
+
                 this._currentIndex = -1;
                 this._current = null;
                 this._options = [];
                 this._backCallback = null;
 
-                this._controls = _.extend(this.DefaultControls, {});
+                this._controls = _.extend({}, this.DefaultControls);
 
                 if (typeof (options.orientation) !== 'undefined') {
                     // Is orientation vertical?
@@ -70,19 +72,37 @@ define (
                 }
             },
 
-            setWebremoteControls : function(user)
-            {
-                var view = user.setView ("catlab-nes");
+            clearUsers : function() {
 
+                for (var i = 0; i < this._remoteViews.length; i ++) {
+                    this.clearWebremoteControlsInView(this._remoteViews[i]);
+                }
+
+                this._users = [];
+                this._remoteViews = [];
+
+            },
+
+            setWebremoteControls : function(user) {
+
+                var view = user.setView ("catlab-nes");
+                this._remoteViews.push(view);
+
+                this.setWebremoteControlsInView(view);
+
+            },
+
+            setWebremoteControlsInView: function(view)
+            {
                 // Focus next and previous
-                view.control(this._controls.navigation[0]).click(function () { this.previous(); }.bind(this));
-                view.control(this._controls.navigation[1]).click(function () { this.next(); }.bind(this));
+                view.control(this._controls.navigation[0]).click(function (actor) { this.previous(actor); }.bind(this));
+                view.control(this._controls.navigation[1]).click(function (actor) { this.next(actor); }.bind(this));
 
                 // Toggle
                 for (var i = 0; i < this._controls.toggle.length; i ++ ) {
                     (function(i) {
-                        view.control(this._controls.toggle[i]).click (function () {
-                            this.keyInput(this._controls.toggle[i]);
+                        view.control(this._controls.toggle[i]).click (function (actor) {
+                            this.keyInput(this._controls.toggle[i], actor);
                         }.bind(this));
                     }.bind(this))(i);
                 }
@@ -90,15 +110,40 @@ define (
                 // Back
                 for (i = 0; i < this._controls.back.length; i ++ ) {
                     (function(i) {
-                        view.control(this._controls.back[i]).click (function () {
-                            this.triggerBack();
+                        view.control(this._controls.back[i]).click (function (actor) {
+                            this.triggerBack(actor);
                         }.bind(this));
                     }.bind(this))(i);
                 }
 
-                // Increase or decreate
-                view.control(this._controls.manipulation[0]).click(function () { this.keyInput('down'); }.bind(this));
-                view.control(this._controls.manipulation[1]).click(function () { this.keyInput('up'); }.bind(this));
+                // Increase or decrease
+                view.control(this._controls.manipulation[0]).click(function (actor) { this.keyInput('down', actor); }.bind(this));
+                view.control(this._controls.manipulation[1]).click(function (actor) { this.keyInput('up', actor); }.bind(this));
+            },
+
+            clearWebremoteControlsInView: function(view)
+            {
+                // Focus next and previous
+                view.control(this._controls.navigation[0]).off('click');
+                view.control(this._controls.navigation[1]).off('click');
+
+                // Toggle
+                for (var i = 0; i < this._controls.toggle.length; i ++ ) {
+                    (function(i) {
+                        view.control(this._controls.toggle[i]).off('click');
+                    }.bind(this))(i);
+                }
+
+                // Back
+                for (i = 0; i < this._controls.back.length; i ++ ) {
+                    (function(i) {
+                        view.control(this._controls.back[i]).off('click');
+                    }.bind(this))(i);
+                }
+
+                // Increase or decrease
+                view.control(this._controls.manipulation[0]).off('click');
+                view.control(this._controls.manipulation[1]).off('click');
             },
 
             /**
@@ -112,20 +157,28 @@ define (
             /**
              *
              */
-            triggerBack : function()
+            triggerBack : function(actor)
             {
                 if (this._backCallback !== null) {
-                    this._backCallback.apply();
+                    this._backCallback(actor);
                 }
             },
 
-            next : function ()
+            next : function (actor)
             {
+				if (this._options.length === 0) {
+					return;
+				}
+
                 this.activate ((this._currentIndex + 1) % this._options.length);
             },
 
-            previous : function ()
+            previous : function (actor)
             {
+				if (this._options.length === 0) {
+					return;
+				}
+
                 var previous = this._currentIndex - 1;
                 if (previous < 0) {
                     previous = this._options.length - 1;
@@ -133,10 +186,10 @@ define (
                 this.activate (previous);
             },
 
-            keyInput : function (button)
+            keyInput : function (button, actor)
             {
                 if (this._current) {
-                    this._current.keyInput(button);
+                    this._current.keyInput(button, actor);
                 }
             },
 
@@ -177,7 +230,9 @@ define (
                 this._currentIndex = controlIndex;
                 this._options[controlIndex].activate(animate);
                 this._current = this._options[controlIndex];
-            }
+
+				this.scrollIntoView(this._current.element);
+            },
 
         });
     }

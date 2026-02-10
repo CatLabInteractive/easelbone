@@ -45,6 +45,12 @@ define(
         var p = ScrollArea.prototype = new Placeholder();
         var event;
 
+		p.addChild = function (child) {
+			Placeholder.prototype.addChild.call(this, child);
+
+			child._parentScrollArea = this;
+		};
+
         p.isActive = function () {
             return this.getBounds() !== null &&
                 this.parent !== null &&
@@ -123,7 +129,13 @@ define(
                 delay = 0;
             }
 
+			// Sum y until we reach this scroll area.
             var y = element.y;
+			var pElement = element;
+			while (pElement.parent && pElement.parent !== this) {
+				y += pElement.parent.y;
+				pElement = pElement.parent;
+			}
             //this.setScroll (y);
 
             // Center around this y position.
@@ -132,23 +144,24 @@ define(
                 height = element.getBounds().height;
             }
 
-            // y should be in the middle of the screen, so...
-            if (height < this.parent.getBounds().height) {
-                y -= (this.parent.getBounds().height / 2) - (height / 2);
-            }
+			// Center element in scroll area
+			if (height < this.parent.getBounds().height) {
+				y -= (this.parent.getBounds().height / 2) - (height / 2);
+			}
 
-            if (delay > 0) {
-                createjs.Tween.get(this)
-                    .to({'scroll': y}, delay, ease)
-                    .call(function() {
-                        state.resolve()
-                    }.bind(this));
-            } else {
-                this.scroll = y;
-                state.resolve();
-            }
+			if (delay > 0) {
+				createjs.Tween.get(this)
+					.to({scroll: y}, delay, ease)
+					.call(function() {
+						state.resolve();
+					}.bind(this));
+			} else {
+				this.scroll = y;
+				state.resolve();
+			}
 
             return state.promise();
+
         };
 
         p.scrollTo = function (percentage) {
@@ -165,6 +178,7 @@ define(
 
             event = new createjs.Event('scroll');
             this.dispatchEvent(event);
+
         };
 
         return ScrollArea;

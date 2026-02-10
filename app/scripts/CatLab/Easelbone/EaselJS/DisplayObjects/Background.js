@@ -14,7 +14,9 @@ define(
         var Background = function (background, options) {
             if (typeof (options) === 'undefined') {
                 options = {
-                    'zoom': 'stretch'
+                    zoom: 'stretch',
+					horizontalAlign: 'center',
+					verticalAlign: 'center'
                 };
             }
 
@@ -66,13 +68,14 @@ define(
                 return this.childBounds;
             }
 
-            if (!this.displayobject.getBounds()) {
+            var bounds = this.displayobject.getBounds();
+            if (!bounds) {
                 return null;
             }
 
             return {
-                width: this.displayobject.getBounds().width,
-                height: this.displayobject.getBounds().height
+                width: bounds.width,
+                height: bounds.height
             };
         };
 
@@ -103,12 +106,15 @@ define(
                     width = bounds.width;
                     height = bounds.height
                 }
-            } else if (this.getBounds()) {
-                width = this.getBounds().width;
-                height = this.getBounds().height;
             } else {
-                width = 100;
-                height = 100;
+                bounds = this.getBounds();
+                if (bounds) {
+                    width = bounds.width;
+                    height = bounds.height;
+                } else {
+                    width = 100;
+                    height = 100;
+                }
             }
 
             return {width: width, height: height};
@@ -135,7 +141,7 @@ define(
         };
 
         // Center a displayobject.
-        p.center = function (space) {
+        p.align = function (space) {
             if (!this.displayobject) {
                 return;
             }
@@ -145,8 +151,41 @@ define(
                 return;
             }
 
-            this.displayobject.x = (space.width - (childBounds.width * this.displayobject.scaleX)) / 2;
-            this.displayobject.y = (space.height - (childBounds.height * this.displayobject.scaleY)) / 2;
+			var horizontalAlign = this.fillOptions.horizontalAlign || 'center';
+			var verticalAlign = this.fillOptions.verticalAlign || 'center';
+
+			switch (horizontalAlign) {
+				case 'left':
+					this.displayobject.x = 0;
+					break;
+
+				case 'right':
+					this.displayobject.x = (space.width - (childBounds.width * this.displayobject.scaleX));
+					break;
+
+				case 'center':
+				default:
+					this.displayobject.x = (space.width - (childBounds.width * this.displayobject.scaleX)) / 2;
+					break;
+			}
+
+			switch (verticalAlign) {
+				case 'top':
+					this.displayobject.y = 0;
+					break;
+
+				case 'bottom':
+					this.displayobject.y = (space.height - (childBounds.height * this.displayobject.scaleY));
+					break;
+
+				case 'center':
+				default:
+					this.displayobject.y = (space.height - (childBounds.height * this.displayobject.scaleY)) / 2;
+					break;
+			}
+
+
+
         };
 
         /**
@@ -206,12 +245,12 @@ define(
 
                     case 'minimum':
                         this.displayobject.scaleX = this.displayobject.scaleY = Math.min(zooms.x, zooms.y);
-                        this.center(space);
+                        this.align(space);
                         break;
 
                     case 'maximum':
                         this.displayobject.scaleX = this.displayobject.scaleY = Math.max(zooms.x, zooms.y);
-                        this.center(space);
+                        this.align(space);
                         break;
 
                     case 'stretch':

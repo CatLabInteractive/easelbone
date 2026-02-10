@@ -26,8 +26,6 @@ define(
         var fontOffsets = {};
         var fontLineHeights = {};
 
-        var fontSize;
-
         var DefaultTextClass = createjs.Text;
         //var TextClass = EmojiText;
 
@@ -43,8 +41,10 @@ define(
 
             this.debug = debug;
             this.fontsize = 0;
+			this.minFontSize = 5;
 
             this.textConstructor = DefaultTextClass;
+			this.snapToPixel = true;
         };
 
         /**
@@ -163,14 +163,19 @@ define(
         };
 
         p.getAvailableSpace = function () {
+            var bounds;
+
             if (this.limits !== null) {
                 return this.limits;
-            } else if (this.getBounds()) {
-                width = this.getBounds().width;
-                height = this.getBounds().height;
-            } else if (this.parent && this.parent.getBounds()) {
-                width = this.parent.getBounds().width;
-                height = this.parent.getBounds().height
+            } else if (this._bounds) {
+                width = this._bounds.width;
+                height = this._bounds.height;
+            } else if (this.parent && (bounds = this.parent.getBounds())) {
+                width = bounds.width;
+                height = bounds.height;
+            } else if ((bounds = this.getBounds())) {
+                width = bounds.width;
+                height = bounds.height;
             } else {
                 width = 0;
                 height = 0;
@@ -191,13 +196,18 @@ define(
             return new this.textConstructor("" + String(text), fontSize + "px " + font, color);
         };
 
+		p.goBigOrGoHome = function (textstring, availableWidth, availableHeight) {
+			//return this.goBigOrGoHomeLinear(textstring, availableWidth, availableHeight);
+			return this.goBigOrGoHomeBinary(textstring, availableWidth, availableHeight);
+		};
+
         /**
          * Return an array of createjs.Text elements that should be displayed below eachother.
          * @param textstring
          * @param availableWidth
          * @param availableHeight
          */
-        p.goBigOrGoHome = function (textstring, availableWidth, availableHeight) {
+        p.goBigOrGoHomeLinear = function (textstring, availableWidth, availableHeight) {
             var self = this;
 
             var fontsize = 5;
@@ -251,9 +261,49 @@ define(
             while (bigger()) {
             }
 
-            this.fontsize = fontsize;
+			this.fontsize = fontsize;
             return stable;
         };
+
+		/**
+		 * Find the largest font size that fits the available space using binary search.
+		 * Reuses a single measurement text object to avoid creating one per iteration.
+		 * @param textstring
+		 * @param availableWidth
+		 * @param availableHeight
+		 */
+		p.goBigOrGoHomeBinary = function (textstring, availableWidth, availableHeight) {
+			var minFontSize = this.minFontSize;
+			var maxFontSize = availableHeight;
+			var bestFontSize = minFontSize;
+
+			// Reuse a single text object for measurement instead of creating one per step
+			var measureObj = this.createTextObject(textstring, minFontSize, this._font, this._color);
+			measureObj.lineWidth = availableWidth;
+
+			while (minFontSize <= maxFontSize) {
+				var midFontSize = Math.floor((minFontSize + maxFontSize) / 2);
+				measureObj.font = midFontSize + "px " + this._font;
+				measureObj.lineHeight = getFontLineheight(measureObj, this._font);
+				updateCurrentSize(measureObj);
+
+				if (currentSize.height <= availableHeight && currentSize.width <= availableWidth) {
+					bestFontSize = midFontSize;
+					minFontSize = midFontSize + 1;
+				} else {
+					maxFontSize = midFontSize - 1;
+				}
+			}
+
+			// Create the final text object at the best size found
+			var bestFit = this.createTextObject(textstring, bestFontSize, this._font, this._color);
+			bestFit.lineWidth = availableWidth;
+			bestFit.lineHeight = getFontLineheight(bestFit, this._font);
+			updateCurrentSize(bestFit);
+
+			this.fontsize = bestFontSize;
+			return bestFit;
+		};
 
         p.Container_draw = p.draw;
 
@@ -262,7 +312,8 @@ define(
          */
         p.getLocationHash = function () {
             hash = this.getAvailableSpace();
-            hash = parseInt(hash.width) + ':' + parseInt(hash.height) + ':' + this.textstring + ':' + this._align;
+            hash = parseInt(hash.width) + ':' + parseInt(hash.height) + ':' + this.textstring
+                + ':' + this._align + ':' + this._font + ':' + this._color
 
             //location = this.localToGlobal(this.x, this.y);
             //hash = location.x + ':' + location.y + ':' + hash + ':' + this._align;

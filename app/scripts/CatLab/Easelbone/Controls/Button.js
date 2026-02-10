@@ -29,11 +29,13 @@ define(
         Button.prototype = Object.create(Base.prototype);
         Button.prototype.constructor = Button;
 
-        Button.prototype.setText = function (text, font, color)
-        {
-            var bigtext = new BigText(text, font, color);
-            this.text.addChild(bigtext);
+        Button.prototype.setText = function (text, font, color) {
+            this.text.addChild(new BigText(text, font, color));
         };
+
+		Button.prototype.click = function(callback) {
+			this.on('click', callback);
+		};
 
         Button.prototype.convertText = function ()
         {
@@ -52,12 +54,12 @@ define(
 
         };
 
-        Button.prototype.keyInput = function (input) {
+        Button.prototype.keyInput = function (input, actor) {
             switch (input) {
                 case 'a':
                 case 'start':
 
-                    this.trigger('click');
+                    this.trigger('click', actor);
 
                     break;
             }
