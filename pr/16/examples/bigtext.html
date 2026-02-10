@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+
+</head>
+
+<body>
+
+<!-- Ze canvas -->
+<div id="container" style="width: 1024px; height: 768px;"></div>
+
+<!-- Ze requirejs -->
+<script src="../scripts/vendor/requirejs/require.js"></script>
+
+<!-- Ze game code -->
+<script>
+
+	require.config ({
+		'baseUrl' : '../scripts/',
+		'urlArgs' : 'bust=v2'
+	});
+
+	require ([ 'main' ], function (easelbone)
+	{
+		// Some additional config to load the assets is required here.
+		require.config ({
+			'paths' : {
+				'assets' : '../examples/assets/easelboneassets'
+			},
+
+			'shim' : {
+				assets: {
+					exports: "lib"
+				}
+			}
+		});
+
+		// We'll need backbone to define our view, and easeljs to handle our rendering.
+		// We'll also need the assets.
+		require ([
+					'backbone',
+					'easeljs',
+					'assets'
+				],
+				function (
+						backbone,
+						createjs,
+						assets
+				) {
+
+					createjs.Ticker.timingMode = createjs.Ticker.TIMEOUT;
+					createjs.Ticker.setFPS (24);
+
+					var rootView = new easelbone.Views.Root ({'container': document.getElementById ('container') });
+
+					rootView.stage.enableMouseOver(20);
+
+					// Set default properties
+					easelbone.setProperties (assets.properties);
+
+					// Ticker
+					//createjs.Ticker.setFPS (assets.properties.fps);
+
+
+					// Load assets
+                    var loader = new easelbone.Loader();
+                    loader.loadAssets (assets, '../examples/assets/');
+
+					// Prepare our "users"
+					var users = [
+						new easelbone.FakeWebremote.KeyboardUser ()
+					];
+
+                    var link = document.createElement('link');
+                    link.rel = 'stylesheet';
+                    link.href = 'fonts/fonts.css';
+                    document.body.appendChild(link);
+
+                    // Set font settings
+                    createjs.BigText.setFontOffset('Designers', 0, 0.15);
+
+					// And actually do load them.
+					loader.load (function () {
+
+						// NOW WE ARE READY FOR THE REAL SHIZZLE
+						// Create a view and add it to the root.
+
+						// An example settings view.slider1
+						var ExampleView = easelbone.Views.Navigatable.extend ({
+
+							initialize : function () {
+                                this.initializeNavigatable ({ 'orientation' : 'vertical' });
+							},
+
+							'render' : function () {
+
+                                var self = this;
+
+                                function printLine(x, y, width, height)
+                                {
+                                    var container = new createjs.Container ();
+                                    container.setBounds (0, 0, width, height);
+
+                                    container.x = x;
+                                    container.y = y;
+
+                                    var text = new createjs.BigText (
+                                        "Test message with Multiple lines",
+                                        "Designers",
+                                        "#ff0000"
+                                    );
+
+                                    text.debug = true;
+                                    container.addChild (text);
+
+                                    self.el.addChild (container);
+                                }
+
+                                var posy = 0;
+                                var posx = 0;
+                                var height = 50;
+
+                                var maxWidth = 1024;
+                                var maxHeight = 768;
+
+                                while (posy < maxHeight - 11) {
+                                    posx = 0;
+                                    height = Math.max(Math.random(), 0.5) * 200;
+
+                                    if ((posy + height) > maxHeight) {
+                                        height = maxHeight - posy - 1;
+                                    }
+
+                                    while (posx < maxWidth) {
+                                        var width = Math.max(0.2, Math.random()) * 3 * height;
+
+                                        if ((posx + width)  > maxWidth) {
+                                            width = maxWidth - posx - 1;
+                                        }
+
+                                        printLine(posx, posy, width, height);
+                                        posx += width + 10;
+                                    }
+
+                                    posy += height + 10;
+                                }
+
+							}
+
+						});
+
+						var view = new ExampleView ();
+						view.setUsers (users);
+
+						rootView.setView (view);
+					});
+				});
+	});
+
+</script>
+
+</body>
+</html>
