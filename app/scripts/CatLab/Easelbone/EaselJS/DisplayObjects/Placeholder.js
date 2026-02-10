@@ -89,7 +89,10 @@ define (
             };
 
             element._tick = function() {
-                this.updateZIndex();
+                // Only check z-index if parent has children (skip orphaned elements)
+                if (element.parent && element.parent.children) {
+                    this.updateZIndex();
+                }
 
                 return element.original_tick.apply(element, arguments);
             };

@@ -163,18 +163,19 @@ define(
         };
 
         p.getAvailableSpace = function () {
+            var bounds;
 
             if (this.limits !== null) {
                 return this.limits;
             } else if (this._bounds) {
                 width = this._bounds.width;
                 height = this._bounds.height;
-            } else if (this.parent && this.parent.getBounds()) {
-                width = this.parent.getBounds().width;
-                height = this.parent.getBounds().height
-            } else if (this.getBounds()) {
-                width = this.getBounds().width;
-                height = this.getBounds().height;
+            } else if (this.parent && (bounds = this.parent.getBounds())) {
+                width = bounds.width;
+                height = bounds.height;
+            } else if ((bounds = this.getBounds())) {
+                width = bounds.width;
+                height = bounds.height;
             } else {
                 width = 0;
                 height = 0;
@@ -266,6 +267,7 @@ define(
 
 		/**
 		 * Find the largest font size that fits the available space using binary search.
+		 * Reuses a single measurement text object to avoid creating one per iteration.
 		 * @param textstring
 		 * @param availableWidth
 		 * @param availableHeight
@@ -273,35 +275,33 @@ define(
 		p.goBigOrGoHomeBinary = function (textstring, availableWidth, availableHeight) {
 			var minFontSize = this.minFontSize;
 			var maxFontSize = availableHeight;
-			var bestFit = null;
+			var bestFontSize = minFontSize;
 
-			var steps = 0;
+			// Reuse a single text object for measurement instead of creating one per step
+			var measureObj = this.createTextObject(textstring, minFontSize, this._font, this._color);
+			measureObj.lineWidth = availableWidth;
+
 			while (minFontSize <= maxFontSize) {
 				var midFontSize = Math.floor((minFontSize + maxFontSize) / 2);
-				var textObj = this.createTextObject(textstring, midFontSize, this._font, this._color);
-				textObj.lineWidth = availableWidth;
-				textObj.lineHeight = getFontLineheight(textObj, this._font);
-				updateCurrentSize(textObj);
+				measureObj.font = midFontSize + "px " + this._font;
+				measureObj.lineHeight = getFontLineheight(measureObj, this._font);
+				updateCurrentSize(measureObj);
 
 				if (currentSize.height <= availableHeight && currentSize.width <= availableWidth) {
-					bestFit = textObj;
+					bestFontSize = midFontSize;
 					minFontSize = midFontSize + 1;
 				} else {
 					maxFontSize = midFontSize - 1;
 				}
-
-				steps ++;
 			}
 
-			if (!bestFit) {
-				// Could not find a fit, return smallest possible
-				bestFit = this.createTextObject(textstring, this.minFontSize, this._font, this._color);
-				bestFit.lineWidth = availableWidth;
-				bestFit.lineHeight = getFontLineheight(bestFit, this._font);
-				updateCurrentSize(bestFit);
-			}
+			// Create the final text object at the best size found
+			var bestFit = this.createTextObject(textstring, bestFontSize, this._font, this._color);
+			bestFit.lineWidth = availableWidth;
+			bestFit.lineHeight = getFontLineheight(bestFit, this._font);
+			updateCurrentSize(bestFit);
 
-			this.fontsize = parseInt(bestFit.font.split('px')[0]);
+			this.fontsize = bestFontSize;
 			return bestFit;
 		};
 

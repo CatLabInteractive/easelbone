@@ -95,6 +95,10 @@ define(
 			// This is a simple 1-dimensional map: name -> child.
 			container._mh_named_children_map = {};
 
+			// Create a deep map of all descendants by name for O(1) lookups.
+			// This is a 1-dimensional map: name -> [child, child, ...]
+			container._mh_deep_named_children_map = {};
+
 			// Create a map of timeline labels.
 			// This is a 2-dimensional map: label -> [child, child, ...]
 			// A label can have multiple children; grandchildren are included as well
@@ -127,6 +131,22 @@ define(
 					}
 				}
 
+				// Build the deep map: add this child under its own name
+				if (typeof(container._mh_deep_named_children_map[name]) === 'undefined') {
+					container._mh_deep_named_children_map[name] = [];
+				}
+				container._mh_deep_named_children_map[name].push(child);
+
+				// Merge child's deep map into container's deep map
+				for (var dk in child._mh_deep_named_children_map) {
+					if (child._mh_deep_named_children_map.hasOwnProperty(dk)) {
+						if (typeof(container._mh_deep_named_children_map[dk]) === 'undefined') {
+							container._mh_deep_named_children_map[dk] = [];
+						}
+						container._mh_deep_named_children_map[dk] = container._mh_deep_named_children_map[dk].concat(child._mh_deep_named_children_map[dk]);
+					}
+				}
+
 			}.bind(this));
 
 		}
@@ -153,14 +173,20 @@ define(
 			// Cache a container map for faster lookups.
 			this.buildNamedChildMap(container);
 
+			// Direct child lookup (O(1))
 			if (typeof(container._mh_named_children_map[name]) !== 'undefined') {
 				results.push(container._mh_named_children_map[name]);
 			}
 
+			// Deep lookup using pre-built map instead of recursive search
             if (results.length === 0 || options.all) {
-				for (var k in container._mh_named_children_map) {
-					if (container._mh_named_children_map.hasOwnProperty(k)) {
-						this.findFromNameInContainer(container._mh_named_children_map[k], name, options, results);
+				if (container._mh_deep_named_children_map && container._mh_deep_named_children_map[name]) {
+					var deepResults = container._mh_deep_named_children_map[name];
+					for (var i = 0; i < deepResults.length; i++) {
+						// Avoid duplicates from direct child lookup
+						if (results.indexOf(deepResults[i]) === -1) {
+							results.push(deepResults[i]);
+						}
 					}
 				}
             }
