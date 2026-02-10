@@ -50,7 +50,7 @@ jobs:
             const owner = context.repo.owner;
             const repo = context.repo.repo;
             const previewUrl = `https://${owner.toLowerCase()}.github.io/${repo}/pr/${prNumber}/examples/`;
-            const body = `📦 PR Preview deployed!\n\nExamples are available at:\n- [Controls](${previewUrl}controls.html)\n- [Scroll](${previewUrl}scroll.html)\n- [Float](${previewUrl}float.html)\n- [Alpha Mask](${previewUrl}alphamask.html)`;
+            const body = `📦 PR Preview deployed!\n\nExamples are available at:\n- [Controls](${previewUrl}controls.html)\n- [Scroll](${previewUrl}scroll.html)\n- [Float](${previewUrl}float.html)\n- [Alpha Mask](${previewUrl}alphamask.html)\n- [Background & Fill](${previewUrl}background.html)\n- [BigText](${previewUrl}bigtext.html)\n- [Emoji Text](${previewUrl}emoji.html)`;
 
             // Check if a preview comment already exists
             const comments = await github.rest.issues.listComments({
