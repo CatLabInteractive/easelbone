@@ -89,6 +89,13 @@ module.exports = function (grunt) {
                         'cwd': './app/',
                         'src': 'scripts/vendor/**/*',
                         'dest': 'dist/'
+                    },
+
+                    {
+                        'expand': true,
+                        'cwd': './app/',
+                        'src': 'index.html',
+                        'dest': 'dist/'
                     }
                 ]
             }
