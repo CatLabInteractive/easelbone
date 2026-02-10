@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+	<head lang="en">
+
+	</head>
+
+	<body>
+
+		<!-- Ze canvas -->
+		<div id="container" style="width: 1024px; height: 768px;"></div>
+
+		<!-- Ze requirejs -->
+		<script src="../scripts/vendor/requirejs/require.js"></script>
+
+		<!-- Ze game code -->
+		<script>
+
+			require.config ({
+				'baseUrl' : '../scripts/',
+				'urlArgs' : 'bust=v2'
+			});
+
+			require ([ 'main' ], function (easelbone)
+			{
+				// Some additional config to load the assets is required here.
+				require.config ({
+					'paths' : {
+						'assets' : '../examples/assets/easelboneassets'
+					},
+
+					'shim' : {
+						assets: {
+							exports: "lib"
+						}
+					}
+				});
+
+				// We'll need backbone to define our view, and easeljs to handle our rendering.
+				// We'll also need the assets.
+				require ([
+					'backbone',
+					'easeljs',
+					'assets'
+				],
+				function (
+					backbone,
+					createjs,
+					assets
+				) {
+
+					createjs.Ticker.timingMode = createjs.Ticker.TIMEOUT;
+					createjs.Ticker.setFPS (24);
+
+					var rootView = new easelbone.Views.Root ({'container': document.getElementById ('container') });
+
+					rootView.stage.enableMouseOver(20);
+
+					// Set default properties
+					easelbone.setProperties (assets.properties);
+
+					// Ticker
+					//createjs.Ticker.setFPS (assets.properties.fps);
+
+
+					// Load assets
+					var loader = new easelbone.Loader();
+
+					loader.loadAssets (assets, '../examples/assets/');
+
+					// Prepare our "users"
+					var users = [
+						new easelbone.FakeWebremote.KeyboardUser ()
+					];
+
+					// And actually do load them.
+					loader.load (function () {
+
+						// NOW WE ARE READY FOR THE REAL SHIZZLE
+						// Create a view and add it to the root.
+
+						// An example settings view.slider1
+						var ExampleView = easelbone.Views.Navigatable.extend ({
+
+							'initialize' : function () {
+
+								// First call the parent.
+								this.initializeNavigatable ({ 'orientation' : 'vertical' });
+
+								// Now set the view
+								this.view = new assets.ExampleScrollArea ();
+
+								this.list = new easelbone.Controls.FloatContainer (assets.ExampleListElement, 2);
+								//this.list = new easelbone.Controls.FloatContainer (function () { return new assets.ExampleListElement () }, 2);
+
+								this.scroll = new easelbone.Controls.ScrollArea (this.view.scrollcontent);
+								this.scroll.content.addChild (this.list);
+
+								this.list.createElement ().element.text.text = 'Item 1';
+								this.list.createElement ().element.text.text = 'Item 2';
+								this.list.createElement ().element.text.text = 'Item 3';
+								this.list.createElement ().element.text.text = 'Item 4';
+								this.list.createElement ().element.text.text = 'Item 5';
+								this.list.createElement ().element.text.text = 'Item 6';
+								this.list.createElement ().element.text.text = 'Item 7';
+								this.list.createElement ().element.text.text = 'Item 8';
+								this.list.createElement ().element.text.text = 'Item 9';
+								this.list.createElement ().element.text.text = 'Item 10';
+								this.list.createElement ().element.text.text = 'Item 11';
+								this.list.createElement ().element.text.text = 'Item 12';
+								this.list.createElement ().element.text.text = 'Item 13';
+								this.list.createElement ().element.text.text = 'Item 14';
+								this.list.createElement ().element.text.text = 'Item 15';
+
+
+								//this.list.update ();
+
+								console.log (this.list);
+
+							},
+
+							'render' : function () {
+
+								this.addCenter (this.view);
+
+							}
+
+						});
+
+						var view = new ExampleView ();
+						view.setUsers (users);
+
+						rootView.setView (view);
+					});
+				});
+			});
+
+		</script>
+
+	</body>
+</html>
