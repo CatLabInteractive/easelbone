@@ -20,10 +20,31 @@ define(
             "JZ6Uh3g9gzF80D7u4yQm1rzU8DYi9kRnWE333WBRFN/rarIQnaMREb/SU5uu3VjWOS6haFaX41iqWbjQosE8eltpgAk8TKf9" +
             "FXYl/kgawzMcTPxOXMPN/B8gxx+XbHMxap3gAwAAAABJRU5ErkJggg==";
 
+        var step = 0;
+
         var pawsize = {
             'width': 20,
             'height': 20
         };
+
+        var limits = {
+            'x': {
+                'start': 0,
+                'end': 100
+            },
+            'y': {
+                'start': 0,
+                'end': 100
+            }
+        };
+
+        var position = {
+            'x': limits.x.end / 2,
+            'y': limits.y.end / 2
+        };
+
+        var points = [];
+        var flipper = false;
 
         return Base.extend({
 
@@ -36,6 +57,7 @@ define(
 
                 this.dRotation = 0.0;
 
+                this.speed = 10;
                 this.angle = Math.random() * Math.PI * 2;
                 this.targetAngle = null;
 
@@ -43,30 +65,12 @@ define(
                 this.flippedY = false;
 
                 this.rotationSpeedRad = 0.2;
-
-                // Instance-level state (was incorrectly shared at module level)
-                this._step = 0;
-                this._points = [];
-                this._flipper = false;
-                this._limits = { x: { start: 0, end: 100 }, y: { start: 0, end: 100 } };
-                this._position = { x: 50, y: 50 };
-            },
-
-            _getScreenMargin: function() {
-                // Scale margin proportionally to the smaller canvas dimension
-                return Math.min(this._limits.x.end, this._limits.y.end) * 0.05;
-            },
-
-            _getSpeed: function() {
-                // Speed proportional to canvas diagonal so it looks consistent on any aspect ratio
-                var w = this._limits.x.end;
-                var h = this._limits.y.end;
-                return Math.sqrt(w * w + h * h) * 0.007;
+                this.screenMargin = 50;
             },
 
             render: function() {
 
-                this._limits = {
+                limits = {
                     'x': {
                         'start': 0,
                         'end': this.el.stage.canvas.width
@@ -94,19 +98,14 @@ define(
                 this.el.setBounds(0, 0, this.el.stage.canvas.width, this.el.stage.canvas.height);
                 this.updatePositions();
 
-                var screenMargin = this._getScreenMargin();
-                this._position = {
-                    x: (Math.random() * (this._limits.x.end - screenMargin * 2)) + screenMargin,
-                    y: (Math.random() * (this._limits.y.end - screenMargin * 2)) + screenMargin
+                position = {
+                    x: (Math.random() * (limits.x.end - this.screenMargin * 2)) + this.screenMargin,
+                    y: (Math.random() * (limits.y.end - this.screenMargin * 2)) + this.screenMargin
                 };
             },
 
             tick: function() {
                 this.updatePositions();
-
-                var screenMargin = this._getScreenMargin();
-                var limits = this._limits;
-                var position = this._position;
 
                 var baseAngle = this.angle;
                 if (this.targetAngle !== null) {
@@ -114,30 +113,32 @@ define(
                 }
 
                 if (
-                    position.x < limits.x.start + screenMargin &&
+                    position.x < limits.x.start + this.screenMargin &&
                     Math.cos(baseAngle) < 0
                 ) {
                     this.targetAngle = Math.PI - baseAngle;
                 } else if (
-                    position.x > limits.x.end - screenMargin &&
+                    position.x > limits.x.end - this.screenMargin &&
                     Math.cos(baseAngle) > 0
                 ) {
                     this.targetAngle = Math.PI - baseAngle;
                 }
 
                 if (
-                    position.y < limits.y.start + screenMargin &&
+                    position.y < limits.y.start + this.screenMargin &&
                     Math.sin(baseAngle) < 0
                 ) {
                     this.targetAngle = (Math.PI * 2) - baseAngle;
                 } else if (
-                    position.y > limits.y.end - screenMargin &&
+                    position.y > limits.y.end - this.screenMargin &&
                     Math.sin(baseAngle) > 0
                 ) {
                     this.targetAngle = (Math.PI * 2) - baseAngle;
                 }
 
                 if (this.targetAngle !== null) {
+                    //this.targetAngle = (this.targetAngle + Math.PI * 2) % (Math.PI * 2);
+
                     if ((this.targetAngle - this.angle) > this.rotationSpeedRad) {
                         this.angle += this.rotationSpeedRad;
                     } else if ((this.targetAngle - this.angle) < 0 - this.rotationSpeedRad) {
@@ -147,42 +148,54 @@ define(
                     }
                 }
 
-                var speed = this._getSpeed();
-                var dx = Math.cos(this.angle) * speed;
-                var dy = Math.sin(this.angle) * speed;
+                var dx = Math.cos(this.angle) * this.speed;
+                var dy = Math.sin(this.angle) * this.speed;
 
                 position.x += dx;
                 position.y += dy;
 
-                this._step++;
-                if (this._step % 6 === 0) {
+                step ++;
+                if (step % 6 === 0) {
                     this.addPaw();
                 }
 
-                for (var i = 0; i < this._points.length; i++) {
-                    this._points[i].alpha -= (1 / 40);
+                // Debug
+                /*
+                var g = new createjs.Graphics();
+                g.setStrokeStyle(1);
+                g.beginStroke("#000000");
+                g.beginFill("yellow");
+                g.drawCircle(0,0,3);
+
+                var shape = new createjs.Shape(g);
+                shape.x = position.x;
+                shape.y = position.y;
+                this.el.addChild(shape);
+
+                 */
+
+                for (var i = 0; i < points.length; i++) {
+                    points[i].alpha -= (1 / 40);
                 }
 
                 var tmppoints = [];
-                for (i = 0; i < this._points.length; i++) {
-                    if (this._points[i].alpha > 0) {
-                        tmppoints.push(this._points[i]);
+                for (i = 0; i < points.length; i++) {
+                    if (points[i].alpha > 0) {
+                        tmppoints.push(points[i]);
                     }
                 }
-                this._points = tmppoints;
+                points = tmppoints;
 
                 return true;
             },
 
             updatePositions: function() {
-                var bounds = this.el.getBounds();
-                this.loadingText.x = bounds.width / 2;
-                this.loadingText.y = bounds.height / 2;
+                this.loadingText.x = this.el.getBounds().width / 2;
+                this.loadingText.y = this.el.getBounds().height / 2;
 
                 if (this.versionText) {
-                    this.versionText.x = bounds.width - 10;
-                    this.versionText.textAlign = 'right';
-                    this.versionText.y = bounds.height - 20;
+                    this.versionText.x = this.el.getBounds().width - 60;
+                    this.versionText.y = this.el.getBounds().height - 20;
                 }
             },
 
@@ -196,12 +209,25 @@ define(
 
             addPaw : function () {
 
-                this._flipper = !this._flipper;
+                flipper = !flipper;
 
                 var ox = 10;
-                if (this._flipper) {
+                if (flipper) {
                     ox *= -1;
                 }
+
+                /*
+                var g = new createjs.Graphics();
+                g.setStrokeStyle(1);
+                g.beginStroke("#000000");
+                g.beginFill("yellow");
+                g.drawCircle(0,0,3);
+
+                var shape = new createjs.Shape(g);
+                shape.x = position.x;
+                shape.y = position.y;
+                this.el.addChild(shape);
+                 */
 
                 var pawImage = new createjs.Bitmap(img);
                 var atan = this.angle;
@@ -209,8 +235,8 @@ define(
                 pawImage.regX = pawsize.width / 2;
                 pawImage.regY = pawsize.height / 2;
 
-                pawImage.x = this._position.x + (Math.cos(atan + Math.PI / 2) * ox);
-                pawImage.y = this._position.y + (Math.sin(atan + Math.PI / 2) * ox);
+                pawImage.x = position.x + (Math.cos(atan + Math.PI / 2) * ox);
+                pawImage.y = position.y + (Math.sin(atan + Math.PI / 2) * ox);
 
                 pawImage.scaleX = pawsize.width / img.width;
                 pawImage.scaleY = pawsize.height / img.height;
@@ -218,7 +244,7 @@ define(
                 pawImage.rotation = (atan + (Math.PI / 2)) * (180 / Math.PI);
 
                 this.el.addChild(pawImage);
-                this._points.push(pawImage);
+                points.push(pawImage);
             },
 
             /**
