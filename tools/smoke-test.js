@@ -33,58 +33,65 @@ async function testPage(browser, baseUrl, url) {
     var errors = [];
     var origin = baseUrl.split('/').slice(0, 3).join('/');
 
-    page.on('console', function (msg) {
-        if (msg.type() === 'error') {
-            errors.push('console: ' + msg.text());
-        }
-    });
-    page.on('pageerror', function (err) {
-        errors.push('pageerror: ' + err.message);
-    });
-    page.on('requestfailed', function (req) {
-        if (req.url().indexOf(origin) === 0) {
-            errors.push('requestfailed: ' + req.url() + ' (' + req.failure().errorText + ')');
-        }
-    });
-
-    await page.goto(url, { waitUntil: 'load', timeout: 30000 });
-    await page.waitForTimeout(SETTLE_MS);
-
     try {
-        var distinctPixels = await page.evaluate(function () {
-            var canvas = document.querySelector('canvas');
-            if (!canvas) {
-                return null;
+        page.on('console', function (msg) {
+            if (msg.type() === 'error') {
+                errors.push('console: ' + msg.text());
             }
-            var ctx = canvas.getContext('2d');
-            var data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-            var distinct = {};
-            // Sample ~1000 pixels spread over the canvas.
-            var pixelCount = data.length / 4;
-            var step = Math.max(1, Math.floor(pixelCount / 1000)) * 4;
-            for (var i = 0; i < data.length; i += step) {
-                distinct[data[i] + ',' + data[i + 1] + ',' + data[i + 2] + ',' + data[i + 3]] = true;
+        });
+        page.on('pageerror', function (err) {
+            errors.push('pageerror: ' + err.message);
+        });
+        page.on('requestfailed', function (req) {
+            if (req.url().indexOf(origin) === 0) {
+                errors.push('requestfailed: ' + req.url() + ' (' + req.failure().errorText + ')');
             }
-            return Object.keys(distinct).length;
         });
 
-        if (distinctPixels === null) {
-            errors.push('no canvas element found');
-        } else if (distinctPixels < 2) {
-            errors.push('canvas appears blank (' + distinctPixels + ' distinct sampled pixel values)');
+        await page.goto(url, { waitUntil: 'load', timeout: 30000 });
+        await page.waitForTimeout(SETTLE_MS);
+
+        try {
+            var distinctPixels = await page.evaluate(function () {
+                var canvas = document.querySelector('canvas');
+                if (!canvas) {
+                    return null;
+                }
+                var ctx = canvas.getContext('2d');
+                var data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+                var distinct = {};
+                // Sample ~1000 pixels spread over the canvas.
+                var pixelCount = data.length / 4;
+                var step = Math.max(1, Math.floor(pixelCount / 1000)) * 4;
+                for (var i = 0; i < data.length; i += step) {
+                    distinct[data[i] + ',' + data[i + 1] + ',' + data[i + 2] + ',' + data[i + 3]] = true;
+                }
+                return Object.keys(distinct).length;
+            });
+
+            if (distinctPixels === null) {
+                errors.push('no canvas element found');
+            } else if (distinctPixels < 2) {
+                errors.push('canvas appears blank (' + distinctPixels + ' distinct sampled pixel values)');
+            }
+        } catch (e) {
+            errors.push('pixel check failed: ' + e.message);
         }
-    } catch (e) {
-        errors.push('pixel check failed: ' + e.message);
+
+        try {
+            var bench = await page.evaluate(function () {
+                return window.__benchmark || null;
+            });
+            if (bench) {
+                console.log('  perf: ' + JSON.stringify(bench));
+            }
+        } catch (e) {
+            errors.push('benchmark read failed: ' + e.message);
+        }
+    } finally {
+        await page.close();
     }
 
-    var bench = await page.evaluate(function () {
-        return window.__benchmark || null;
-    });
-    if (bench) {
-        console.log('  perf: ' + JSON.stringify(bench));
-    }
-
-    await page.close();
     return errors;
 }
 

@@ -1,3 +1,9 @@
+/**
+ * This flag is a module-level singleton shared by all stages: on a page with
+ * multiple dirty-rendering Root instances, one stage's consume() may claim
+ * another's invalidation; the heartbeat bounds the resulting paint delay to
+ * ~1s.
+ */
 define(
     [],
     function () {

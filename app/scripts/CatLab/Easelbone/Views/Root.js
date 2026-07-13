@@ -235,6 +235,10 @@ define(
              *
              */
             update: function () {
+                if (this.dirtyRendering) {
+                    // Direct paints (render/resize) also reset the heartbeat.
+                    this._lastPaintTime = createjs.Ticker.getTime();
+                }
                 this.stage.update();
             },
 

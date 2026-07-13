@@ -1,11 +1,13 @@
 define (
 	[
 		'easeljs',
-        'CatLab/Easelbone/Utilities/CustomAttributes'
+        'CatLab/Easelbone/Utilities/CustomAttributes',
+        'CatLab/Easelbone/Utilities/DirtyFlag'
 	],
 	function (
 	    createjs,
-        CustomAttributes
+        CustomAttributes,
+        DirtyFlag
     ) {
 		var Placeholder = function (element) {
 
@@ -120,6 +122,7 @@ define (
 
                 if (originalIndex + 1 !== innerIndex) {
                     element.parent.addChildAt(innerPlaceholder, originalIndex + 1);
+                    DirtyFlag.invalidate();
                 }
 
                 lastVerifiedIndex = originalIndex + 1;
