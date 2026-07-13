@@ -28,8 +28,9 @@ define (
             element.easelPlaceholderInitialized = true;
 
             var innerPlaceholder = this;
-            var boundHash = '0:0';
-            var oldBoundHash = '0:0';
+            var lastBoundsWidth = null;
+            var lastBoundsHeight = null;
+            var lastVerifiedIndex = -1;
             var event;
 
             var innerIndex;
@@ -65,27 +66,26 @@ define (
             element.draw = function (ctx, ignoreCache) {
 
                 this.updateBounds();
-                this.updateZIndex();
 
                 return element.original_draw.apply(element, arguments);
             };
 
-            this.getBoundsHash = function () {
-
-                if (this.getBounds ()) {
-                    boundHash = this.getBounds ().width + ':' + this.getBounds ().height;
-
-                    return boundHash;
-                }
-                return null;
-            };
-
             this.hasBoundsChanged = function () {
-
-                if (this.getBoundsHash () !== oldBoundHash) {
-                    oldBoundHash = boundHash;
-                    return true;
+                var bounds = this.getBounds();
+                if (!bounds) {
+                    return false;
                 }
+
+                if (
+                    bounds.width === lastBoundsWidth &&
+                    bounds.height === lastBoundsHeight
+                ) {
+                    return false;
+                }
+
+                lastBoundsWidth = bounds.width;
+                lastBoundsHeight = bounds.height;
+                return true;
             };
 
             element._tick = function() {
@@ -103,6 +103,17 @@ define (
                     return;
                 }
 
+                // Fast path: verify the cached position directly instead of
+                // scanning the parent's children twice with getChildIndex.
+                var siblings = element.parent.children;
+                if (
+                    lastVerifiedIndex > 0 &&
+                    siblings[lastVerifiedIndex] === innerPlaceholder &&
+                    siblings[lastVerifiedIndex - 1] === element
+                ) {
+                    return;
+                }
+
                 // check if order is still correct
                 innerIndex = element.parent.getChildIndex(innerPlaceholder);
                 originalIndex = element.parent.getChildIndex(element);
@@ -110,6 +121,8 @@ define (
                 if (originalIndex + 1 !== innerIndex) {
                     element.parent.addChildAt(innerPlaceholder, originalIndex + 1);
                 }
+
+                lastVerifiedIndex = originalIndex + 1;
             };
 
             element.updateBounds = function () {
