@@ -19,6 +19,11 @@ define (
 
 			if (typeof(options.queue) === 'undefined') {
 				this.queue = new createjs.LoadQueue(false);
+
+				// PreloadJS defaults to a single connection; load assets in parallel.
+				this.queue.setMaxConnections(
+					typeof(options.maxConnections) !== 'undefined' ? options.maxConnections : 6
+				);
 			} else {
 				this.queue = options.queue;
 			}
