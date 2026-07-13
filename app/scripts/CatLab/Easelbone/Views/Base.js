@@ -3,13 +3,15 @@ define(
         'backbone',
         'easeljs',
         'CatLab/Easelbone/Utilities/GlobalProperties',
-        'CatLab/Easelbone/Utilities/MovieClipHelper'
+        'CatLab/Easelbone/Utilities/MovieClipHelper',
+        'CatLab/Easelbone/Utilities/Deferred'
     ],
     function (
         Backbone,
         createjs,
         GlobalProperties,
-        MovieClipHelper
+        MovieClipHelper,
+        Deferred
     ) {
         "use strict";
 
@@ -92,6 +94,25 @@ define(
             jumpToFrame: function(label, container) {
                 if (typeof(container) === 'undefined') {
                     container = this.easelScreen;
+
+                    // The screen only joins the display list in render(),
+                    // and MovieClipHelper skips gotoAndPlay on detached
+                    // clips. Remember jumps requested before that and
+                    // replay them once the screen is attached.
+                    if (container && !container.parent) {
+                        var deferred = new Deferred();
+
+                        if (!this._pendingFrameJumps) {
+                            this._pendingFrameJumps = [];
+                        }
+
+                        this._pendingFrameJumps.push({
+                            label: label,
+                            deferred: deferred
+                        });
+
+                        return deferred.promise();
+                    }
                 }
 
                 if (!container) {
@@ -99,6 +120,25 @@ define(
                 }
 
                 return MovieClipHelper.jumpToFrame(label, container);
+            },
+
+            /**
+             * Replay frame jumps that were requested while the screen was
+             * not part of the display list yet.
+             */
+            _replayPendingFrameJumps: function() {
+                if (!this._pendingFrameJumps) {
+                    return;
+                }
+
+                var pending = this._pendingFrameJumps;
+                this._pendingFrameJumps = null;
+
+                pending.forEach(function (jump) {
+                    this.jumpToFrame(jump.label).done(function () {
+                        jump.deferred.resolve();
+                    });
+                }.bind(this));
             },
 
             pause: function(container)
@@ -260,6 +300,7 @@ define(
             render: function () {
                 if (this.easelScreen) {
                     this.addCenter(this.easelScreen);
+                    this._replayPendingFrameJumps();
                     return this;
                 }
 
