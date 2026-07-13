@@ -21,7 +21,8 @@ var PAGES = [
     'examples/alphamask.html',
     'examples/background.html',
     'examples/bigtext.html',
-    'examples/emoji.html'
+    'examples/emoji.html',
+    'examples/benchmark.html'
 ];
 
 var MODES = ['', '?dirtyRendering=1'];
