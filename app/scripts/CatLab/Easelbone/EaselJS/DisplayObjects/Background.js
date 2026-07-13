@@ -6,8 +6,6 @@ define(
         var width;
         var height;
         var debug = false;
-        var hash;
-        var hasChanged = false;
         var zooms = {};
         var bounds;
 
@@ -122,22 +120,25 @@ define(
 
         p.Container_draw = p.draw;
 
-        p.getLocationHash = function () {
-            hash = this.getAvailableSpace();
-            return Math.floor(hash.width) + ':' + Math.floor(hash.height);
-        };
-
         /**
          * Determine if the dimensions have changed since last frame.
          * @returns {boolean}
          */
         p.hasChanged = function () {
-            hash = this.getLocationHash();
+            var space = this.getAvailableSpace();
+            var spaceWidth = Math.floor(space.width);
+            var spaceHeight = Math.floor(space.height);
 
-            hasChanged = this.lastHash !== hash;
-            this.lastHash = hash;
+            if (
+                this._lastSpaceWidth === spaceWidth &&
+                this._lastSpaceHeight === spaceHeight
+            ) {
+                return false;
+            }
 
-            return hasChanged;
+            this._lastSpaceWidth = spaceWidth;
+            this._lastSpaceHeight = spaceHeight;
+            return true;
         };
 
         // Center a displayobject.
