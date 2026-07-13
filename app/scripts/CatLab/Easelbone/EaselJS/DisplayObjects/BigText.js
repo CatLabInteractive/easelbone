@@ -2,9 +2,10 @@ define(
     [
         'easeljs',
         'CatLab/Easelbone/Utilities/GlobalProperties',
-        'CatLab/Easelbone/EaselJS/DisplayObjects/EmojiText'
+        'CatLab/Easelbone/EaselJS/DisplayObjects/EmojiText',
+        'CatLab/Easelbone/Utilities/DirtyFlag'
     ],
-    function (createjs, GlobalProperties, EmojiText) {
+    function (createjs, GlobalProperties, EmojiText, DirtyFlag) {
         var width;
         var height;
         var debug = false;
@@ -347,6 +348,7 @@ define(
          * Draw text (for the first time)
          */
         p.drawText = function () {
+            DirtyFlag.invalidate();
             this.initialized = true;
             this.removeAllChildren();
 

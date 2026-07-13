@@ -1,8 +1,9 @@
 define(
 	[
-		'easeljs'
+		'easeljs',
+		'CatLab/Easelbone/Utilities/DirtyFlag'
 	],
-	function (createjs) {
+	function (createjs, DirtyFlag) {
 
 		var U200D = String.fromCharCode(0x200D);
 		var UFE0Fg = /\uFE0F/g;
@@ -347,6 +348,7 @@ define(
 
 		p._requestRedraw = function () {
 			this._redrawRequested = true;
+			DirtyFlag.invalidate();
 		};
 
 		return createjs.promote(EmojiText, "Text");
