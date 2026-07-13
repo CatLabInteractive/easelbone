@@ -12,9 +12,9 @@ static screens. On top of that, several hot paths allocate strings or do
 linear scans per frame per display object, and the asset loader runs on
 PreloadJS's default of a single connection.
 
-This pass has four parts: an opt-in dirty-rendering mode, hot-path
-micro-optimizations, loader parallelism, and a benchmark page to measure it
-all.
+This pass has five parts: an opt-in dirty-rendering mode, hot-path
+micro-optimizations, loader parallelism, a benchmark page to measure it all,
+and a CI job that verifies the example pages headlessly on every PR.
 
 ## 1. Dirty rendering (opt-in)
 
@@ -122,7 +122,26 @@ New `app/examples/benchmark.html` (+ deploy alongside existing examples):
   in this pass is measurable before/after.
 - Doubles as a live demo on the GitHub Pages examples index.
 
-## 5. Risks & verification
+## 5. Continuous integration: headless smoke tests
+
+CI currently builds the project on every PR and push (`deploy.yml`,
+`deploy-pr.yml`) but runs no tests. Add an automated smoke-test layer that
+runs the spec's verification sweep in GitHub Actions:
+
+- **New workflow job** (runs on PRs and pushes to master): install deps,
+  build, serve the built site locally, run Playwright against it.
+- **Coverage:** every example page — controls, scroll, float, alphamask,
+  background, bigtext, emoji, and the new benchmark page.
+- **Both modes:** example pages accept a query parameter
+  (e.g. `?dirtyRendering=1`) so each page is tested with dirty rendering
+  off (default) and on, without duplicating pages.
+- **Assertions per page:** no console errors, no failed network requests,
+  and the canvas is not blank (pixel-sample check after load).
+- **Perf output is informational only:** the benchmark page's frame-time/FPS
+  numbers are printed to the job log for eyeballing trends, but never
+  asserted — shared GitHub runners are too noisy for FPS thresholds.
+
+## 6. Risks & verification
 
 **Risk profile:**
 
@@ -136,11 +155,14 @@ New `app/examples/benchmark.html` (+ deploy alongside existing examples):
 **Verification:**
 
 1. Benchmark page numbers before/after each change (frame time, FPS).
-2. Manual sweep of all existing example pages — controls, scroll, float,
-   alphamask, background, bigtext, emoji — with `dirtyRendering` off (default)
-   and on, confirming identical visuals and working interaction.
+2. Sweep of all existing example pages — controls, scroll, float, alphamask,
+   background, bigtext, emoji — with `dirtyRendering` off (default) and on,
+   confirming identical visuals and working interaction. Automated by the CI
+   smoke tests (section 5); interaction checks (drag, click, scroll) done
+   manually once during development.
 3. Loader: confirm parallel requests in devtools network tab on an example
    that loads a manifest.
+4. CI smoke-test job green on the PR.
 
 ## Out of scope
 
