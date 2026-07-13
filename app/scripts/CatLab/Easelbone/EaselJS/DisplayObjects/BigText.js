@@ -8,8 +8,6 @@ define(
         var width;
         var height;
         var debug = false;
-        var hash;
-        var hasChanged = false;
         var cacheAfterDraw = true;
 
         var currentHeight;
@@ -95,27 +93,29 @@ define(
             currentSize.width = currentBounds.width;
         }
 
-        function measureLineHeight(text) {
-            return Math.max(
-                measureLetter(text, "M").width,
-                measureLetter(text, "m").width
-            ) * 1.2;
-        }
+        var REFERENCE_FONT_SIZE = 100;
 
-        function measureLetter(text, letter) {
-            var ctx = createjs.Text._workingContext;
-            ctx.save();
-            var size = text._prepContext(ctx).measureText(letter);
-            ctx.restore();
-            return size;
-        }
-
-        function getFontLineheight(text, font) {
-            if (typeof (fontLineheightCache[text.font]) === 'undefined') {
-                fontLineheightCache[text.font] = measureLineHeight(text);
+        /**
+         * Measured line-height per font family, normalized to font size 1.
+         * Measuring once per family (instead of per family+size) keeps the
+         * cache bounded and skips measureText calls in later fit-searches.
+         */
+        function getNormalizedLineHeight(font) {
+            if (typeof (fontLineheightCache[font]) === 'undefined') {
+                var ctx = createjs.Text._workingContext;
+                ctx.save();
+                ctx.font = REFERENCE_FONT_SIZE + 'px ' + font;
+                fontLineheightCache[font] = Math.max(
+                    ctx.measureText('M').width,
+                    ctx.measureText('m').width
+                ) * 1.2 / REFERENCE_FONT_SIZE;
+                ctx.restore();
             }
+            return fontLineheightCache[font];
+        }
 
-            return fontLineheightCache[text.font] * BigText.getFontLineHeightFactor(font);
+        function getFontLineheight(font, fontSize) {
+            return getNormalizedLineHeight(font) * fontSize * BigText.getFontLineHeightFactor(font);
         }
 
         var p = BigText.prototype = new createjs.Container();
@@ -230,7 +230,7 @@ define(
                 current = self.createTextObject(textstring, fontsize, self._font, self._color)
 
                 current.lineWidth = availableWidth;
-                current.lineHeight = getFontLineheight(current, self._font);
+                current.lineHeight = getFontLineheight(self._font, fontsize);
 
                 updateCurrentSize(current);
 
@@ -284,7 +284,7 @@ define(
 			while (minFontSize <= maxFontSize) {
 				var midFontSize = Math.floor((minFontSize + maxFontSize) / 2);
 				measureObj.font = midFontSize + "px " + this._font;
-				measureObj.lineHeight = getFontLineheight(measureObj, this._font);
+				measureObj.lineHeight = getFontLineheight(this._font, midFontSize);
 				updateCurrentSize(measureObj);
 
 				if (currentSize.height <= availableHeight && currentSize.width <= availableWidth) {
@@ -298,7 +298,7 @@ define(
 			// Create the final text object at the best size found
 			var bestFit = this.createTextObject(textstring, bestFontSize, this._font, this._color);
 			bestFit.lineWidth = availableWidth;
-			bestFit.lineHeight = getFontLineheight(bestFit, this._font);
+			bestFit.lineHeight = getFontLineheight(this._font, bestFontSize);
 			updateCurrentSize(bestFit);
 
 			this.fontsize = bestFontSize;
@@ -308,21 +308,8 @@ define(
         p.Container_draw = p.draw;
 
         /**
-         * @returns {string|*}
-         */
-        p.getLocationHash = function () {
-            hash = this.getAvailableSpace();
-            hash = parseInt(hash.width) + ':' + parseInt(hash.height) + ':' + this.textstring
-                + ':' + this._align + ':' + this._font + ':' + this._color
-
-            //location = this.localToGlobal(this.x, this.y);
-            //hash = location.x + ':' + location.y + ':' + hash + ':' + this._align;
-
-            return hash;
-        };
-
-        /**
-         * Determine if the dimensions have changed since last frame.
+         * Determine if the dimensions or content have changed since last frame.
+         * Field-by-field comparison — no string allocation per tick.
          * @returns {boolean}
          */
         p.hasChanged = function () {
@@ -331,12 +318,29 @@ define(
                 return true;
             }
 
-            hash = this.getLocationHash();
+            var space = this.getAvailableSpace();
+            var spaceWidth = Math.floor(space.width);
+            var spaceHeight = Math.floor(space.height);
 
-            hasChanged = this.lastHash !== hash;
-            this.lastHash = hash;
+            if (
+                this._lastSpaceWidth === spaceWidth &&
+                this._lastSpaceHeight === spaceHeight &&
+                this._lastText === this.textstring &&
+                this._lastAlign === this._align &&
+                this._lastFont === this._font &&
+                this._lastColor === this._color
+            ) {
+                return false;
+            }
 
-            return hasChanged;
+            this._lastSpaceWidth = spaceWidth;
+            this._lastSpaceHeight = spaceHeight;
+            this._lastText = this.textstring;
+            this._lastAlign = this._align;
+            this._lastFont = this._font;
+            this._lastColor = this._color;
+
+            return true;
         };
 
         /**
