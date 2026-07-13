@@ -20,6 +20,11 @@ var chromium = require('playwright').chromium;
 var FIXTURE = 'tools/fixtures/bigtext-baseline.html';
 var CENTER_TOLERANCE_PX = 10;
 
+// Decorative webfont whose ink extends beyond EaselJS's heuristic text box
+// (glyphs overshoot the em-top anchor and swashes exceed advance widths).
+var DECORATIVE_FONT = '&font=Designers&fontUrl=' +
+    encodeURIComponent('/app/examples/fonts/designers/desib___-webfont.woff2');
+
 /**
  * Load the fixture with the given query string and return the ink bounding
  * box (canvas pixels brighter than the black background) together with the
@@ -79,9 +84,13 @@ async function measureInk(browser, baseUrl, query) {
 }
 
 function gaps(result) {
-    var topGap = result.ink.top - result.container.y;
-    var bottomGap = (result.container.y + result.container.height) - result.ink.bottom;
-    return {top: topGap, bottom: bottomGap};
+    var c = result.container;
+    return {
+        top: result.ink.top - c.y,
+        bottom: (c.y + c.height) - result.ink.bottom,
+        left: result.ink.left - c.x,
+        right: (c.x + c.width) - result.ink.right
+    };
 }
 
 async function runScenarios(baseUrl) {
@@ -115,6 +124,35 @@ async function runScenarios(baseUrl) {
                     var g = gaps(result);
                     check(this.name, Math.abs(g.top - g.bottom) <= CENTER_TOLERANCE_PX,
                         'topGap=' + g.top + ' bottomGap=' + g.bottom);
+                }
+            },
+            {
+                name: 'decorative font: multi-line ink stays inside a tight container',
+                query: '?text=' + encodeURIComponent('Test message with Multiple lines') +
+                    DECORATIVE_FONT + '&w=413&h=112',
+                assert: function (result) {
+                    var g = gaps(result);
+                    check(this.name, g.top >= 0 && g.bottom >= 0 && g.left >= 0 && g.right >= 0,
+                        JSON.stringify(g));
+                }
+            },
+            {
+                name: 'decorative font: single line ink stays inside a tight container',
+                query: '?text=Multiple' + DECORATIVE_FONT + '&w=700&h=60',
+                assert: function (result) {
+                    var g = gaps(result);
+                    check(this.name, g.top >= 0 && g.bottom >= 0 && g.left >= 0 && g.right >= 0,
+                        JSON.stringify(g));
+                }
+            },
+            {
+                name: 'decorative font: example-page box stays inside',
+                query: '?text=' + encodeURIComponent('Test message with Multiple lines') +
+                    DECORATIVE_FONT + '&w=456&h=90',
+                assert: function (result) {
+                    var g = gaps(result);
+                    check(this.name, g.top >= 0 && g.bottom >= 0 && g.left >= 0 && g.right >= 0,
+                        JSON.stringify(g));
                 }
             },
             {

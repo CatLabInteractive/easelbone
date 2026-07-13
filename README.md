@@ -60,11 +60,13 @@ npm run smoke                             # every example page renders cleanly
 npm run test:baseline                     # BigText vertical centering (self-serving)
 ```
 
-Note: `BigText` centers text on the measured glyph bounds
-(`TextMetrics.actualBoundingBox*`), so manual `BigText.setFontOffset(...)`
-calls are no longer needed in modern browsers. Registering an offset still
-works and takes precedence, as does the legacy heuristic on browsers without
-extended TextMetrics.
+Note: `BigText` fits and centers text on the measured glyph bounds
+(`TextMetrics.actualBoundingBox*`), so the drawn ink never leaves the
+available space and manual `BigText.setFontOffset(...)` calls are no longer
+needed in modern browsers — even for decorative fonts whose glyphs extend
+beyond their em box or advance widths. Registering an offset still works and
+takes precedence (restoring the fully legacy behavior for that font), as does
+the legacy heuristic on browsers without extended TextMetrics.
 
 ## License
 

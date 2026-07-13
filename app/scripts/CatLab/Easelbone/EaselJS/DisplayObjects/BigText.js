@@ -84,14 +84,33 @@ define(
             cacheAfterDraw = autoCache;
         };
 
+        var currentInk = null;
+
         /**
          * @param text
+         * @param align horizontal alignment the text will be drawn with
          */
-        function updateCurrentSize(text) {
+        function updateCurrentSize(text, align) {
             currentBounds = text.getMetrics();
 
             currentSize.height = currentBounds.height;
             currentSize.width = currentBounds.width;
+
+            // Fonts can put ink outside the heuristic text box (above the
+            // em-top anchor, or swashes beyond the advance width). Fit on the
+            // larger of both so the drawn glyphs never leave the box.
+            currentInk = null;
+            if (getRegisteredOffset(text.font) === null) {
+                currentInk = measureInkBounds(text, currentBounds, align);
+                if (currentInk) {
+                    if (currentInk.height > currentSize.height) {
+                        currentSize.height = currentInk.height;
+                    }
+                    if (currentInk.width > currentSize.width) {
+                        currentSize.width = currentInk.width;
+                    }
+                }
+            }
         }
 
         var REFERENCE_FONT_SIZE = 100;
@@ -119,6 +138,21 @@ define(
             return getNormalizedLineHeight(font) * fontSize * BigText.getFontLineHeightFactor(font);
         }
 
+        /**
+         * Manually registered offset for a full font string
+         * (e.g. "275px sans-serif"), or null when none is set.
+         */
+        function getRegisteredOffset(font) {
+            var fontName = font.split(' ');
+            fontName.shift();
+            fontName = fontName.join(' ');
+
+            if (typeof (fontOffsets[fontName]) === 'undefined') {
+                return null;
+            }
+            return fontOffsets[fontName];
+        }
+
         var inkMetricsSupported = null;
 
         /**
@@ -130,21 +164,27 @@ define(
                 var m = createjs.Text._workingContext.measureText('M');
                 inkMetricsSupported =
                     typeof m.actualBoundingBoxAscent === 'number' &&
-                    typeof m.actualBoundingBoxDescent === 'number';
+                    typeof m.actualBoundingBoxDescent === 'number' &&
+                    typeof m.actualBoundingBoxLeft === 'number' &&
+                    typeof m.actualBoundingBoxRight === 'number';
             }
             return inkMetricsSupported;
         }
 
         /**
-         * Vertical bounds of the visible glyph ink, relative to the text
-         * object's origin (textBaseline 'top'). Only the first line can raise
-         * the top edge and only the last line can lower the bottom edge, so
-         * two measurements suffice. Returns null when the browser lacks
-         * extended TextMetrics or there is nothing to measure.
+         * Bounds of the visible glyph ink relative to the text object's
+         * origin (textBaseline 'top', horizontal anchor per `align`).
+         * Vertically only the first line can raise the top edge and only the
+         * last line can lower the bottom edge; horizontally every line
+         * matters. Returns null when the browser lacks extended TextMetrics
+         * or there is nothing to measure.
          * @param text
          * @param metrics result of text.getMetrics()
+         * @param align 'left', 'center' or 'right'
+         * @returns {{top, height, left, right, width}|null} left/right are
+         *          the ink extents on either side of the anchor point.
          */
-        function measureInkBounds(text, metrics) {
+        function measureInkBounds(text, metrics, align) {
             if (!supportsInkMetrics()) {
                 return null;
             }
@@ -154,20 +194,49 @@ define(
                 return null;
             }
 
+            // Only 'center' changes the element's textAlign; 'left' and
+            // 'right' keep a left-anchored element and move the block.
+            var anchorFactor = align === 'center' ? 0.5 : 0;
+
             var ctx = createjs.Text._workingContext;
             ctx.save();
             ctx.font = text.font;
             ctx.textBaseline = 'top';
-            var first = ctx.measureText(lines[0]);
-            var last = lines.length === 1 ? first : ctx.measureText(lines[lines.length - 1]);
+            ctx.textAlign = 'left';
+
+            var top = 0;
+            var bottom = 0;
+            var left = 0;
+            var right = 0;
+
+            for (var i = 0; i < lines.length; i++) {
+                var m = ctx.measureText(lines[i]);
+
+                if (i === 0) {
+                    top = -m.actualBoundingBoxAscent;
+                }
+                if (i === lines.length - 1) {
+                    bottom = (i * metrics.lineHeight) + m.actualBoundingBoxDescent;
+                }
+
+                // Measured from the line's left edge; shift to where the
+                // aligned anchor point will be.
+                var anchorShift = m.width * anchorFactor;
+                left = Math.max(left, m.actualBoundingBoxLeft + anchorShift);
+                right = Math.max(right, m.actualBoundingBoxRight - anchorShift);
+            }
             ctx.restore();
 
-            var top = -first.actualBoundingBoxAscent;
-            var bottom = ((lines.length - 1) * metrics.lineHeight) + last.actualBoundingBoxDescent;
-            if (bottom <= top) {
+            if (bottom <= top || left + right <= 0) {
                 return null;
             }
-            return {'top': top, 'height': bottom - top};
+            return {
+                'top': top,
+                'height': bottom - top,
+                'left': left,
+                'right': right,
+                'width': left + right
+            };
         }
 
         var p = BigText.prototype = new createjs.Container();
@@ -181,14 +250,7 @@ define(
          * @param font full font string, e.g. "275px sans-serif"
          */
         p.getRegisteredFontOffset = function (font) {
-            var fontName = font.split(' ');
-            fontName.shift();
-            fontName = fontName.join(' ');
-
-            if (typeof (fontOffsets[fontName]) === 'undefined') {
-                return null;
-            }
-            return fontOffsets[fontName];
+            return getRegisteredOffset(font);
         };
 
         p.getFontOffset = function (font) {
@@ -292,7 +354,7 @@ define(
                 current.lineWidth = availableWidth;
                 current.lineHeight = getFontLineheight(self._font, fontsize);
 
-                updateCurrentSize(current);
+                updateCurrentSize(current, self._align);
 
                 // Does current size still match the available space?
                 if (
@@ -345,7 +407,7 @@ define(
 				var midFontSize = Math.floor((minFontSize + maxFontSize) / 2);
 				measureObj.font = midFontSize + "px " + this._font;
 				measureObj.lineHeight = getFontLineheight(this._font, midFontSize);
-				updateCurrentSize(measureObj);
+				updateCurrentSize(measureObj, this._align);
 
 				if (currentSize.height <= availableHeight && currentSize.width <= availableWidth) {
 					bestFontSize = midFontSize;
@@ -359,7 +421,7 @@ define(
 			var bestFit = this.createTextObject(textstring, bestFontSize, this._font, this._color);
 			bestFit.lineWidth = availableWidth;
 			bestFit.lineHeight = getFontLineheight(this._font, bestFontSize);
-			updateCurrentSize(bestFit);
+			updateCurrentSize(bestFit, this._align);
 
 			this.fontsize = bestFontSize;
 			return bestFit;
@@ -439,30 +501,31 @@ define(
 
             text.textBaseline = 'top';
 
-            updateCurrentSize(text);
+            updateCurrentSize(text, this._align);
 
             currentHeight = currentSize.height;
             currentWidth = currentSize.width;
 
+            var ink = currentInk;
+
             if (this._align === 'center') {
                 text.textAlign = 'center';
-                text.x = ((space.width - currentWidth) / 2) + (currentWidth / 2);
+                if (ink) {
+                    text.x = ((space.width - ink.width) / 2) + ink.left;
+                } else {
+                    text.x = ((space.width - currentWidth) / 2) + (currentWidth / 2);
+                }
             } else if (this._align === 'left') {
-                text.x = 0;
+                text.x = ink ? ink.left : 0;
             } else if (this._align === 'right') {
-                //text.x = ((space.width - text.getBounds ().width)) + text.getBounds ().width;
-                text.x = space.width - currentWidth;
+                text.x = ink ? (space.width - ink.right) : (space.width - currentWidth);
             }
 
-            currentBounds = text.getMetrics();
-
-            var offset = this.getRegisteredFontOffset(text.font);
-            var ink = offset === null ? measureInkBounds(text, currentBounds) : null;
             if (ink) {
                 // Center the visible glyph ink in the available space.
                 text.y = ((space.height - ink.height) / 2) - ink.top;
             } else {
-                offset = offset || {'x': 0, 'y': 0};
+                var offset = this.getFontOffset(text.font);
                 text.y = (text.lineHeight * offset.y) + ((space.height - currentHeight) / 2);
             }
 

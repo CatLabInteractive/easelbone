@@ -19,8 +19,11 @@
     // Query parameters:
     //   text    - the string to render (default 'gyp')
     //   font    - font family (default 'sans-serif')
+    //   fontUrl - when present, loads `font` as a webfont from this URL
+    //             before rendering
     //   offsetY - when present, registers a manual font offset for `font`
     //             via BigText.setFontOffset before rendering
+    //   w, h    - container size (default 700x300)
 
     require.config({
         'baseUrl': '/app/scripts/'
@@ -44,9 +47,22 @@
                 BigText.setFontOffset(font, 0, parseFloat(params.offsetY));
             }
 
-            var CONTAINER = {x: 50, y: 50, width: 700, height: 300};
+            var fontLoaded = Promise.resolve();
+            if (params.fontUrl) {
+                var face = new FontFace(font, 'url(' + params.fontUrl + ')');
+                document.fonts.add(face);
+                fontLoaded = face.load();
+            }
+
+            var CONTAINER = {
+                x: 50,
+                y: 50,
+                width: parseInt(params.w, 10) || 700,
+                height: parseInt(params.h, 10) || 300
+            };
             window.__container = CONTAINER;
 
+            fontLoaded.then(function () {
             var stage = new createjs.Stage(document.getElementById('canvas'));
 
             var background = new createjs.Shape();
@@ -66,12 +82,15 @@
             createjs.Ticker.setFPS(24);
             createjs.Ticker.addEventListener('tick', stage);
 
+            window.__bigText = bigText;
+
             // Give BigText a few ticks to lay out and draw before signalling.
             var ticks = 0;
             createjs.Ticker.addEventListener('tick', function () {
                 if (++ticks === 5) {
                     window.__ready = true;
                 }
+            });
             });
         });
     });
