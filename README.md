@@ -10,6 +10,7 @@ A GUI engine combining [EaselJS](https://createjs.com/easeljs) and [Backbone.js]
 - Alpha mask support
 - Asset loading and management
 - Built on top of AMD modules (RequireJS)
+- Opt-in dirty rendering (`new easelbone.Views.Root({ ..., dirtyRendering: true })`): the stage ticks every frame but repaints only when something changed — MovieClip frames, tweens, text redraws, mouse activity, or an explicit `rootView.invalidate()` call. Views can return `false` from `tick()` when static to skip repaints entirely.
 
 ## Documentation
 
@@ -36,6 +37,7 @@ Live examples are hosted on GitHub Pages:
 - [Background & Fill](https://catlabinteractive.github.io/easelbone/examples/background.html) — Background fill and placeholder demo
 - [BigText](https://catlabinteractive.github.io/easelbone/examples/bigtext.html) — Auto-sizing text rendering demo
 - [Emoji Text](https://catlabinteractive.github.io/easelbone/examples/emoji.html) — Text rendering with emoji support
+- [Benchmark](https://catlabinteractive.github.io/easelbone/examples/benchmark.html) — Performance stress test with paint/tick statistics
 
 Pull request previews are automatically deployed to `https://catlabinteractive.github.io/easelbone/pr/<PR_NUMBER>/examples/`.
 
