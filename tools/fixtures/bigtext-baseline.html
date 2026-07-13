@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <title>BigText baseline fixture</title>
+    <style>body { margin: 0; }</style>
+</head>
+<body>
+
+<canvas id="canvas" width="800" height="400"></canvas>
+
+<script src="/app/scripts/vendor/requirejs/require.js"></script>
+<script>
+    // Test fixture for tools/baseline-test.js.
+    //
+    // Renders a single white BigText on a black stage inside a container of
+    // known bounds, then exposes the container rectangle and readiness flag
+    // so the test can measure where the glyph ink actually landed.
+    //
+    // Query parameters:
+    //   text    - the string to render (default 'gyp')
+    //   font    - font family (default 'sans-serif')
+    //   offsetY - when present, registers a manual font offset for `font`
+    //             via BigText.setFontOffset before rendering
+
+    require.config({
+        'baseUrl': '/app/scripts/'
+    });
+
+    require(['main'], function () {
+        require([
+            'easeljs',
+            'CatLab/Easelbone/EaselJS/DisplayObjects/BigText'
+        ], function (createjs, BigText) {
+
+            var params = {};
+            window.location.search.replace(/[?&]([^=&]+)=([^&]*)/g, function (m, k, v) {
+                params[k] = decodeURIComponent(v);
+            });
+
+            var text = params.text || 'gyp';
+            var font = params.font || 'sans-serif';
+
+            if (typeof params.offsetY !== 'undefined') {
+                BigText.setFontOffset(font, 0, parseFloat(params.offsetY));
+            }
+
+            var CONTAINER = {x: 50, y: 50, width: 700, height: 300};
+            window.__container = CONTAINER;
+
+            var stage = new createjs.Stage(document.getElementById('canvas'));
+
+            var background = new createjs.Shape();
+            background.graphics.beginFill('#000').drawRect(0, 0, 800, 400);
+            stage.addChild(background);
+
+            var container = new createjs.Container();
+            container.setBounds(0, 0, CONTAINER.width, CONTAINER.height);
+            container.x = CONTAINER.x;
+            container.y = CONTAINER.y;
+            stage.addChild(container);
+
+            var bigText = new BigText(text, font, '#fff');
+            container.addChild(bigText);
+
+            createjs.Ticker.timingMode = createjs.Ticker.TIMEOUT;
+            createjs.Ticker.setFPS(24);
+            createjs.Ticker.addEventListener('tick', stage);
+
+            // Give BigText a few ticks to lay out and draw before signalling.
+            var ticks = 0;
+            createjs.Ticker.addEventListener('tick', function () {
+                if (++ticks === 5) {
+                    window.__ready = true;
+                }
+            });
+        });
+    });
+</script>
+
+</body>
+</html>

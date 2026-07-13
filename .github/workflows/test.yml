@@ -38,3 +38,6 @@ jobs:
 
       - name: Run smoke tests
         run: npm run smoke
+
+      - name: Run BigText baseline tests
+        run: npm run test:baseline

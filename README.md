@@ -53,7 +53,18 @@ npm run build
 
 # Watch for changes
 npx grunt watch
+
+# Headless tests (need `npx playwright install chromium` once)
+npx http-server dist -p 8080 --silent &   # serve the build first
+npm run smoke                             # every example page renders cleanly
+npm run test:baseline                     # BigText vertical centering (self-serving)
 ```
+
+Note: `BigText` centers text on the measured glyph bounds
+(`TextMetrics.actualBoundingBox*`), so manual `BigText.setFontOffset(...)`
+calls are no longer needed in modern browsers. Registering an offset still
+works and takes precedence, as does the legacy heuristic on browsers without
+extended TextMetrics.
 
 ## License
 

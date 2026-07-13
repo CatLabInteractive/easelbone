@@ -119,21 +119,80 @@ define(
             return getNormalizedLineHeight(font) * fontSize * BigText.getFontLineHeightFactor(font);
         }
 
+        var inkMetricsSupported = null;
+
+        /**
+         * Automatic baseline compensation needs the extended TextMetrics
+         * fields; old embedded browsers (smart TVs) may not have them.
+         */
+        function supportsInkMetrics() {
+            if (inkMetricsSupported === null) {
+                var m = createjs.Text._workingContext.measureText('M');
+                inkMetricsSupported =
+                    typeof m.actualBoundingBoxAscent === 'number' &&
+                    typeof m.actualBoundingBoxDescent === 'number';
+            }
+            return inkMetricsSupported;
+        }
+
+        /**
+         * Vertical bounds of the visible glyph ink, relative to the text
+         * object's origin (textBaseline 'top'). Only the first line can raise
+         * the top edge and only the last line can lower the bottom edge, so
+         * two measurements suffice. Returns null when the browser lacks
+         * extended TextMetrics or there is nothing to measure.
+         * @param text
+         * @param metrics result of text.getMetrics()
+         */
+        function measureInkBounds(text, metrics) {
+            if (!supportsInkMetrics()) {
+                return null;
+            }
+
+            var lines = metrics.lines;
+            if (!lines || !lines.length) {
+                return null;
+            }
+
+            var ctx = createjs.Text._workingContext;
+            ctx.save();
+            ctx.font = text.font;
+            ctx.textBaseline = 'top';
+            var first = ctx.measureText(lines[0]);
+            var last = lines.length === 1 ? first : ctx.measureText(lines[lines.length - 1]);
+            ctx.restore();
+
+            var top = -first.actualBoundingBoxAscent;
+            var bottom = ((lines.length - 1) * metrics.lineHeight) + last.actualBoundingBoxDescent;
+            if (bottom <= top) {
+                return null;
+            }
+            return {'top': top, 'height': bottom - top};
+        }
+
         var p = BigText.prototype = new createjs.Container();
 
         p.Container_initialize = p.initialize;
         p.Container_tick = p._tick;
 
-        p.getFontOffset = function (font) {
+        /**
+         * Manually registered offset for this font, or null when none is set
+         * (in which case positioning is calculated from TextMetrics).
+         * @param font full font string, e.g. "275px sans-serif"
+         */
+        p.getRegisteredFontOffset = function (font) {
             var fontName = font.split(' ');
             fontName.shift();
             fontName = fontName.join(' ');
 
             if (typeof (fontOffsets[fontName]) === 'undefined') {
-                return {'x': 0, 'y': 0};
-            } else {
-                return fontOffsets[fontName];
+                return null;
             }
+            return fontOffsets[fontName];
+        };
+
+        p.getFontOffset = function (font) {
+            return this.getRegisteredFontOffset(font) || {'x': 0, 'y': 0};
         };
 
         p.initialize = function () {
@@ -397,8 +456,15 @@ define(
 
             currentBounds = text.getMetrics();
 
-            var offset = this.getFontOffset(text.font);
-            text.y = (text.lineHeight * offset.y) + ((space.height - currentHeight) / 2);
+            var offset = this.getRegisteredFontOffset(text.font);
+            var ink = offset === null ? measureInkBounds(text, currentBounds) : null;
+            if (ink) {
+                // Center the visible glyph ink in the available space.
+                text.y = ((space.height - ink.height) / 2) - ink.top;
+            } else {
+                offset = offset || {'x': 0, 'y': 0};
+                text.y = (text.lineHeight * offset.y) + ((space.height - currentHeight) / 2);
+            }
 
             this.addChild(text);
 
