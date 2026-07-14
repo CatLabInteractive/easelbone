@@ -69,15 +69,12 @@ define(
                 // re-rendered QR (removeAllChildren + regenerate) never stacks.
                 Pinner._removeByAnchor(stage, anchor);
 
-                var record = {
-                    obj: obj,
-                    anchor: anchor,
-                    localMatrix: obj.getMatrix(),
-                    origRegX: obj.regX,
-                    origRegY: obj.regY
-                };
+                var wrapper = new createjs.Container();
+                var record = { obj: obj, anchor: anchor, wrapper: wrapper };
 
-                ensureContainer(stage).addChild(obj); // reparents out of anchor
+                ensureContainer(stage).addChild(wrapper);
+                wrapper.addChild(obj); // reparents obj out of anchor; obj's own transform/regX/regY untouched
+
                 stage._pinnedElements.push(record);
 
                 // Immediate sync: correctly placed even without a running tick.
@@ -150,39 +147,40 @@ define(
                 if (record.obj.parent) {
                     record.obj.parent.removeChild(record.obj);
                 }
-                record.obj.regX = record.origRegX;
-                record.obj.regY = record.origRegY;
+                if (record.wrapper.parent) {
+                    record.wrapper.parent.removeChild(record.wrapper);
+                }
+                if (record.anchor && record.anchor.getStage && record.anchor.getStage()) {
+                    record.anchor.addChild(record.obj);
+                }
             },
 
             _syncRecord: function (stage, record) {
-                var obj = record.obj;
-                var container = obj.parent;
+                var wrapper = record.wrapper;
+                var container = wrapper.parent;
                 if (!container) {
                     return;
                 }
 
-                // desired global matrix = anchorConcatenated * capturedLocal
-                var desired = record.anchor.getConcatenatedMatrix()
-                    .appendMatrix(record.localMatrix);
+                // Carry the anchor's bounds so bounds-sizing children (e.g. Fill) size correctly.
+                var bounds = record.anchor.getBounds();
+                if (bounds) {
+                    wrapper.setBounds(0, 0, bounds.width, bounds.height);
+                }
 
-                // Express in the pin container's local space (do not assume the
-                // pin container sits at identity):
-                //   local = containerConcatenated^-1 * desired
+                // Place the wrapper in the anchor's coordinate space:
+                //   wrapperLocal = pinContainerConcatenated^-1 * anchorConcatenated
                 var local = container.getConcatenatedMatrix().invert()
-                    .appendMatrix(desired);
+                    .appendMatrix(record.anchor.getConcatenatedMatrix());
 
                 var props = local.decompose(Pinner._props);
-                obj.x = props.x;
-                obj.y = props.y;
-                obj.scaleX = props.scaleX;
-                obj.scaleY = props.scaleY;
-                obj.rotation = props.rotation;
-                obj.skewX = props.skewX;
-                obj.skewY = props.skewY;
-                // The captured localMatrix already bakes in the original regX/regY
-                // as translation, so the pinned copy must carry none of its own.
-                obj.regX = 0;
-                obj.regY = 0;
+                wrapper.x = props.x;
+                wrapper.y = props.y;
+                wrapper.scaleX = props.scaleX;
+                wrapper.scaleY = props.scaleY;
+                wrapper.rotation = props.rotation;
+                wrapper.skewX = props.skewX;
+                wrapper.skewY = props.skewY;
             }
         };
 

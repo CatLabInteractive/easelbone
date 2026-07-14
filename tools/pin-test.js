@@ -42,6 +42,16 @@ async function main() {
         var center = await pixel(page, 125, 125);
         if (!isGreen(center)) { failures.push('expected GREEN at (125,125), got ' + center); }
 
+        // Wrapper must carry the anchor's bounds (50x50) so a bounds-sizing
+        // child (e.g. a Fill/QR) sizes itself to the anchor's box instead of
+        // falling back to a 100x100 default. This requires a per-pin wrapper
+        // container -- it fails against pre-fix code that reparents obj
+        // directly into the (bounds-less) pin container.
+        var wrapperBounds = await page.evaluate('window.__wrapperBounds()');
+        if (!wrapperBounds || wrapperBounds[0] !== 50 || wrapperBounds[1] !== 50) {
+            failures.push('expected wrapper bounds [50,50], got ' + JSON.stringify(wrapperBounds));
+        }
+
         // Move anchor +100,+0 -> old center now blue, new center green.
         await page.evaluate('window.__moveAnchor(100, 0)');
         await page.waitForTimeout(200);

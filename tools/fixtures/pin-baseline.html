@@ -110,6 +110,19 @@
                 return (records && records.length) ? records[0].obj.__id : null;
             };
 
+            // Returns [width, height] of the pinned record's wrapper bounds,
+            // or null. Proves the wrapper carries the anchor's bounds (so a
+            // bounds-sizing child, e.g. a Fill, would size to the anchor's
+            // dimensions rather than falling back to a 100x100 default).
+            window.__wrapperBounds = function () {
+                var records = root.stage._pinnedElements;
+                if (!records || !records.length || !records[0].wrapper) {
+                    return null;
+                }
+                var b = records[0].wrapper.getBounds();
+                return b ? [b.width, b.height] : null;
+            };
+
             // Removes the anchor from the stage entirely; sync() should
             // auto-teardown the pin on the next render.
             window.__removeAnchor = function () {
