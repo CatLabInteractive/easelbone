@@ -105,6 +105,14 @@ define (
                     return;
                 }
 
+                // If this placeholder has been pinned (Pinner.pinToTop moved it
+                // into a pin layer), don't drag it back next to the source
+                // element -- that would rip it out of the pin layer every tick
+                // and defeat the pin.
+                if (innerPlaceholder._pinnedToTop) {
+                    return;
+                }
+
                 // Fast path: verify the cached position directly instead of
                 // scanning the parent's children twice with getChildIndex.
                 var siblings = element.parent.children;
