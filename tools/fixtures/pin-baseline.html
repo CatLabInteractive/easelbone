@@ -80,6 +80,13 @@
                 root.render();
             };
 
+            // Suppression: hide/show all pinned overlays (e.g. while a modal is
+            // open) via the stage flag the Pinner honors.
+            window.__setPinsHidden = function (b) {
+                root.stage._pinsHidden = b;
+                root.render();
+            };
+
             // Simulates a re-render that regenerates the pinned content: a
             // brand-new object instance pinned to the SAME anchor. Should
             // replace (not stack on top of) the previously pinned box.

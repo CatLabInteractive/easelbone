@@ -174,6 +174,11 @@ define(
 
             _syncRecord: function (stage, record) {
                 var wrapper = record.wrapper;
+
+                // Callers can hide all pinned overlays (e.g. while a modal is
+                // open over the pinned QR) by setting stage._pinsHidden.
+                wrapper.visible = !stage._pinsHidden;
+
                 var container = wrapper.parent;
                 if (!container) {
                     return;
