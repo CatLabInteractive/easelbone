@@ -17,7 +17,7 @@ define(
         }
 
         function ensureContainer(stage) {
-            if (stage._pinContainer && stage._pinContainer.getStage() === stage) {
+            if (stage._pinContainer && stage._pinContainer.stage === stage) {
                 return stage._pinContainer;
             }
             // Fallback for contexts with no designated pin layer (e.g. a
@@ -41,7 +41,7 @@ define(
             // Gives up after ~5s (300 ticks) so a never-attached object can't
             // leak a permanent retry loop.
             _deferPin: function (obj, attempt) {
-                if (obj.getStage()) {
+                if (obj.stage) {
                     Pinner.pin(obj);
                     return;
                 }
@@ -54,7 +54,7 @@ define(
             },
 
             pin: function (obj) {
-                var stage = obj.getStage();
+                var stage = obj.stage;
                 if (!stage) {
                     // Not on a stage yet. We can't rely on obj's 'added'
                     // event here: obj is typically addChild'd to its
@@ -104,7 +104,7 @@ define(
             },
 
             unpin: function (obj) {
-                var stage = obj.getStage();
+                var stage = obj.stage;
                 var records = stage && stage._pinnedElements;
                 if (!records) {
                     return;
@@ -140,7 +140,7 @@ define(
                 for (var i = records.length - 1; i >= 0; i--) {
                     var record = records[i];
                     // Auto-teardown: anchor removed from the stage.
-                    if (!record.anchor.getStage || record.anchor.getStage() !== stage) {
+                    if (record.anchor.stage !== stage) {
                         Pinner._restore(record);
                         records.splice(i, 1);
                         continue;
@@ -167,7 +167,7 @@ define(
                 if (record.wrapper.parent) {
                     record.wrapper.parent.removeChild(record.wrapper);
                 }
-                if (record.anchor && record.anchor.getStage && record.anchor.getStage()) {
+                if (record.anchor && record.anchor.stage) {
                     record.anchor.addChild(record.obj);
                 }
             },
