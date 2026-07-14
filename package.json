@@ -35,6 +35,7 @@
     "bump" : "grunt bump",
     "bump:minor" : "grunt bump:minor",
     "smoke": "node tools/smoke-test.js",
-    "test:baseline": "node tools/baseline-test.js"
+    "test:baseline": "node tools/baseline-test.js",
+    "test:pin": "node tools/pin-test.js"
   }
 }

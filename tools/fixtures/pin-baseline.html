@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <title>Pinner baseline fixture</title>
+    <style>body { margin: 0; }</style>
+</head>
+<body>
+<canvas id="canvas" width="400" height="400"></canvas>
+<script src="/app/scripts/vendor/requirejs/require.js"></script>
+<script>
+    // Fixture for tools/pin-test.js.
+    //
+    // Layout (bottom -> top layer order):
+    //   layer 0 (main): black background
+    //   layer 1: RED anchor box (50x50) at (100,100); a GREEN child box is
+    //            added to it, then pinned.
+    //   layer 2: a full-canvas BLUE occluder (simulates the smiley layer).
+    //   pin layer (layer 3): the GREEN box is reparented here by pinToTop.
+    //
+    // If pinning works, the GREEN box paints on TOP of the BLUE occluder at
+    // the anchor's position. Moving the anchor moves the GREEN box.
+    //
+    // window.__ready flips true after first paint.
+    // window.__moveAnchor(dx,dy) shifts the anchor and repaints.
+    require.config({ baseUrl: '/app/scripts/' });
+    require(['main'], function () {
+        require([
+            'easeljs',
+            'CatLab/Easelbone/Views/Root',
+            'CatLab/Easelbone/FrontController'
+        ], function (createjs, RootView, easelbone) {
+            // FrontController returns the easelbone namespace object (the same
+            // object the built bundle exposes as `easelbone`), including
+            // pinToTop / unpinFromTop.
+
+            var root = new RootView({ canvas: document.getElementById('canvas') });
+
+            // layer 1: anchor + green child
+            var anchorLayer = root.nextLayer('anchor');
+            var anchor = new createjs.Container();
+            anchor.x = 100; anchor.y = 100;
+            anchor.setBounds(0, 0, 50, 50);
+            var red = new createjs.Shape();
+            red.graphics.beginFill('#ff0000').drawRect(0, 0, 50, 50);
+            anchor.addChild(red);
+
+            var green = new createjs.Shape();
+            green.graphics.beginFill('#00ff00').drawRect(0, 0, 50, 50);
+            anchor.addChild(green);
+            anchorLayer.container.addChild(anchor);
+
+            // layer 2: full blue occluder
+            var occLayer = root.nextLayer('occluder');
+            var blue = new createjs.Shape();
+            blue.graphics.beginFill('#0000ff').drawRect(0, 0, 400, 400);
+            occLayer.container.addChild(blue);
+
+            // pin layer: above occluder
+            var pinLayer = root.nextLayer('pin');
+            root.setPinContainer(pinLayer.container);
+
+            // main layer background (layer 0)
+            var bg = new createjs.Shape();
+            bg.graphics.beginFill('#000').drawRect(0, 0, 400, 400);
+            root.getLayer('main').container.addChild(bg);
+
+            easelbone.pinToTop(green);
+
+            window.__moveAnchor = function (dx, dy) {
+                anchor.x += dx; anchor.y += dy;
+                root.render();
+            };
+
+            root.render();
+            window.__ready = true;
+        });
+    });
+</script>
+</body>
+</html>
