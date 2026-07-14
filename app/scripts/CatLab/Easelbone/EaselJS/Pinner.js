@@ -37,15 +37,32 @@ define(
                 stage._pinContainer = container;
             },
 
+            // Retry pinning on each tick until obj is attached to a stage.
+            // Gives up after ~5s (300 ticks) so a never-attached object can't
+            // leak a permanent retry loop.
+            _deferPin: function (obj, attempt) {
+                if (obj.getStage()) {
+                    Pinner.pin(obj);
+                    return;
+                }
+                if (attempt >= 300) {
+                    return;
+                }
+                createjs.Ticker.on('tick', function () {
+                    Pinner._deferPin(obj, attempt + 1);
+                }, null, true);
+            },
+
             pin: function (obj) {
                 var stage = obj.getStage();
                 if (!stage) {
-                    // Not on a stage yet; defer until it is added.
-                    var deferred = function () {
-                        obj.off('added', deferred);
-                        Pinner.pin(obj);
-                    };
-                    obj.on('added', deferred);
+                    // Not on a stage yet. We can't rely on obj's 'added'
+                    // event here: obj is typically addChild'd to its
+                    // placeholder BEFORE pinToTop is called, so 'added' has
+                    // already fired and will NOT fire again when an ancestor
+                    // (the placeholder) is later attached to the stage. Retry
+                    // on the ticker until obj is actually on a stage.
+                    Pinner._deferPin(obj, 0);
                     return;
                 }
 

@@ -130,6 +130,34 @@
                 root.render();
             };
 
+            // Deferral: pin an object whose anchor is NOT yet on the stage.
+            // The object is addChild'd to its anchor (so its 'added' event has
+            // already fired) BEFORE pinToTop is called and BEFORE the anchor is
+            // attached to a layer. pinToTop must retry on the ticker and only
+            // complete once the anchor is on the stage.
+            var deferAnchor = null, deferBox = null;
+            window.__deferSetup = function () {
+                deferAnchor = new createjs.Container();
+                deferAnchor.x = 250; deferAnchor.y = 250;
+                deferAnchor.setBounds(0, 0, 40, 40);
+                deferBox = new createjs.Shape();
+                deferBox.__id = 999;
+                deferBox.graphics.beginFill('#00ff00').drawRect(0, 0, 40, 40);
+                deferAnchor.addChild(deferBox); // 'added' fires here, before pinToTop
+                easelbone.pinToTop(deferBox);   // deferBox.getStage() is null -> must defer
+            };
+            window.__deferAttach = function () {
+                anchorLayer.container.addChild(deferAnchor); // now on the stage
+                root.render();
+            };
+            window.__deferBoxPinned = function () {
+                var records = root.stage._pinnedElements || [];
+                for (var i = 0; i < records.length; i++) {
+                    if (records[i].obj === deferBox) { return true; }
+                }
+                return false;
+            };
+
             root.render();
             window.__ready = true;
         });

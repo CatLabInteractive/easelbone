@@ -91,6 +91,19 @@ async function main() {
         if (countAfterRemoveAnchor !== 0) { failures.push('auto-teardown: expected 0 tracked records, got ' + countAfterRemoveAnchor); }
         if (isGreen(teardownSpot)) { failures.push('auto-teardown: expected GREEN to be gone at (225,125), still green'); }
 
+        // Deferral: pinning an object whose anchor isn't on the stage yet must
+        // retry and complete once the anchor is attached. Regression guard for
+        // the bug where pin() relied on obj's 'added' event, which had already
+        // fired before pinToTop was called and never fired again. Runs after
+        // auto-teardown so its extra record doesn't skew the count above.
+        await page.evaluate('window.__deferSetup()');
+        var pinnedBeforeAttach = await page.evaluate('window.__deferBoxPinned()');
+        if (pinnedBeforeAttach) { failures.push('deferred pin: box should NOT be pinned before its anchor is on the stage'); }
+        await page.evaluate('window.__deferAttach()');
+        await page.waitForTimeout(500);
+        var pinnedAfterAttach = await page.evaluate('window.__deferBoxPinned()');
+        if (!pinnedAfterAttach) { failures.push('deferred pin: box should be pinned after its anchor is attached to the stage'); }
+
         if (errors.length) { failures.push('page errors: ' + errors.join('; ')); }
         await page.close();
     } finally {
