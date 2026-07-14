@@ -1,6 +1,6 @@
 define(
-    ['easeljs'],
-    function (createjs) {
+    ['easeljs', 'CatLab/Easelbone/Utilities/DirtyFlag'],
+    function (createjs, DirtyFlag) {
 
         'use strict';
 
@@ -49,6 +49,15 @@ define(
                     return;
                 }
 
+                // Idempotent: a second pin() on an object that's already
+                // pinned must not re-derive the anchor from obj.parent, since
+                // that's now the pin container, not the original anchor --
+                // which would orphan the real record (wrong key for
+                // _removeByAnchor) and push a bogus, never-torn-down one.
+                if (Pinner._isPinned(stage, obj)) {
+                    return;
+                }
+
                 var anchor = obj.parent;
                 if (!anchor) {
                     return;
@@ -73,6 +82,11 @@ define(
 
                 // Immediate sync: correctly placed even without a running tick.
                 Pinner._syncRecord(stage, record);
+
+                // Reparenting doesn't itself mark the RootView dirty; under
+                // dirtyRendering:true this ensures the pin paints next frame
+                // instead of waiting for an unrelated event or the heartbeat.
+                DirtyFlag.invalidate();
             },
 
             unpin: function (obj) {
@@ -85,9 +99,23 @@ define(
                     if (records[i].obj === obj) {
                         Pinner._restore(records[i]);
                         records.splice(i, 1);
+                        DirtyFlag.invalidate();
                         return;
                     }
                 }
+            },
+
+            _isPinned: function (stage, obj) {
+                var records = stage._pinnedElements;
+                if (!records) {
+                    return false;
+                }
+                for (var i = 0; i < records.length; i++) {
+                    if (records[i].obj === obj) {
+                        return true;
+                    }
+                }
+                return false;
             },
 
             sync: function (stage) {

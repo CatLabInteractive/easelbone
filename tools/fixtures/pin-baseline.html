@@ -22,6 +22,12 @@
     //
     // window.__ready flips true after first paint.
     // window.__moveAnchor(dx,dy) shifts the anchor and repaints.
+    // window.__rePinNewBox() pins a NEW green box to the SAME anchor
+    //   (simulates a re-render that regenerates the pinned content).
+    // window.__pinAgain() calls pinToTop again on the CURRENTLY pinned box
+    //   (idempotent re-pin of the same instance).
+    // window.__pinnedCount() returns stage._pinnedElements.length.
+    // window.__removeAnchor() removes the anchor from its layer (auto-teardown).
     require.config({ baseUrl: '/app/scripts/' });
     require(['main'], function () {
         require([
@@ -45,6 +51,7 @@
             anchor.addChild(red);
 
             var green = new createjs.Shape();
+            green.__id = 1;
             green.graphics.beginFill('#00ff00').drawRect(0, 0, 50, 50);
             anchor.addChild(green);
             anchorLayer.container.addChild(anchor);
@@ -65,9 +72,48 @@
             root.getLayer('main').container.addChild(bg);
 
             easelbone.pinToTop(green);
+            var currentPinned = green;
+            var nextId = 2;
 
             window.__moveAnchor = function (dx, dy) {
                 anchor.x += dx; anchor.y += dy;
+                root.render();
+            };
+
+            // Simulates a re-render that regenerates the pinned content: a
+            // brand-new object instance pinned to the SAME anchor. Should
+            // replace (not stack on top of) the previously pinned box.
+            window.__rePinNewBox = function () {
+                var box = new createjs.Shape();
+                box.__id = nextId++;
+                box.graphics.beginFill('#00ff00').drawRect(0, 0, 50, 50);
+                anchor.addChild(box);
+                easelbone.pinToTop(box);
+                currentPinned = box;
+                root.render();
+                return box.__id;
+            };
+
+            // Calls pinToTop again on the object that's already pinned
+            // (same instance) -- must be a no-op, not a second record.
+            window.__pinAgain = function () {
+                easelbone.pinToTop(currentPinned);
+                root.render();
+            };
+
+            window.__pinnedCount = function () {
+                return root.stage._pinnedElements ? root.stage._pinnedElements.length : 0;
+            };
+
+            window.__pinnedRecordId = function () {
+                var records = root.stage._pinnedElements;
+                return (records && records.length) ? records[0].obj.__id : null;
+            };
+
+            // Removes the anchor from the stage entirely; sync() should
+            // auto-teardown the pin on the next render.
+            window.__removeAnchor = function () {
+                anchorLayer.container.removeChild(anchor);
                 root.render();
             };
 

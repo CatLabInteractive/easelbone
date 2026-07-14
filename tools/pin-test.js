@@ -50,6 +50,37 @@ async function main() {
         if (isGreen(oldSpot)) { failures.push('expected GREEN to have LEFT (125,125), still green'); }
         if (!isGreen(newSpot)) { failures.push('expected GREEN at moved (225,125), got ' + newSpot); }
 
+        // Anchor is now at (200,100), center (225,125).
+
+        // Re-pin replace: a NEW object instance pinned to the SAME anchor
+        // must replace the old pinned record (no stacking/leak) and render
+        // on top at the anchor.
+        var newId = await page.evaluate('window.__rePinNewBox()');
+        var countAfterRepin = await page.evaluate('window.__pinnedCount()');
+        var recordIdAfterRepin = await page.evaluate('window.__pinnedRecordId()');
+        var repinSpot = await pixel(page, 225, 125);
+        if (countAfterRepin !== 1) { failures.push('re-pin replace: expected 1 tracked record, got ' + countAfterRepin); }
+        if (recordIdAfterRepin !== newId) { failures.push('re-pin replace: expected tracked record to be the NEW box (id ' + newId + '), got ' + recordIdAfterRepin); }
+        if (!isGreen(repinSpot)) { failures.push('re-pin replace: expected GREEN at (225,125), got ' + repinSpot); }
+
+        // Idempotent re-pin: calling pinToTop twice on the SAME
+        // already-pinned object must not create a second record.
+        await page.evaluate('window.__pinAgain()');
+        await page.evaluate('window.__pinAgain()');
+        var countAfterIdempotent = await page.evaluate('window.__pinnedCount()');
+        var idempotentSpot = await pixel(page, 225, 125);
+        if (countAfterIdempotent !== 1) { failures.push('idempotent re-pin: expected 1 tracked record, got ' + countAfterIdempotent); }
+        if (!isGreen(idempotentSpot)) { failures.push('idempotent re-pin: expected GREEN to still render at (225,125), got ' + idempotentSpot); }
+
+        // Auto-teardown: removing the anchor from the stage must drop the
+        // pin on the next render (no more paint, no tracked record).
+        await page.evaluate('window.__removeAnchor()');
+        await page.waitForTimeout(200);
+        var countAfterRemoveAnchor = await page.evaluate('window.__pinnedCount()');
+        var teardownSpot = await pixel(page, 225, 125);
+        if (countAfterRemoveAnchor !== 0) { failures.push('auto-teardown: expected 0 tracked records, got ' + countAfterRemoveAnchor); }
+        if (isGreen(teardownSpot)) { failures.push('auto-teardown: expected GREEN to be gone at (225,125), still green'); }
+
         if (errors.length) { failures.push('page errors: ' + errors.join('; ')); }
         await page.close();
     } finally {
