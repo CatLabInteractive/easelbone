@@ -31,7 +31,9 @@ define(
         'CatLab/Easelbone/Utilities/GlobalProperties',
         'CatLab/Easelbone/Utilities/MovieClipHelper',
 
-        'CatLab/FakeWebremote/Models/KeyboardUser'
+        'CatLab/FakeWebremote/Models/KeyboardUser',
+
+        'CatLab/Easelbone/EaselJS/Pinner'
     ],
     function (
         Loader,
@@ -65,7 +67,9 @@ define(
         GlobalProperties,
         MovieClipHelper,
 
-        KeyboardUser
+        KeyboardUser,
+
+        Pinner
     ) {
 
         return {
@@ -108,6 +112,14 @@ define(
                 Filters: {
                     ColorSwapFilter: ColorSwapFilter
                 }
+            },
+
+            pinToTop: function (displayObject) {
+                return Pinner.pin(displayObject);
+            },
+
+            unpinFromTop: function (displayObject) {
+                return Pinner.unpin(displayObject);
             },
 
             FakeWebremote: {

@@ -4,9 +4,10 @@ define(
         'easeljs',
 
         'CatLab/Easelbone/Views/Layer',
-        'CatLab/Easelbone/Utilities/DirtyFlag'
+        'CatLab/Easelbone/Utilities/DirtyFlag',
+        'CatLab/Easelbone/EaselJS/Pinner'
     ],
-    function (Backbone, createjs, Layer, DirtyFlag) {
+    function (Backbone, createjs, Layer, DirtyFlag, Pinner) {
         var i;
         var layer;
 
@@ -151,6 +152,16 @@ define(
             },
 
             /**
+             * Designate the container that pinToTop reparents objects into.
+             * Lets the host control z-order (e.g. above the smiley layer but
+             * below a blackout overlay).
+             * @param container
+             */
+            setPinContainer: function (container) {
+                Pinner.setContainer(this.stage, container);
+            },
+
+            /**
              * Set a view on the main layer.
              * @param view
              */
@@ -239,6 +250,7 @@ define(
                     // Direct paints (render/resize) also reset the heartbeat.
                     this._lastPaintTime = createjs.Ticker.getTime();
                 }
+                Pinner.sync(this.stage);
                 this.stage.update();
             },
 

@@ -1,6 +1,6 @@
 {
   "name": "easelbone",
-  "version": "1.2.7",
+  "version": "1.2.8",
   "main": "dist/scripts/easelbone.js",
   "author": "CatLab Interactive",
   "devDependencies": {
@@ -30,11 +30,12 @@
   },
   "scripts": {
     "update": "node_modules/.bin/bower update",
-    "start" : "grunt",
-    "build" : "grunt",
-    "bump" : "grunt bump",
-    "bump:minor" : "grunt bump:minor",
+    "start": "grunt",
+    "build": "grunt",
+    "bump": "grunt bump",
+    "bump:minor": "grunt bump:minor",
     "smoke": "node tools/smoke-test.js",
-    "test:baseline": "node tools/baseline-test.js"
+    "test:baseline": "node tools/baseline-test.js",
+    "test:pin": "node tools/pin-test.js"
   }
 }
