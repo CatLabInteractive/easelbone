@@ -184,9 +184,12 @@ define(
                     return;
                 }
 
-                // Carry the anchor's bounds so bounds-sizing children (e.g. Fill) size correctly.
+                // Carry the anchor's bounds so bounds-sizing children (e.g. Fill)
+                // size correctly. Only touch bounds when they actually change.
                 var bounds = record.anchor.getBounds();
-                if (bounds) {
+                if (bounds && (record._bw !== bounds.width || record._bh !== bounds.height)) {
+                    record._bw = bounds.width;
+                    record._bh = bounds.height;
                     wrapper.setBounds(0, 0, bounds.width, bounds.height);
                 }
 
@@ -194,6 +197,20 @@ define(
                 //   wrapperLocal = pinContainerConcatenated^-1 * anchorConcatenated
                 var local = container.getConcatenatedMatrix().invert()
                     .appendMatrix(record.anchor.getConcatenatedMatrix());
+
+                // Short-circuit: if the resulting transform is bit-identical to
+                // last frame (a static QR on a still screen), skip the decompose
+                // and the property writes. The matrix reads above are the same
+                // inputs -> same outputs, so an exact compare is safe.
+                var m = record._m || (record._m = { a: 0, b: 0, c: 0, d: 0, tx: 0, ty: 0 });
+                if (
+                    m.a === local.a && m.b === local.b && m.c === local.c &&
+                    m.d === local.d && m.tx === local.tx && m.ty === local.ty
+                ) {
+                    return;
+                }
+                m.a = local.a; m.b = local.b; m.c = local.c;
+                m.d = local.d; m.tx = local.tx; m.ty = local.ty;
 
                 var props = local.decompose(Pinner._props);
                 wrapper.x = props.x;
