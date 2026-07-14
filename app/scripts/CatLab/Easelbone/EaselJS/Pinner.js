@@ -92,6 +92,13 @@ define(
                 ensureContainer(stage).addChild(wrapper);
                 wrapper.addChild(obj); // reparents obj out of anchor; obj's own transform/regX/regY untouched
 
+                // Flag so other machinery that manages an object's place in the
+                // display list (e.g. Placeholder.updateZIndex, which re-inserts
+                // an inner placeholder next to its source element every tick)
+                // can leave a pinned object where the Pinner put it instead of
+                // dragging it back and defeating the pin.
+                obj._pinnedToTop = true;
+
                 stage._pinnedElements.push(record);
 
                 // Immediate sync: correctly placed even without a running tick.
@@ -161,6 +168,7 @@ define(
             },
 
             _restore: function (record) {
+                record.obj._pinnedToTop = false;
                 if (record.obj.parent) {
                     record.obj.parent.removeChild(record.obj);
                 }
@@ -184,9 +192,36 @@ define(
                     return;
                 }
 
-                // Carry the anchor's bounds so bounds-sizing children (e.g. Fill)
-                // size correctly. Only touch bounds when they actually change.
-                var bounds = record.anchor.getBounds();
+                // Positioning needs only the concatenated matrices. Reading
+                // them walks the anchor/container up to the stage, which can
+                // throw (or return null) while the tree is still being built
+                // (e.g. a pin created from a deferred tick during screen init).
+                // If so, leave the pin where it is and place it on a later sync.
+                var anchorMatrix;
+                var containerMatrix;
+                try {
+                    anchorMatrix = record.anchor.getConcatenatedMatrix();
+                    containerMatrix = container.getConcatenatedMatrix();
+                } catch (e) {
+                    return;
+                }
+
+                if (!anchorMatrix || !containerMatrix) {
+                    return;
+                }
+
+                // The anchor's bounds are OPTIONAL -- only used so bounds-sizing
+                // children (e.g. a Fill) can match the anchor's box. getBounds()
+                // walks the anchor's *subtree* and can throw when a descendant
+                // has incomplete bounds; that must NOT block positioning, so
+                // guard it separately and just skip the bounds carry on failure.
+                // Only touch bounds when they actually change.
+                var bounds = null;
+                try {
+                    bounds = record.anchor.getBounds();
+                } catch (e) {
+                    bounds = null;
+                }
                 if (bounds && (record._bw !== bounds.width || record._bh !== bounds.height)) {
                     record._bw = bounds.width;
                     record._bh = bounds.height;
@@ -195,8 +230,7 @@ define(
 
                 // Place the wrapper in the anchor's coordinate space:
                 //   wrapperLocal = pinContainerConcatenated^-1 * anchorConcatenated
-                var local = container.getConcatenatedMatrix().invert()
-                    .appendMatrix(record.anchor.getConcatenatedMatrix());
+                var local = containerMatrix.invert().appendMatrix(anchorMatrix);
 
                 // Short-circuit: if the resulting transform is bit-identical to
                 // last frame (a static QR on a still screen), skip the decompose

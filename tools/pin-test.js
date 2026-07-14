@@ -112,6 +112,13 @@ async function main() {
         var pinnedAfterAttach = await page.evaluate('window.__deferBoxPinned()');
         if (!pinnedAfterAttach) { failures.push('deferred pin: box should be pinned after its anchor is attached to the stage'); }
 
+        // Crash guard: an anchor whose getBounds() throws on first access must
+        // not break the tick loop; the pin still places once it stops throwing.
+        await page.evaluate('window.__pinThrowingAnchor()');
+        await page.waitForTimeout(100);
+        var throwSpot = await pixel(page, 315, 315);
+        if (!isGreen(throwSpot)) { failures.push('throwing-anchor: expected GREEN at (315,315), got ' + throwSpot); }
+
         if (errors.length) { failures.push('page errors: ' + errors.join('; ')); }
         await page.close();
     } finally {

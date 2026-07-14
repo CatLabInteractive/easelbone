@@ -165,6 +165,29 @@
                 return false;
             };
 
+            // Crash guard + positioning: pin against an anchor whose getBounds()
+            // throws on EVERY access (as a MovieClip with an incomplete-bounds
+            // descendant does). _syncRecord must (a) not let the exception break
+            // the tick loop and (b) STILL position the pin from the anchor's
+            // matrix -- getBounds is only for optional child-sizing and must not
+            // block positioning. The anchor is at (300,300), so the pinned box
+            // must render there, not stuck at the pin container's origin.
+            window.__pinThrowingAnchor = function () {
+                var throwing = new createjs.Container();
+                throwing.x = 300; throwing.y = 300;
+                throwing.setBounds(0, 0, 30, 30);
+                throwing.getBounds = function () {
+                    throw new TypeError("Cannot read properties of undefined (reading 'x')");
+                };
+                var box = new createjs.Shape();
+                box.graphics.beginFill('#00ff00').drawRect(0, 0, 30, 30);
+                throwing.addChild(box);
+                anchorLayer.container.addChild(throwing);
+                easelbone.pinToTop(box);  // anchor = throwing; getBounds always throws
+                root.render();
+                root.render();
+            };
+
             root.render();
             window.__ready = true;
         });
