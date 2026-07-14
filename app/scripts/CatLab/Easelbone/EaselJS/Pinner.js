@@ -215,19 +215,36 @@ define(
                 // walks the anchor's *subtree* and can throw when a descendant
                 // has incomplete bounds; that must NOT block positioning, so
                 // guard it separately and just skip the bounds carry on failure.
+                // Only touch bounds when they actually change.
                 var bounds = null;
                 try {
                     bounds = record.anchor.getBounds();
                 } catch (e) {
                     bounds = null;
                 }
-                if (bounds) {
+                if (bounds && (record._bw !== bounds.width || record._bh !== bounds.height)) {
+                    record._bw = bounds.width;
+                    record._bh = bounds.height;
                     wrapper.setBounds(0, 0, bounds.width, bounds.height);
                 }
 
                 // Place the wrapper in the anchor's coordinate space:
                 //   wrapperLocal = pinContainerConcatenated^-1 * anchorConcatenated
                 var local = containerMatrix.invert().appendMatrix(anchorMatrix);
+
+                // Short-circuit: if the resulting transform is bit-identical to
+                // last frame (a static QR on a still screen), skip the decompose
+                // and the property writes. The matrix reads above are the same
+                // inputs -> same outputs, so an exact compare is safe.
+                var m = record._m || (record._m = { a: 0, b: 0, c: 0, d: 0, tx: 0, ty: 0 });
+                if (
+                    m.a === local.a && m.b === local.b && m.c === local.c &&
+                    m.d === local.d && m.tx === local.tx && m.ty === local.ty
+                ) {
+                    return;
+                }
+                m.a = local.a; m.b = local.b; m.c = local.c;
+                m.d = local.d; m.tx = local.tx; m.ty = local.ty;
 
                 var props = local.decompose(Pinner._props);
                 wrapper.x = props.x;
