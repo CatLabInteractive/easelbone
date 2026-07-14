@@ -1,8 +1,9 @@
 define(
 	[
-		'easeljs'
+		'easeljs',
+		'CatLab/Easelbone/Utilities/DirtyFlag'
 	],
-	function (createjs) {
+	function (createjs, DirtyFlag) {
 
 		var U200D = String.fromCharCode(0x200D);
 		var UFE0Fg = /\uFE0F/g;
@@ -10,6 +11,20 @@ define(
 
 		var emojiList = {};
 		var emojiPlaceholder = '  ';
+
+		var emojiListVersion = 0;
+		var sortedGlobalKeys = null;
+
+		function byLengthDesc(a, b) {
+			return b.length - a.length;
+		}
+
+		function getGlobalSortedKeys() {
+			if (sortedGlobalKeys === null) {
+				sortedGlobalKeys = Object.keys(emojiList).sort(byLengthDesc);
+			}
+			return sortedGlobalKeys;
+		}
 
 		var Text = createjs.Text;
 
@@ -20,17 +35,53 @@ define(
 			this._lastReplacedText = null;
 			this._lastReplacedResult = null;
 
+			this._sortedKeys = null;
+			this._sortedKeysVersion = -1;
+
 			this.snapToPixel = true;
 		}
 
 		EmojiText.setEmojis = function (aEmojis) {
 			emojiList = aEmojis;
+			emojiListVersion++;
+			sortedGlobalKeys = null;
 		};
 
 		var p = createjs.extend(EmojiText, Text);
 
 		p.setEmojis = function (aEmojis) {
 			this._additionalEmojis = aEmojis;
+			this._sortedKeys = null;
+			this._lastReplacedText = null;
+		};
+
+		/**
+		 * Sorted (longest first) list of all emoji keys applicable to this
+		 * instance. Cached; rebuilt only when the emoji lists change.
+		 * @returns {Array}
+		 * @private
+		 */
+		p._getSortedEmojiKeys = function () {
+			var hasAdditional = false;
+			for (var k in this._additionalEmojis) {
+				if (this._additionalEmojis.hasOwnProperty(k)) {
+					hasAdditional = true;
+					break;
+				}
+			}
+
+			if (!hasAdditional) {
+				return getGlobalSortedKeys();
+			}
+
+			if (this._sortedKeys !== null && this._sortedKeysVersion === emojiListVersion) {
+				return this._sortedKeys;
+			}
+
+			var merged = Object.assign({}, emojiList, this._additionalEmojis);
+			this._sortedKeys = Object.keys(merged).sort(byLengthDesc);
+			this._sortedKeysVersion = emojiListVersion;
+			return this._sortedKeys;
 		};
 
 		/**
@@ -128,17 +179,16 @@ define(
 			var strW = ctx.measureText(str).width;
 			var alignOffset = Text.H_OFFSETS[this.textAlign || "left"];
 
-			for (var index in this._emoji) {
-				index = parseInt(index);
+			for (var e = 0; e < this._emoji.length; e++) {
+				var entry = this._emoji[e];
 				if (
-					this._emoji.hasOwnProperty(index) &&
-					index >= charCount &&
-					index < (charCount + str.length)
+					entry.index >= charCount &&
+					entry.index < (charCount + str.length)
 				) {
 					this._drawEmoji(
 						ctx,
-						this._emoji[index],
-						strW * alignOffset + ctx.measureText(str.substring(0, index - charCount)).width,
+						entry.data,
+						strW * alignOffset + ctx.measureText(str.substring(0, entry.index - charCount)).width,
 						y,
 						lineHeight
 					);
@@ -198,12 +248,7 @@ define(
 			this._lastReplacedText = text;
 			this._emoji = [];
 
-			var allEmojis = Object.assign({}, emojiList, this._additionalEmojis);
-
-			// Sort emoji keys by length descending for longest match first
-			var emojiKeys = Object.keys(allEmojis).sort(function (a, b) {
-				return b.length - a.length;
-			});
+			var emojiKeys = this._getSortedEmojiKeys();
 
 			var replacedText = '';
 			var outputIndex = 0;
@@ -217,7 +262,7 @@ define(
 					if (text.substr(i, emoji.length) === emoji) {
 						let replaced = this._replaceEmoji(emoji);
 						if (replaced) {
-							this._emoji[outputIndex] = replaced;
+							this._emoji.push({ index: outputIndex, data: replaced });
 							replacedText += replaced.replacement;
 							outputIndex += replaced.replacement.length;
 							i += emoji.length;
@@ -303,6 +348,7 @@ define(
 
 		p._requestRedraw = function () {
 			this._redrawRequested = true;
+			DirtyFlag.invalidate();
 		};
 
 		return createjs.promote(EmojiText, "Text");

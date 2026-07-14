@@ -1,0 +1,43 @@
+name: Smoke Tests
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+jobs:
+  smoke-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install npm dependencies
+        run: npm install
+
+      - name: Install bower dependencies
+        run: npx bower install --allow-root
+
+      - name: Build
+        run: npm run build
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Serve built site
+        run: |
+          npx http-server dist -p 8080 --silent &
+          sleep 2
+
+      - name: Run smoke tests
+        run: npm run smoke
+
+      - name: Run BigText baseline tests
+        run: npm run test:baseline

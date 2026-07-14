@@ -51,7 +51,8 @@
 					createjs.Ticker.timingMode = createjs.Ticker.TIMEOUT;
 					createjs.Ticker.setFPS (24);
 
-					var rootView = new easelbone.Views.Root ({'container': document.getElementById ('container') });
+					var dirtyRendering = /[?&]dirtyRendering=1/.test(window.location.search);
+					var rootView = new easelbone.Views.Root ({'container': document.getElementById ('container'), 'dirtyRendering': dirtyRendering });
 
 					rootView.stage.enableMouseOver(20);
 

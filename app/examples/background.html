@@ -51,7 +51,8 @@
 					createjs.Ticker.timingMode = createjs.Ticker.TIMEOUT;
 					createjs.Ticker.setFPS (24);
 
-					var rootView = new easelbone.Views.Root ({'container': document.getElementById ('container') });
+					var dirtyRendering = /[?&]dirtyRendering=1/.test(window.location.search);
+					var rootView = new easelbone.Views.Root ({'container': document.getElementById ('container'), 'dirtyRendering': dirtyRendering });
 
 					rootView.stage.enableMouseOver(20);
 
@@ -87,7 +88,23 @@
 								var placeholder = new easelbone.EaselJS.Placeholder(this.view.placeholder);
 
 								var img = new Image();
-								img.src = 'http://static.guim.co.uk/sys-images/Guardian/Pix/pictures/2014/4/11/1397210130748/Spring-Lamb.-Image-shot-2-011.jpg';
+								img.src = (function () {
+									// Generate the demo image locally: external hotlinks taint the
+									// canvas and break offline/CI runs.
+									var c = document.createElement('canvas');
+									c.width = 400;
+									c.height = 300;
+									var ctx = c.getContext('2d');
+									var grad = ctx.createLinearGradient(0, 0, 400, 300);
+									grad.addColorStop(0, '#4a90d9');
+									grad.addColorStop(1, '#d94a90');
+									ctx.fillStyle = grad;
+									ctx.fillRect(0, 0, 400, 300);
+									ctx.fillStyle = '#ffffff';
+									ctx.font = '30px sans-serif';
+									ctx.fillText('easelbone', 130, 160);
+									return c.toDataURL('image/png');
+								})();
 
 								var fill = new easelbone.EaselJS.Fill(img);
 								placeholder.addChild(fill);

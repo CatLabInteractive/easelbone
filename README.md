@@ -10,6 +10,7 @@ A GUI engine combining [EaselJS](https://createjs.com/easeljs) and [Backbone.js]
 - Alpha mask support
 - Asset loading and management
 - Built on top of AMD modules (RequireJS)
+- Opt-in dirty rendering (`new easelbone.Views.Root({ ..., dirtyRendering: true })`): the stage ticks every frame but repaints only when something changed — MovieClip frames, tweens, text redraws, mouse activity, or an explicit `rootView.invalidate()` call. Views can return `false` from `tick()` when static to skip repaints entirely. `rootView.heartbeatInterval` (ms, default `1000`) controls the safety-net repaint cadence that guarantees a periodic redraw even if nothing else invalidates the stage.
 
 ## Documentation
 
@@ -36,6 +37,7 @@ Live examples are hosted on GitHub Pages:
 - [Background & Fill](https://catlabinteractive.github.io/easelbone/examples/background.html) — Background fill and placeholder demo
 - [BigText](https://catlabinteractive.github.io/easelbone/examples/bigtext.html) — Auto-sizing text rendering demo
 - [Emoji Text](https://catlabinteractive.github.io/easelbone/examples/emoji.html) — Text rendering with emoji support
+- [Benchmark](https://catlabinteractive.github.io/easelbone/examples/benchmark.html) — Performance stress test with paint/tick statistics
 
 Pull request previews are automatically deployed to `https://catlabinteractive.github.io/easelbone/pr/<PR_NUMBER>/examples/`.
 
@@ -51,7 +53,20 @@ npm run build
 
 # Watch for changes
 npx grunt watch
+
+# Headless tests (need `npx playwright install chromium` once)
+npx http-server dist -p 8080 --silent &   # serve the build first
+npm run smoke                             # every example page renders cleanly
+npm run test:baseline                     # BigText vertical centering (self-serving)
 ```
+
+Note: `BigText` fits and centers text on the measured glyph bounds
+(`TextMetrics.actualBoundingBox*`), so the drawn ink never leaves the
+available space and manual `BigText.setFontOffset(...)` calls are no longer
+needed in modern browsers — even for decorative fonts whose glyphs extend
+beyond their em box or advance widths. Registering an offset still works and
+takes precedence (restoring the fully legacy behavior for that font), as does
+the legacy heuristic on browsers without extended TextMetrics.
 
 ## License
 

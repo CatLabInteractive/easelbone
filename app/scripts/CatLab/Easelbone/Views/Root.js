@@ -3,9 +3,10 @@ define(
         'backbone',
         'easeljs',
 
-        'CatLab/Easelbone/Views/Layer'
+        'CatLab/Easelbone/Views/Layer',
+        'CatLab/Easelbone/Utilities/DirtyFlag'
     ],
-    function (Backbone, createjs, Layer) {
+    function (Backbone, createjs, Layer, DirtyFlag) {
         var i;
         var layer;
 
@@ -65,6 +66,24 @@ define(
                 this.mainLayer = this.nextLayer('main');
 
 				this.snapToPixel = typeof(options.snapToPixel) !== 'undefined' ? options.snapToPixel : false;
+
+                this.dirtyRendering = typeof(options.dirtyRendering) !== 'undefined' ? !!options.dirtyRendering : false;
+                this.heartbeatInterval = 1000;
+                this._lastPaintTime = 0;
+
+                if (this.dirtyRendering) {
+                    // Split EaselJS's combined tick-and-paint: we tick the
+                    // stage every frame ourselves and paint only when dirty.
+                    this.stage.tickOnUpdate = false;
+
+                    DirtyFlag.installMovieClipHook(createjs);
+
+                    // Mouse interaction changes hover/press visuals.
+                    var invalidate = this.invalidate.bind(this);
+                    this.stage.on('stagemousedown', invalidate);
+                    this.stage.on('stagemouseup', invalidate);
+                    this.stage.on('stagemousemove', invalidate);
+                }
 
                 // Ticker
                 //createjs.Ticker.timingMode = createjs.Ticker.RAF_SYNCHED;
@@ -143,12 +162,17 @@ define(
             },
 
             /**
+             * Force a repaint on the next frame (dirty rendering mode).
+             */
+            invalidate: function () {
+                DirtyFlag.invalidate();
+            },
+
+            /**
              *
              * @param event
              */
             tick: function (event) {
-                // Listen to the voice
-                //Speech.onRenderFrame ();
                 this.trigger('tick:before', event);
                 this.dirty = false;
 
@@ -159,12 +183,36 @@ define(
                     }
                 }
 
-                if (this.dirty) {
+                if (this.dirtyRendering) {
+                    // Advance the display list (MovieClips, BigText change
+                    // detection) without painting; paint only when dirty.
+                    this.stage.tick(event);
+
+                    if (DirtyFlag.consume()) {
+                        this.dirty = true;
+                    }
+
+                    if (
+                        typeof (createjs.Tween) !== 'undefined' &&
+                        createjs.Tween.hasActiveTweens &&
+                        createjs.Tween.hasActiveTweens()
+                    ) {
+                        this.dirty = true;
+                    }
+
+                    // Self-healing safety net: never go longer than the
+                    // heartbeat interval without a paint.
+                    if (event.time - this._lastPaintTime >= this.heartbeatInterval) {
+                        this.dirty = true;
+                    }
+
+                    if (this.dirty) {
+                        this._lastPaintTime = event.time;
+                        this.update();
+                    }
+                } else if (this.dirty) {
                     this.update();
                 }
-
-                // Update the stage.
-                //this.stage.handleEvent ("tick", event);
 
                 this.trigger('tick:after');
             },
@@ -187,6 +235,10 @@ define(
              *
              */
             update: function () {
+                if (this.dirtyRendering) {
+                    // Direct paints (render/resize) also reset the heartbeat.
+                    this._lastPaintTime = createjs.Ticker.getTime();
+                }
                 this.stage.update();
             },
 
