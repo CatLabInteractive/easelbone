@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head lang="en"><title>Pinner + Placeholder z-index repro</title><style>body{margin:0}</style></head>
+<body>
+<canvas id="canvas" width="400" height="400"></canvas>
+<script src="/app/scripts/vendor/requirejs/require.js"></script>
+<script>
+    // Pinning a Placeholder must survive Placeholder.updateZIndex, which runs
+    // every tick of the source element and re-inserts the inner placeholder
+    // next to it. If it drags the pinned placeholder back into the screen, the
+    // pinned content falls BELOW the occluder (the emoji layer). We pin the
+    // inner placeholder, add a GREEN box to it, tick a few times, and check
+    // the box still paints ON TOP of the BLUE occluder.
+    require.config({ baseUrl: '/app/scripts/' });
+    require(['main'], function () {
+        require([
+            'easeljs',
+            'CatLab/Easelbone/Views/Root',
+            'CatLab/Easelbone/FrontController',
+            'CatLab/Easelbone/Utilities/MovieClipHelper'
+        ], function (createjs, RootView, easelbone, helper) {
+            var root = new RootView({ canvas: document.getElementById('canvas') });
+
+            var bg = new createjs.Shape();
+            bg.graphics.beginFill('#000').drawRect(0, 0, 400, 400);
+            root.getLayer('main').container.addChild(bg);
+
+            // Screen movieclip with a named qrCode child at (100,100).
+            var mcLayer = root.nextLayer('mc');
+            var screen = new createjs.Container();
+            var qrCodeEl = new createjs.Container();
+            qrCodeEl.name = 'qrCode';
+            qrCodeEl.x = 100; qrCodeEl.y = 100;
+            qrCodeEl.setBounds(0, 0, 50, 50);
+            var pink = new createjs.Shape();
+            pink.graphics.beginFill('#ff00ff').drawRect(0, 0, 50, 50);
+            qrCodeEl.addChild(pink);
+            screen.qrCode = qrCodeEl;          // Animate-style named property
+            screen.addChild(qrCodeEl);
+            mcLayer.container.addChild(screen);
+
+            // Full-canvas BLUE occluder (the emoji layer).
+            var occLayer = root.nextLayer('occluder');
+            var blue = new createjs.Shape();
+            blue.graphics.beginFill('#0000ff').drawRect(0, 0, 400, 400);
+            occLayer.container.addChild(blue);
+
+            var pinLayer = root.nextLayer('pin');
+            root.setPinContainer(pinLayer.container);
+
+            // Turn qrCode into a Placeholder and pin the placeholder itself.
+            var placeholder = helper.findPlaceholders('qrCode', screen)[0];
+            root.render(); // let updateBounds run so the placeholder is sized/placed
+            easelbone.pinToTop(placeholder);
+            var green = new createjs.Shape();
+            green.graphics.beginFill('#00ff00').drawRect(0, 0, 50, 50);
+            placeholder.addChild(green);
+            root.render();
+
+            window.__centerRGB = function () {
+                var d = document.getElementById('canvas').getContext('2d').getImageData(125, 125, 1, 1).data;
+                return [d[0], d[1], d[2]];
+            };
+            window.__tick = function () {
+                // Drive several ticks+renders so updateZIndex runs repeatedly.
+                for (var i = 0; i < 5; i++) {
+                    createjs.Ticker.dispatchEvent('tick');
+                    root.render();
+                }
+            };
+            window.__placeholderInPinLayer = function () {
+                return placeholder.parent && placeholder.parent.parent === pinLayer.container;
+            };
+            window.__ready = true;
+        });
+    });
+</script>
+</body>
+</html>
