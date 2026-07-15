@@ -106,7 +106,10 @@
                 var box = new createjs.Shape();
                 box.graphics.beginFill('#888888').drawRect(0, 0, 200, 200);
                 modal.addChild(box);
-                modal.x = 100; modal.y = 100;
+                // Bottom-right quadrant: must NOT cover the probed anchor
+                // spot (125,125) so pixel checks see park/lift state while
+                // the modal is attached.
+                modal.x = 200; modal.y = 200;
                 modals[name] = modal;
                 easelbone.suppressPins(modal);
             };
@@ -141,6 +144,12 @@
 
             window.__pinsHiddenFlag = function () {
                 return !!root.stage._pinsHidden;
+            };
+
+            // Force a repaint: suppression state changes on Ticker ticks,
+            // which don't repaint a non-dirty-rendering root by themselves.
+            window.__render = function () {
+                root.render();
             };
 
             root.render();

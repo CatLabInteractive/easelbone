@@ -132,6 +132,107 @@ define(
                 }
             },
 
+            // ---- Modal suppression -------------------------------------
+            // suppress(obj) registers a display object (typically a modal
+            // view's container). While ANY registered object is attached to a
+            // stage, that stage's pins are parked at their anchors. State is
+            // evaluated on the shared Ticker (not the RootView sync) so it
+            // works even when an older easelbone copy owns the render loop;
+            // the outcome is materialized into stage._pinsHidden, which IS
+            // the cross-bundle protocol.
+
+            _suppressors: [],
+            _suppressedStages: [],
+            _suppressTickerHandle: null,
+
+            suppress: function (obj) {
+                for (var i = 0; i < Pinner._suppressors.length; i++) {
+                    if (Pinner._suppressors[i].obj === obj) {
+                        return;
+                    }
+                }
+                Pinner._suppressors.push({ obj: obj, wasAttached: !!obj.stage, attempts: 0 });
+                Pinner._evaluateSuppression();
+                if (!Pinner._suppressTickerHandle && Pinner._suppressors.length) {
+                    Pinner._suppressTickerHandle = createjs.Ticker.on('tick', function () {
+                        Pinner._evaluateSuppression();
+                    });
+                }
+            },
+
+            release: function (obj) {
+                for (var i = 0; i < Pinner._suppressors.length; i++) {
+                    if (Pinner._suppressors[i].obj === obj) {
+                        Pinner._suppressors.splice(i, 1);
+                        break;
+                    }
+                }
+                Pinner._evaluateSuppression();
+            },
+
+            _evaluateSuppression: function () {
+                var i;
+                var stages = [];
+                var suppressors = Pinner._suppressors;
+
+                for (i = suppressors.length - 1; i >= 0; i--) {
+                    var entry = suppressors[i];
+                    var stage = entry.obj.stage;
+                    if (stage) {
+                        entry.wasAttached = true;
+                        if (stages.indexOf(stage) === -1) {
+                            stages.push(stage);
+                        }
+                    } else if (entry.wasAttached) {
+                        // Modal left the stage: suppression over, one-shot.
+                        suppressors.splice(i, 1);
+                    } else if (++entry.attempts >= 300) {
+                        // Never attached within ~5s: give up (same grace as
+                        // _deferPin) so a never-shown modal can't leak.
+                        suppressors.splice(i, 1);
+                    }
+                }
+
+                for (i = 0; i < stages.length; i++) {
+                    if (Pinner._suppressedStages.indexOf(stages[i]) === -1) {
+                        Pinner._setSuppressed(stages[i], true);
+                        Pinner._suppressedStages.push(stages[i]);
+                    }
+                }
+                for (i = Pinner._suppressedStages.length - 1; i >= 0; i--) {
+                    if (stages.indexOf(Pinner._suppressedStages[i]) === -1) {
+                        Pinner._setSuppressed(Pinner._suppressedStages[i], false);
+                        Pinner._suppressedStages.splice(i, 1);
+                    }
+                }
+
+                if (!suppressors.length && !Pinner._suppressedStages.length && Pinner._suppressTickerHandle) {
+                    createjs.Ticker.off('tick', Pinner._suppressTickerHandle);
+                    Pinner._suppressTickerHandle = null;
+                }
+            },
+
+            // Flip a stage's suppression state: write the shared _pinsHidden
+            // flag and park/unpark its records right away (don't wait for a
+            // sync that an older bundle's Pinner might be driving).
+            _setSuppressed: function (stage, suppressed) {
+                stage._pinsHidden = suppressed;
+                var records = stage._pinnedElements;
+                if (records) {
+                    for (var i = 0; i < records.length; i++) {
+                        if (records[i].anchor.stage !== stage) {
+                            continue; // sync() will tear this one down
+                        }
+                        if (suppressed) {
+                            Pinner._park(records[i]);
+                        } else {
+                            Pinner._unpark(records[i]);
+                        }
+                    }
+                }
+                DirtyFlag.invalidate();
+            },
+
             _isPinned: function (stage, obj) {
                 var records = stage._pinnedElements;
                 if (!records) {

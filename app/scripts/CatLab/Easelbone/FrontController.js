@@ -122,6 +122,20 @@ define(
                 return Pinner.unpin(displayObject);
             },
 
+            // Register a modal-like display object: while it is attached to a
+            // stage, that stage's pinned objects are parked back at their
+            // anchors (regular spot, under the modal). Auto-releases when the
+            // object leaves the stage.
+            suppressPins: function (displayObject) {
+                return Pinner.suppress(displayObject);
+            },
+
+            // Explicit counterpart for modals that linger on the stage after
+            // closing (e.g. covered by the next screen instead of removed).
+            releasePins: function (displayObject) {
+                return Pinner.release(displayObject);
+            },
+
             FakeWebremote: {
                 KeyboardUser: KeyboardUser
             },

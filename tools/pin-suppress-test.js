@@ -70,6 +70,70 @@ async function main() {
         if ((await page.evaluate('window.__pinnedParent()')) !== 'wrapper') { failures.push('unparked: obj should be back in wrapper'); }
         if ((await page.evaluate('window.__pinnedToTop()')) !== true) { failures.push('unparked: _pinnedToTop should be true'); }
 
+        // ---- Suppressor registry ----
+
+        // Registering a detached modal does nothing yet.
+        await page.evaluate('window.__registerModal("a")');
+        await page.waitForTimeout(200);
+        await page.evaluate('window.__render()');
+        spot = await pixel(page, 125, 125);
+        if (!isGreen(spot)) { failures.push('detached suppressor: pins must stay lifted, got ' + spot); }
+        if ((await page.evaluate('window.__suppressorCount()')) !== 1) { failures.push('detached suppressor: expected 1 registered'); }
+
+        // Attaching the modal parks the pins (next ticks).
+        await page.evaluate('window.__attachModal("a")');
+        await page.waitForTimeout(300);
+        await page.evaluate('window.__render()');
+        spot = await pixel(page, 125, 125);
+        if (!isBlue(spot)) { failures.push('modal attached: expected parked/BLUE, got ' + spot); }
+        if ((await page.evaluate('window.__pinnedParent()')) !== 'anchor') { failures.push('modal attached: obj should be in anchor'); }
+        if ((await page.evaluate('window.__pinsHiddenFlag()')) !== true) { failures.push('modal attached: _pinsHidden must be written for old-bundle compat'); }
+
+        // Nesting: second modal attached, then first detached -> stays parked.
+        await page.evaluate('window.__registerModal("b")');
+        await page.evaluate('window.__attachModal("b")');
+        await page.waitForTimeout(200);
+        await page.evaluate('window.__render()');
+        await page.evaluate('window.__detachModal("a")');
+        await page.waitForTimeout(300);
+        await page.evaluate('window.__render()');
+        spot = await pixel(page, 125, 125);
+        if (!isBlue(spot)) { failures.push('nesting: expected still parked after first modal closed, got ' + spot); }
+        if ((await page.evaluate('window.__suppressorCount()')) !== 1) { failures.push('nesting: detached suppressor must auto-deregister'); }
+
+        // Last modal detached -> unparked automatically, registry empty.
+        await page.evaluate('window.__detachModal("b")');
+        await page.waitForTimeout(300);
+        await page.evaluate('window.__render()');
+        spot = await pixel(page, 125, 125);
+        if (!isGreen(spot)) { failures.push('last modal closed: expected GREEN again, got ' + spot); }
+        if ((await page.evaluate('window.__pinnedParent()')) !== 'wrapper') { failures.push('last modal closed: obj should be back in wrapper'); }
+        if ((await page.evaluate('window.__suppressorCount()')) !== 0) { failures.push('last modal closed: registry should be empty'); }
+        if ((await page.evaluate('window.__pinsHiddenFlag()')) !== false) { failures.push('last modal closed: _pinsHidden must be cleared'); }
+
+        // Explicit release while still attached -> unparks immediately.
+        await page.evaluate('window.__registerModal("c")');
+        await page.evaluate('window.__attachModal("c")');
+        await page.waitForTimeout(300);
+        await page.evaluate('window.__render()');
+        await page.evaluate('window.__releaseModal("c")');
+        await page.waitForTimeout(200);
+        await page.evaluate('window.__render()');
+        spot = await pixel(page, 125, 125);
+        if (!isGreen(spot)) { failures.push('explicit release: expected GREEN, got ' + spot); }
+        if ((await page.evaluate('window.__suppressorCount()')) !== 0) { failures.push('explicit release: registry should be empty'); }
+        await page.evaluate('window.__detachModal("c")');
+        await page.waitForTimeout(200);
+        await page.evaluate('window.__render()');
+
+        // Grace period: a suppressor that never attaches expires after ~300
+        // evaluations and never affects the pins.
+        await page.evaluate('window.__registerModal("never")');
+        await page.evaluate('window.__tickSuppression(301)');
+        if ((await page.evaluate('window.__suppressorCount()')) !== 0) { failures.push('grace: never-attached suppressor should expire'); }
+        spot = await pixel(page, 125, 125);
+        if (!isGreen(spot)) { failures.push('grace: pins must stay lifted, got ' + spot); }
+
         if (errors.length) { failures.push('page errors: ' + errors.join(' | ')); }
     } finally {
         await browser.close();
