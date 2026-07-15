@@ -47,7 +47,9 @@ async function main() {
         // falling back to a 100x100 default. This requires a per-pin wrapper
         // container -- it fails against pre-fix code that reparents obj
         // directly into the (bounds-less) pin container.
-        // Suppression: hiding pins makes the pinned wrapper invisible; restoring shows it.
+        // Suppression: _pinsHidden parks the pinned box back into its anchor
+        // (under the occluder here), so the spot stops being green; clearing
+        // the flag lifts it back on top.
         await page.evaluate('window.__setPinsHidden(true)');
         var hiddenSpot = await pixel(page, 125, 125);
         if (isGreen(hiddenSpot)) { failures.push('pins hidden: expected GREEN hidden at (125,125), still green'); }

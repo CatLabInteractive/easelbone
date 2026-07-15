@@ -101,8 +101,14 @@ define(
 
                 stage._pinnedElements.push(record);
 
-                // Immediate sync: correctly placed even without a running tick.
-                Pinner._syncRecord(stage, record);
+                // Immediate placement: if the stage is currently suppressed
+                // (e.g. a modal is open) the new pin starts parked; otherwise
+                // sync it into place even without a running tick.
+                if (stage._pinsHidden) {
+                    Pinner._park(record);
+                } else {
+                    Pinner._syncRecord(stage, record);
+                }
 
                 // Reparenting doesn't itself mark the RootView dirty; under
                 // dirtyRendering:true this ensures the pin paints next frame
@@ -139,11 +145,49 @@ define(
                 return false;
             },
 
+            // Park: move a pinned object out of its wrapper and back into its
+            // anchor -- it renders in its regular spot and z-order (e.g. under
+            // an open modal). The record is kept so the pin can resume.
+            _park: function (record) {
+                if (record._parked) {
+                    return;
+                }
+                record._parked = true;
+                record.obj._pinnedToTop = false;
+                if (record.obj.parent === record.wrapper) {
+                    record.wrapper.removeChild(record.obj);
+                }
+                record.anchor.addChild(record.obj);
+                DirtyFlag.invalidate();
+            },
+
+            // Unpark: lift the object back into its pin wrapper; the pin
+            // resumes exactly as before. wrapper.visible is forced true in
+            // case an older Pinner copy hid it while we were parked.
+            _unpark: function (record) {
+                if (!record._parked) {
+                    return;
+                }
+                record._parked = false;
+                if (record.obj.parent) {
+                    record.obj.parent.removeChild(record.obj);
+                }
+                record.wrapper.addChild(record.obj);
+                record.wrapper.visible = true;
+                record.obj._pinnedToTop = true;
+                DirtyFlag.invalidate();
+            },
+
             sync: function (stage) {
                 var records = stage._pinnedElements;
                 if (!records || records.length === 0) {
                     return false;
                 }
+                // _pinsHidden is the shared-stage suppression protocol: set by
+                // the suppressor registry, or manually by older callers. While
+                // set, pins are PARKED at their anchors (regular spot), not
+                // positioned in the pin layer.
+                var suppressed = !!stage._pinsHidden;
                 for (var i = records.length - 1; i >= 0; i--) {
                     var record = records[i];
                     // Auto-teardown: anchor removed from the stage.
@@ -152,7 +196,12 @@ define(
                         records.splice(i, 1);
                         continue;
                     }
-                    Pinner._syncRecord(stage, record);
+                    if (suppressed) {
+                        Pinner._park(record);
+                    } else {
+                        Pinner._unpark(record);
+                        Pinner._syncRecord(stage, record);
+                    }
                 }
                 return records.length > 0;
             },
@@ -169,23 +218,20 @@ define(
 
             _restore: function (record) {
                 record.obj._pinnedToTop = false;
-                if (record.obj.parent) {
+                record._parked = false;
+                if (record.obj.parent && record.obj.parent !== record.anchor) {
                     record.obj.parent.removeChild(record.obj);
                 }
                 if (record.wrapper.parent) {
                     record.wrapper.parent.removeChild(record.wrapper);
                 }
-                if (record.anchor && record.anchor.stage) {
+                if (record.obj.parent !== record.anchor && record.anchor && record.anchor.stage) {
                     record.anchor.addChild(record.obj);
                 }
             },
 
             _syncRecord: function (stage, record) {
                 var wrapper = record.wrapper;
-
-                // Callers can hide all pinned overlays (e.g. while a modal is
-                // open over the pinned QR) by setting stage._pinsHidden.
-                wrapper.visible = !stage._pinsHidden;
 
                 var container = wrapper.parent;
                 if (!container) {
