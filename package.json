@@ -1,6 +1,6 @@
 {
   "name": "easelbone",
-  "version": "1.2.8",
+  "version": "1.2.11",
   "main": "dist/scripts/easelbone.js",
   "author": "CatLab Interactive",
   "devDependencies": {
@@ -37,6 +37,7 @@
     "smoke": "node tools/smoke-test.js",
     "test:baseline": "node tools/baseline-test.js",
     "test:pin": "node tools/pin-test.js",
-    "test:pin:placeholder": "node tools/pin-placeholder-test.js"
+    "test:pin:placeholder": "node tools/pin-placeholder-test.js",
+    "test:pin:suppress": "node tools/pin-suppress-test.js"
   }
 }

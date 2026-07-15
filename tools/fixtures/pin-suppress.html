@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <title>Pinner suppression fixture</title>
+    <style>body { margin: 0; }</style>
+</head>
+<body>
+<canvas id="canvas" width="400" height="400"></canvas>
+<script src="/app/scripts/vendor/requirejs/require.js"></script>
+<script>
+    // Fixture for tools/pin-suppress-test.js.
+    //
+    // Layout (bottom -> top layer order):
+    //   layer 0 (main): black background
+    //   layer 1 (anchor): RED anchor box (50x50) at (100,100); a GREEN child
+    //            box is added to it, then pinned.
+    //   layer 2 (occluder): full-canvas BLUE occluder.
+    //   layer 3 (pin): pin container (setPinContainer).
+    //   layer 4 (modal): where fake "modal" containers get attached.
+    //
+    // Pinned + lifted  -> GREEN paints at the anchor spot (above BLUE).
+    // Parked           -> the green box sits in its anchor UNDER the blue
+    //                     occluder, so the spot paints BLUE.
+    require.config({ baseUrl: '/app/scripts/' });
+    require(['main'], function () {
+        require([
+            'easeljs',
+            'CatLab/Easelbone/Views/Root',
+            'CatLab/Easelbone/FrontController',
+            'CatLab/Easelbone/EaselJS/Pinner'
+        ], function (createjs, RootView, easelbone, Pinner) {
+
+            var root = new RootView({ canvas: document.getElementById('canvas') });
+
+            var anchorLayer = root.nextLayer('anchor');
+            var anchor = new createjs.Container();
+            anchor.x = 100; anchor.y = 100;
+            anchor.setBounds(0, 0, 50, 50);
+            var red = new createjs.Shape();
+            red.graphics.beginFill('#ff0000').drawRect(0, 0, 50, 50);
+            anchor.addChild(red);
+
+            var green = new createjs.Shape();
+            green.graphics.beginFill('#00ff00').drawRect(0, 0, 50, 50);
+            anchor.addChild(green);
+            anchorLayer.container.addChild(anchor);
+
+            var occLayer = root.nextLayer('occluder');
+            var blue = new createjs.Shape();
+            blue.graphics.beginFill('#0000ff').drawRect(0, 0, 400, 400);
+            occLayer.container.addChild(blue);
+
+            var pinLayer = root.nextLayer('pin');
+            root.setPinContainer(pinLayer.container);
+
+            var modalLayer = root.nextLayer('modal');
+
+            var bg = new createjs.Shape();
+            bg.graphics.beginFill('#000').drawRect(0, 0, 400, 400);
+            root.getLayer('main').container.addChild(bg);
+
+            easelbone.pinToTop(green);
+
+            // --- Manual-flag helpers ---
+
+            window.__setPinsHidden = function (b) {
+                root.stage._pinsHidden = b;
+                root.render();
+            };
+
+            // 'anchor' | 'wrapper' | 'other' | 'none'
+            window.__pinnedParent = function () {
+                var records = root.stage._pinnedElements;
+                if (!records || !records.length) { return 'none'; }
+                var r = records[0];
+                if (r.obj.parent === r.anchor) { return 'anchor'; }
+                if (r.obj.parent === r.wrapper) { return 'wrapper'; }
+                return 'other';
+            };
+
+            window.__pinnedToTop = function () {
+                var records = root.stage._pinnedElements;
+                return (records && records.length) ? !!records[0].obj._pinnedToTop : null;
+            };
+
+            window.__pinnedCount = function () {
+                return root.stage._pinnedElements ? root.stage._pinnedElements.length : 0;
+            };
+
+            // Pin a NEW box to the same anchor (used to prove a pin created
+            // while suppressed starts parked).
+            window.__pinNewBox = function () {
+                var box = new createjs.Shape();
+                box.graphics.beginFill('#00ff00').drawRect(0, 0, 50, 50);
+                anchor.addChild(box);
+                easelbone.pinToTop(box);
+                root.render();
+            };
+
+            // --- Suppressor-registry helpers ---
+
+            var modals = {};
+
+            window.__registerModal = function (name) {
+                var modal = new createjs.Container();
+                var box = new createjs.Shape();
+                box.graphics.beginFill('#888888').drawRect(0, 0, 200, 200);
+                modal.addChild(box);
+                // Bottom-right quadrant: must NOT cover the probed anchor
+                // spot (125,125) so pixel checks see park/lift state while
+                // the modal is attached.
+                modal.x = 200; modal.y = 200;
+                modals[name] = modal;
+                easelbone.suppressPins(modal);
+            };
+
+            window.__attachModal = function (name) {
+                modalLayer.container.addChild(modals[name]);
+                root.render();
+            };
+
+            window.__detachModal = function (name) {
+                modalLayer.container.removeChild(modals[name]);
+                root.render();
+            };
+
+            window.__releaseModal = function (name) {
+                easelbone.releasePins(modals[name]);
+                root.render();
+            };
+
+            window.__suppressorCount = function () {
+                return Pinner._suppressors ? Pinner._suppressors.length : 0;
+            };
+
+            // Drive suppression evaluation N times without waiting ~5s of
+            // real ticks (grace-period test).
+            window.__tickSuppression = function (n) {
+                for (var i = 0; i < n; i++) {
+                    Pinner._evaluateSuppression();
+                }
+                root.render();
+            };
+
+            window.__pinsHiddenFlag = function () {
+                return !!root.stage._pinsHidden;
+            };
+
+            // Force a repaint: suppression state changes on Ticker ticks,
+            // which don't repaint a non-dirty-rendering root by themselves.
+            window.__render = function () {
+                root.render();
+            };
+
+            root.render();
+            window.__ready = true;
+        });
+    });
+</script>
+</body>
+</html>
