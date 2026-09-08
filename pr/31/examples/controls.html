@@ -156,7 +156,15 @@
 									triggerViewBack: function () { self.triggerBack (); },
 									viewBacks: function () { return viewBacks; },
 									visibleRows: function () { return dropdown._visibleRows (); },
+									scrollTop: function () { return dropdown._scrollTop; },
 									stageChildren: function () { return rootView.stage.numChildren; },
+									// Move the symbol around the view, to open the list
+									// near an edge of the canvas.
+									moveTo: function (x, y) { dropdownSymbol.x = x; dropdownSymbol.y = y; },
+									canvasSize: function () {
+										var c = rootView.stage.canvas;
+										return { w: c.width, h: c.height };
+									},
 									// Tear the whole view off the display list, as a
 									// screen change would.
 									removeView: function () { self.el.parent.removeChild (self.el); },
