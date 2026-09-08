@@ -62,21 +62,36 @@ async function main() {
         if (Math.abs(panel.y - anchor.y) > 1) { failures.push('popover y ' + panel.y + ', expected ' + anchor.y); }
         if (Math.abs(panel.w - anchor.w) > 1) { failures.push('popover width ' + panel.w + ', expected ' + anchor.w); }
 
+        // The rows are drawn in the symbol's coordinates too, so the whole
+        // panel is exactly as tall as (rows x rowHeight) scaled.
+        var rowHeight = await page.evaluate('window.__dropdown.rowHeight()');
+        var rows = await page.evaluate('window.__dropdown.visibleRows()');
+        var rowPx = rowHeight * anchor.scale;
+        var expectedHeight = rows * rowPx;
+        if (Math.abs(panel.h - expectedHeight) > 2) { failures.push('popover height ' + panel.h + ', expected ' + expectedHeight); }
+
         var probeX = Math.round(panel.x + 6);
         var probeY = Math.round(panel.y + 6);
         var rgb = await pixel(page, probeX, probeY);
         if (!isBackground(rgb)) { failures.push('popover not painted on top: ' + rgb.join(',')); }
 
+        // ... and it is really PAINTED that tall: opaque just inside the bottom
+        // edge, nothing just below it.
+        var midX = Math.round(panel.x + (panel.w / 2));
+        var insideBottom = await pixel(page, midX, Math.round(panel.y + expectedHeight - 4));
+        var belowBottom = await pixel(page, midX, Math.round(panel.y + expectedHeight + 4));
+        if (!isBackground(insideBottom)) { failures.push('popover does not paint down to its scaled bottom edge: ' + insideBottom.join(',')); }
+        if (belowBottom[3] !== 0) { failures.push('popover paints past its scaled bottom edge: ' + belowBottom.join(',')); }
+
         // The selected value ('nl', the second row) starts highlighted, so the
         // second row paints the highlight colour and the first one does not.
-        var rowHeight = await page.evaluate('window.__dropdown.rowHeight()');
-        var highlighted = await pixel(page, probeX, Math.round(panel.y + rowHeight + 6));
+        var highlighted = await pixel(page, probeX, Math.round(panel.y + rowPx + 6));
         if (!isHighlight(highlighted)) { failures.push('selected row is not highlighted: ' + highlighted.join(',')); }
 
         await page.evaluate('window.__dropdown.key("down")');
         await page.waitForTimeout(200);
-        var movedFrom = await pixel(page, probeX, Math.round(panel.y + rowHeight + 6));
-        var movedTo = await pixel(page, probeX, Math.round(panel.y + (2 * rowHeight) + 6));
+        var movedFrom = await pixel(page, probeX, Math.round(panel.y + rowPx + 6));
+        var movedTo = await pixel(page, probeX, Math.round(panel.y + (2 * rowPx) + 6));
         if (!isBackground(movedFrom)) { failures.push('"down" left the old row highlighted: ' + movedFrom.join(',')); }
         if (!isHighlight(movedTo)) { failures.push('"down" did not highlight the next row: ' + movedTo.join(',')); }
 
@@ -111,6 +126,22 @@ async function main() {
         if (await page.evaluate('window.__dropdown.viewBacks()') !== 1) { failures.push('the view did not receive the back press of a closed dropdown'); }
         if (await page.evaluate('window.__dropdown.back()') !== false) { failures.push('closed dropdown swallowed the back press'); }
         if (await page.evaluate('window.__dropdown.changes()') !== 1) { failures.push('triggerBack cancel fired change'); }
+
+        // Tearing the view off the display list with the list open must take the
+        // popover (a stage child) and its stage listener with it. Last step: it
+        // destroys the example view.
+        var stageChildrenClosed = await page.evaluate('window.__dropdown.stageChildren()');
+        await page.evaluate('window.__dropdown.key("a")');            // open again
+        await page.waitForTimeout(100);
+        var stageChildrenOpen = await page.evaluate('window.__dropdown.stageChildren()');
+        if (stageChildrenOpen !== stageChildrenClosed + 1) { failures.push('the open popover is not a stage child (' + stageChildrenClosed + ' -> ' + stageChildrenOpen + ')'); }
+
+        await page.evaluate('window.__dropdown.removeView()');
+        await page.waitForTimeout(200);
+        if (await page.evaluate('window.__dropdown.isOpen()')) { failures.push('the list stayed open after its view was removed'); }
+        var stageChildrenAfter = await page.evaluate('window.__dropdown.stageChildren()');
+        if (stageChildrenAfter !== stageChildrenClosed) { failures.push('the popover was orphaned on the stage (' + stageChildrenClosed + ' -> ' + stageChildrenAfter + ')'); }
+        if (await page.evaluate('window.__dropdown.changes()') !== 1) { failures.push('the teardown committed a value'); }
 
         if (errors.length) { failures.push('page errors: ' + errors.join(' | ')); }
     } finally {

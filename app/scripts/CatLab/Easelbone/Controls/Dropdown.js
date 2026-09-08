@@ -21,6 +21,12 @@ define(
          * click a row to commit, click outside to cancel, wheel to scroll.
          *
          * Events: 'change' (committed value), 'open', 'close'.
+         *
+         * All style metrics (rowHeight, padding, the border and the corner
+         * radius) are given in the SYMBOL's own coordinates and are scaled by
+         * the ancestor transform when the popover is drawn, so the list matches
+         * the symbol on every canvas size. The single exception is `width`,
+         * which - when given - is an absolute stage-pixel width.
          */
         var DEFAULTS = {
             background: '#1e1e1e',
@@ -60,8 +66,12 @@ define(
             this._scrollTop = 0;
             this._panel = null;
             this._panelWidth = 0;
+            this._scale = 1;
+            this._rowPx = this.style.rowHeight;
             this._stage = null;
             this._onStageDown = null;
+            this._onRemoved = null;
+            this._removalListeners = null;
             this._previousWheelCallback = null;
 
             this.element.addEventListener('click', function () {
@@ -188,6 +198,15 @@ define(
             var topLeft = this.element.localToGlobal(bounds.x, bounds.y + bounds.height);
             var topRight = this.element.localToGlobal(bounds.x + bounds.width, bounds.y + bounds.height);
 
+            // Everything the panel draws is expressed in the symbol's own
+            // coordinates, so it has to be scaled by the same factor the
+            // ancestors apply to the symbol.
+            this._scale = bounds.width > 0 ? ((topRight.x - topLeft.x) / bounds.width) : 1;
+            if (!(this._scale > 0)) {
+                this._scale = 1;
+            }
+            this._rowPx = this.style.rowHeight * this._scale;
+
             this._panel.x = topLeft.x;
             this._panel.y = topLeft.y;
             this._panelWidth = this.style.width !== null ? this.style.width : (topRight.x - topLeft.x);
@@ -196,15 +215,22 @@ define(
             this._renderPanel();
 
             this._onStageDown = function (evt) {
+                if (this.element.stage !== this._stage) {
+                    this.close(false);
+                    return;
+                }
+
                 var local = this._panel.globalToLocal(evt.stageX, evt.stageY);
                 var inside = local.x >= 0 && local.x <= this._panelWidth &&
-                    local.y >= 0 && local.y <= this._visibleRows() * this.style.rowHeight;
+                    local.y >= 0 && local.y <= this._visibleRows() * this._rowPx;
 
                 if (!inside && !this._isOnElement(evt.stageX, evt.stageY)) {
                     this.close(false);
                 }
             }.bind(this);
             stage.on('stagemousedown', this._onStageDown);
+
+            this._listenForRemoval();
 
             this._previousWheelCallback = Mousewheel.callback || null;
             Mousewheel.listen(function (delta) {
@@ -213,6 +239,41 @@ define(
 
             DirtyFlag.invalidate();
             this.trigger('open');
+        };
+
+        /**
+         * The panel and the stagemousedown handler live on the stage, not in
+         * the view, so a screen change would orphan both. EaselJS dispatches
+         * 'removed' only on the object that is actually removed and never on
+         * its descendants, so the whole chain between the symbol and the stage
+         * is watched: whichever link leaves the display list closes the list.
+         */
+        Dropdown.prototype._listenForRemoval = function () {
+            this._onRemoved = function () {
+                this.close(false);
+            }.bind(this);
+
+            this._removalListeners = [];
+
+            var node = this.element;
+            while (node && node !== this._stage) {
+                node.on('removed', this._onRemoved);
+                this._removalListeners.push(node);
+                node = node.parent;
+            }
+        };
+
+        Dropdown.prototype._stopListeningForRemoval = function () {
+            if (!this._removalListeners) {
+                return;
+            }
+
+            for (var i = 0; i < this._removalListeners.length; i++) {
+                this._removalListeners[i].off('removed', this._onRemoved);
+            }
+
+            this._removalListeners = null;
+            this._onRemoved = null;
         };
 
         /**
@@ -232,15 +293,25 @@ define(
         };
 
         Dropdown.prototype._renderPanel = function () {
+            if (this.element.stage !== this._stage) {
+                this.close(false);
+                return;
+            }
+
             var panel = this._panel;
             var s = this.style;
+            var scale = this._scale;
             var rows = this._visibleRows();
+            var rowHeight = this._rowPx;
+            var padding = s.padding * scale;
+            var border = 2 * scale;
+            var radius = 8 * scale;
             var w = this._panelWidth;
-            var h = rows * s.rowHeight;
+            var h = rows * rowHeight;
             panel.removeAllChildren();
 
             var bg = new createjs.Shape();
-            bg.graphics.setStrokeStyle(2).beginStroke(s.border).beginFill(s.background).drawRoundRect(0, 0, w, h, 8);
+            bg.graphics.setStrokeStyle(border).beginStroke(s.border).beginFill(s.background).drawRoundRect(0, 0, w, h, radius);
             panel.addChild(bg);
 
             for (var r = 0; r < rows; r++) {
@@ -250,16 +321,16 @@ define(
                 }
 
                 var row = new createjs.Container();
-                row.y = r * s.rowHeight;
+                row.y = r * rowHeight;
 
                 var rowBg = new createjs.Shape();
-                rowBg.graphics.beginFill(i === this._highlight ? s.highlight : s.background).drawRect(2, 1, w - 4, s.rowHeight - 2);
+                rowBg.graphics.beginFill(i === this._highlight ? s.highlight : s.background).drawRect(border, border / 2, w - (2 * border), rowHeight - border);
                 row.addChild(rowBg);
 
                 var text = new BigText(this.allValues[i].text, s.font || undefined, i === this._highlight ? s.textHighlight : s.text, 'left');
-                text.setLimits(w - 2 * s.padding, s.rowHeight - 2 * s.padding);
-                text.x = s.padding;
-                text.y = s.padding;
+                text.setLimits(w - (2 * padding), rowHeight - (2 * padding));
+                text.x = padding;
+                text.y = padding;
                 row.addChild(text);
 
                 row.on('click', (function (index) {
@@ -319,6 +390,8 @@ define(
             }
 
             this._open = false;
+            this._stopListeningForRemoval();
+
             if (this._stage) {
                 this._stage.off('stagemousedown', this._onStageDown);
                 if (this._panel) {

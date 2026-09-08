@@ -155,6 +155,11 @@
 									focus: function () { self.activate (dropdownIndex); },
 									triggerViewBack: function () { self.triggerBack (); },
 									viewBacks: function () { return viewBacks; },
+									visibleRows: function () { return dropdown._visibleRows (); },
+									stageChildren: function () { return rootView.stage.numChildren; },
+									// Tear the whole view off the display list, as a
+									// screen change would.
+									removeView: function () { self.el.parent.removeChild (self.el); },
 									// Where the popover SHOULD be, computed from the raw
 									// symbol coordinates and the scale addCenter gave
 									// the view (the example view is scaled up 800->1024).
@@ -174,7 +179,7 @@
 											x: s.x,
 											y: s.y,
 											w: dropdown._panelWidth,
-											h: dropdown._visibleRows () * dropdown.style.rowHeight
+											h: dropdown._visibleRows () * dropdown._rowPx
 										};
 									}
 								};
