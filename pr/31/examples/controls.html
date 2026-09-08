@@ -54,6 +54,10 @@
 					var dirtyRendering = /[?&]dirtyRendering=1/.test(window.location.search);
 					var rootView = new easelbone.Views.Root ({'container': document.getElementById ('container'), 'dirtyRendering': dirtyRendering });
 
+					// The Dropdown highlights the row under the cursor, which
+					// needs EaselJS' mouseover tracking (off by default).
+					rootView.stage.enableMouseOver (20);
+
 					// Set default properties
 					easelbone.setProperties (assets.properties);
 
@@ -140,6 +144,24 @@
 								var dropdownIndex = this._options.length;
 								this.addControl (dropdown);
 
+								// A second dropdown with a list that is far
+								// longer than its window: keyboard scrolling,
+								// the wheel and the scrollbar all need one.
+								var longSymbol = new assets.SelectBox ();
+								longSymbol.x = 470;
+								longSymbol.y = 230;
+								this.view.addChild (longSymbol);
+
+								var dropdownLong = new easelbone.Controls.Dropdown (longSymbol, { rowHeight: 40, maxRows: 6 });
+								var longValues = {};
+								for (var o = 1; o <= 40; o ++) {
+									longValues['o' + o] = 'Option ' + o;
+								}
+								dropdownLong.setValues (longValues);
+
+								var dropdownLongIndex = this._options.length;
+								this.addControl (dropdownLong);
+
 								var viewBacks = 0;
 								this.setBack (function () { viewBacks++; });
 
@@ -157,6 +179,7 @@
 									viewBacks: function () { return viewBacks; },
 									visibleRows: function () { return dropdown._visibleRows (); },
 									scrollTop: function () { return dropdown._scrollTop; },
+									highlight: function () { return dropdown._highlight; },
 									stageChildren: function () { return rootView.stage.numChildren; },
 									// Move the symbol around the view, to open the list
 									// near an edge of the canvas.
@@ -189,6 +212,53 @@
 											w: dropdown._panelWidth,
 											h: dropdown._visibleRows () * dropdown._rowPx
 										};
+									},
+									index: function () { return dropdownIndex; },
+									// The long (40 option, 6 row) dropdown.
+									long: {
+										key: function (k) { dropdownLong.keyInput (k); },
+										isOpen: function () { return dropdownLong.isOpen (); },
+										value: function () { return dropdownLong.getValue (); },
+										scrollTop: function () { return dropdownLong._scrollTop; },
+										highlight: function () { return dropdownLong._highlight; },
+										index: function () { return dropdownLongIndex; },
+										focus: function () { self.activate (dropdownLongIndex); },
+										panelRect: function () {
+											var p = dropdownLong._panel;
+											var s = p.localToGlobal (0, 0);
+											return {
+												x: s.x,
+												y: s.y,
+												w: dropdownLong._panelWidth,
+												h: dropdownLong._visibleRows () * dropdownLong._rowPx
+											};
+										},
+										// Stage-pixel rect of the i'th VISIBLE row.
+										rowRect: function (i) {
+											var p = dropdownLong._panel;
+											var s = p.localToGlobal (0, i * dropdownLong._rowPx);
+											return {
+												x: s.x,
+												y: s.y,
+												w: dropdownLong._panelWidth,
+												h: dropdownLong._rowPx
+											};
+										},
+										thumbRect: function () {
+											var t = dropdownLong._thumbRect;
+											if (!t) {
+												return null;
+											}
+											var s = dropdownLong._panel.localToGlobal (t.x, t.y);
+											return { x: s.x, y: s.y, w: t.w, h: t.h };
+										}
+									},
+									// The navigatable view itself: focus moves
+									// only when the active control allows it.
+									view: {
+										currentIndex: function () { return self._currentIndex; },
+										next: function () { self.next (); },
+										previous: function () { self.previous (); }
 									}
 								};
 
