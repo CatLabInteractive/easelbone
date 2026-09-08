@@ -42,11 +42,11 @@ define(
          *
          * Events: 'change' (committed value), 'open', 'close'.
          *
-         * All style metrics (rowHeight, padding, the border and the corner
-         * radius) are given in the SYMBOL's own coordinates and are scaled by
-         * the ancestor transform when the popover is drawn, so the list matches
-         * the symbol on every canvas size. The single exception is `width`,
-         * which - when given - is an absolute stage-pixel width.
+         * All style metrics (rowHeight, padding, the border, the corner
+         * radius, and `width`) are given in the SYMBOL's own coordinates
+         * (the same space as `element.nominalBounds`) and are scaled by the
+         * ancestor transform when the popover is drawn, so the list matches
+         * the symbol on every canvas size.
          *
          * The popover opens below the symbol, but its position is clamped to
          * the canvas so the whole visible list stays on screen (it slides up /
@@ -61,6 +61,9 @@ define(
             textHighlight: '#ffffff',
             font: null,
             rowHeight: 48,
+            // Popover width in the element's own units (nominalBounds
+            // space), scaled like every other metric; null = as wide as
+            // the element.
             width: null,
             maxRows: 8,
             padding: 8
@@ -197,7 +200,8 @@ define(
 
             this._panel.x = topLeft.x;
             this._panel.y = topLeft.y;
-            this._panelWidth = this.style.width !== null ? this.style.width : (topRight.x - topLeft.x);
+            this._panelWidth = (typeof this.style.width === 'number' && this.style.width > 0) ?
+                (this.style.width * this._scale) : (topRight.x - topLeft.x);
 
             // Keep the whole visible list on the canvas: a symbol near the
             // bottom (or the right edge) would otherwise open into nothing.
