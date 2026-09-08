@@ -17,6 +17,9 @@
  *  - a long list (40 options, 6 rows) scrolls with the keyboard, the wheel and
  *    the scrollbar, highlights the row under the cursor, and draws a thumb that
  *    is sized and positioned by the visible window
+ *  - clicking a row commits it even when a (5 Hz) mouseover tick repaints the
+ *    highlight between the mousedown and the mouseup, and clicking outside the
+ *    panel cancels
  * Usage: node tools/dropdown-test.js [port]
  */
 var spawn = require('child_process').spawn;
@@ -365,6 +368,72 @@ async function main() {
         await page.evaluate('window.__dropdown.long.key("b")');       // cancel
         await page.waitForTimeout(200);
         if (await page.evaluate('window.__dropdown.long.isOpen()')) { failures.push('the long list stayed open after "b"'); }
+        await page.mouse.move(canvasRect.left + 5, canvasRect.top + 5);
+        await page.waitForTimeout(150);
+
+        // ---- clicking a row commits it, even across a mouseover tick ----
+        // EaselJS only dispatches 'click' when the object under the mouseup is
+        // the SAME object that was under the mousedown (Stage._handlePointerUp:
+        // `if (target == oTarget)`). The hover highlight fires from the
+        // enableMouseOver interval (5 Hz here, as in the game), so a highlight
+        // change that rebuilt the rows would swap that object out from under a
+        // press in progress and the row would never commit. Drive exactly that:
+        // press on row 2, wander to row 3 and back while holding, release.
+        await page.evaluate('window.__dropdown.long.key("a")');       // open
+        await page.waitForTimeout(300);
+        if (!await page.evaluate('window.__dropdown.long.isOpen()')) { failures.push('the long list did not open for the click check'); }
+        var clickChangesBefore = await page.evaluate('window.__dropdown.long.changes()');
+        var clickScroll = await page.evaluate('window.__dropdown.long.scrollTop()');
+        var clickExpected = await page.evaluate('window.__dropdown.long.valueAt(' + (clickScroll + 2) + ')');
+        var clickRow = await page.evaluate('window.__dropdown.long.rowRect(2)');
+        var neighbourRow = await page.evaluate('window.__dropdown.long.rowRect(3)');
+        var clickPoint = toClient(canvasRect, clickRow.x + (clickRow.w * 0.35), clickRow.y + (clickRow.h / 2));
+        var neighbourPoint = toClient(canvasRect, neighbourRow.x + (neighbourRow.w * 0.35), neighbourRow.y + (neighbourRow.h / 2));
+
+        await page.mouse.move(clickPoint.x, clickPoint.y);
+        await page.waitForTimeout(400);                               // settle the highlight on row 2
+        await page.mouse.down();
+        await page.mouse.move(neighbourPoint.x, neighbourPoint.y);
+        await page.waitForTimeout(400);                               // a mouseover tick, mid-press
+        if (await page.evaluate('window.__dropdown.long.highlight()') !== clickScroll + 3) { failures.push('the highlight did not follow the cursor while the button was held'); }
+        await page.mouse.move(clickPoint.x, clickPoint.y);
+        await page.waitForTimeout(400);                               // and another, back on row 2
+        await page.mouse.up();
+        await page.waitForTimeout(300);
+        if (await page.evaluate('window.__dropdown.long.isOpen()')) { failures.push('clicking a row did not close the list'); }
+        if (await page.evaluate('window.__dropdown.long.value()') !== clickExpected) { failures.push('clicking visible row 2 committed ' + await page.evaluate('window.__dropdown.long.value()') + ', expected ' + clickExpected); }
+        if (await page.evaluate('window.__dropdown.long.changes()') !== clickChangesBefore + 1) { failures.push('clicking a row did not fire exactly one change'); }
+
+        // ---- clicking outside cancels ----
+        if (await page.evaluate('window.__dropdown.long.isOpen()')) { await page.evaluate('window.__dropdown.long.key("b")'); }
+        await page.evaluate('window.__dropdown.long.key("a")');       // open again
+        await page.waitForTimeout(300);
+        var outsideValue = await page.evaluate('window.__dropdown.long.value()');
+        var outsideChanges = await page.evaluate('window.__dropdown.long.changes()');
+        var outsidePanel = await page.evaluate('window.__dropdown.long.panelRect()');
+        if (!outsidePanel) {
+            failures.push('the long list is not open for the outside-click check');
+        } else {
+            // Empty canvas well to the left of the panel (and inside the browser
+            // viewport, or the click would never be delivered).
+            var outsideX = 10;
+            var outsideY = outsidePanel.y + 10;
+            if (outsideX >= outsidePanel.x && outsideX <= outsidePanel.x + outsidePanel.w &&
+                outsideY >= outsidePanel.y && outsideY <= outsidePanel.y + outsidePanel.h) {
+                failures.push('the "outside" click point is inside the panel, the cancel check is worthless');
+            }
+            var outsidePoint = toClient(canvasRect, outsideX, outsideY);
+            var viewport = page.viewportSize();
+            if (viewport && (outsidePoint.x > viewport.width || outsidePoint.y > viewport.height)) {
+                failures.push('the "outside" click point is off the viewport, the cancel check is worthless');
+            }
+            await page.mouse.click(outsidePoint.x, outsidePoint.y);
+            await page.waitForTimeout(300);
+            if (await page.evaluate('window.__dropdown.long.isOpen()')) { failures.push('a click outside the panel did not close the list'); }
+            if (await page.evaluate('window.__dropdown.long.value()') !== outsideValue) { failures.push('a click outside the panel changed the value'); }
+            if (await page.evaluate('window.__dropdown.long.changes()') !== outsideChanges) { failures.push('a click outside the panel fired change'); }
+        }
+
         await page.mouse.move(canvasRect.left + 5, canvasRect.top + 5);
         await page.waitForTimeout(150);
 

@@ -92,8 +92,12 @@ define(
             this._scrollTop = 0;
             this._panel = null;
             this._panelWidth = 0;
-            // Panel-local rect of the scrollbar thumb, or null while the list
-            // is short enough to need no scrollbar.
+            // The visible rows, kept alive for the panel's lifetime so a
+            // highlight repaint never invalidates a click in progress.
+            this._rows = null;
+            // The scrollbar thumb Shape and its panel-local rect, or null while
+            // the list is short enough to need no scrollbar.
+            this._thumb = null;
             this._thumbRect = null;
             this._scale = 1;
             this._rowPx = this.style.rowHeight;
@@ -413,6 +417,14 @@ define(
             return Math.min(this.style.maxRows, this.allValues.length);
         };
 
+        /**
+         * Rebuild the whole panel. This is for a NEW window on the list only
+         * (open, or a scroll): it throws every row away, and a row that is
+         * replaced between a mousedown and the matching mouseup never gets its
+         * click - EaselJS only dispatches one when both land on the same
+         * object. A highlight change therefore goes through _paintHighlight,
+         * which repaints the two rows in place.
+         */
         Dropdown.prototype._renderPanel = function () {
             if (this.element.stage !== this._stage) {
                 this.close(false);
@@ -439,6 +451,7 @@ define(
             var gutter = hasScrollbar ? (trackWidth + trackInset) : 0;
 
             panel.removeAllChildren();
+            this._rows = [];
 
             var bg = new createjs.Shape();
             bg.graphics.setStrokeStyle(border).beginStroke(s.border).beginFill(s.background).drawRoundRect(0, 0, w, h, radius);
@@ -454,7 +467,8 @@ define(
                 row.y = r * rowHeight;
 
                 var rowBg = new createjs.Shape();
-                rowBg.graphics.beginFill(i === this._highlight ? s.highlight : s.background).drawRect(border, border / 2, w - (2 * border), rowHeight - border);
+                var rowFill = { x: border, y: border / 2, w: w - (2 * border), h: rowHeight - border };
+                rowBg.graphics.beginFill(i === this._highlight ? s.highlight : s.background).drawRect(rowFill.x, rowFill.y, rowFill.w, rowFill.h);
                 row.addChild(rowBg);
 
                 var text = new BigText(this.allValues[i].text, s.font || undefined, i === this._highlight ? s.textHighlight : s.text, 'left');
@@ -472,27 +486,27 @@ define(
                 }.bind(this))(i));
 
                 // Hovering a row highlights it, the way a native select does.
-                // The re-render replaces the row that dispatched this event, so
-                // EaselJS hands the fresh row another mouseover: the guard is
-                // what stops that from looping.
+                // It repaints, it does NOT rebuild: this handler fires from the
+                // enableMouseOver interval, and rebuilding here would replace
+                // the row between a mousedown and its mouseup and eat the click.
                 row.on('mouseover', (function (index) {
                     return function () {
                         if (!this._open || index === this._highlight) {
                             return;
                         }
+                        var previous = this._highlight;
                         this._highlight = index;
-                        this._renderPanel();
+                        this._paintHighlight(previous, index);
                     }.bind(this);
                 }.bind(this))(i));
 
                 panel.addChild(row);
+                this._rows.push({ index: i, bg: rowBg, text: text, fill: rowFill });
             }
 
+            this._thumb = null;
             this._thumbRect = null;
             if (hasScrollbar) {
-                var thumbHeight = h * (rows / this.allValues.length);
-                var thumbY = h * (this._scrollTop / this.allValues.length);
-
                 var track = new createjs.Shape();
                 track.graphics.setStrokeStyle(1 * scale).beginStroke(s.border).beginFill(s.background).drawRect(trackX, 0, trackWidth, h);
                 // Clicking the track above or below the thumb pages the list.
@@ -510,14 +524,61 @@ define(
                 }.bind(this));
                 panel.addChild(track);
 
-                var thumb = new createjs.Shape();
-                thumb.graphics.beginFill(s.scrollbar).drawRect(trackX, thumbY, trackWidth, thumbHeight);
-                panel.addChild(thumb);
-
-                this._thumbRect = { x: trackX, y: thumbY, w: trackWidth, h: thumbHeight };
+                this._thumb = new createjs.Shape();
+                panel.addChild(this._thumb);
+                this._thumbRect = { x: trackX, y: 0, w: trackWidth, h: 0 };
+                this._paintThumb();
             }
 
             DirtyFlag.invalidate();
+        };
+
+        /**
+         * Repaint the two rows a highlight move touches, in place. The row
+         * containers, their fills and their texts all survive, so a click that
+         * straddles a mouseover tick still reaches the row it started on.
+         */
+        Dropdown.prototype._paintHighlight = function (oldIndex, newIndex) {
+            if (!this._panel || !this._rows) {
+                return;
+            }
+
+            var s = this.style;
+            for (var r = 0; r < this._rows.length; r++) {
+                var row = this._rows[r];
+                if (row.index !== oldIndex && row.index !== newIndex) {
+                    continue;
+                }
+
+                var on = row.index === newIndex;
+                row.bg.graphics.clear().beginFill(on ? s.highlight : s.background).drawRect(row.fill.x, row.fill.y, row.fill.w, row.fill.h);
+                if (typeof (row.text.setColor) === 'function') {
+                    row.text.setColor(on ? s.textHighlight : s.text);
+                }
+            }
+
+            this._paintThumb();
+            DirtyFlag.invalidate();
+        };
+
+        /**
+         * (Re)draw the scrollbar thumb for the current window. Same story as
+         * the rows: the Shape stays, only its graphics are redrawn.
+         */
+        Dropdown.prototype._paintThumb = function () {
+            if (!this._thumb || !this._thumbRect) {
+                return;
+            }
+
+            var rows = this._visibleRows();
+            var h = rows * this._rowPx;
+
+            this._thumbRect.y = h * (this._scrollTop / this.allValues.length);
+            this._thumbRect.h = h * (rows / this.allValues.length);
+
+            this._thumb.graphics.clear()
+                .beginFill(this.style.scrollbar)
+                .drawRect(this._thumbRect.x, this._thumbRect.y, this._thumbRect.w, this._thumbRect.h);
         };
 
         /**
@@ -541,9 +602,18 @@ define(
                 return;
             }
 
+            var previous = this._highlight;
+            var scrollTop = this._scrollTop;
+
             this._highlight = next;
             this._scrollHighlightIntoView();
-            this._renderPanel();
+
+            if (this._scrollTop !== scrollTop) {
+                // The window moved: every row shows a different value now.
+                this._renderPanel();
+            } else {
+                this._paintHighlight(previous, next);
+            }
         };
 
         Dropdown.prototype._scroll = function (delta) {
@@ -574,6 +644,8 @@ define(
             }
 
             this._panel = null;
+            this._rows = null;
+            this._thumb = null;
             this._thumbRect = null;
             this._onStageDown = null;
             this._stage = null;
