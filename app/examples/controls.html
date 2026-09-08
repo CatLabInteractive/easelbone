@@ -40,12 +40,14 @@
 				require ([
 					'backbone',
 					'easeljs',
-					'assets'
+					'assets',
+					'CatLab/Easelbone/Controls/Base'
 				],
 				function (
 					backbone,
 					createjs,
-					assets
+					assets,
+					ControlBase
 				) {
 
 					createjs.Ticker.timingMode = createjs.Ticker.TIMEOUT;
@@ -53,6 +55,12 @@
 
 					var dirtyRendering = /[?&]dirtyRendering=1/.test(window.location.search);
 					var rootView = new easelbone.Views.Root ({'container': document.getElementById ('container'), 'dirtyRendering': dirtyRendering });
+
+					// The Dropdown highlights the row under the cursor, which
+					// needs EaselJS' mouseover tracking (off by default). 5 Hz,
+					// the rate the game uses: slow enough that a mouseover tick
+					// can land between a mousedown and its mouseup.
+					rootView.stage.enableMouseOver (5);
 
 					// Set default properties
 					easelbone.setProperties (assets.properties);
@@ -115,6 +123,207 @@
 
 
 								this.addControl (selectbox);
+
+								// The shared value model (Controls/Choice) is
+								// driven through the accessors from here.
+								window.__easelbone = easelbone;
+								window.__selectbox = {
+									value: function () { return selectbox.value; },
+									index: function () { return selectbox.index; },
+									text: function () { return selectbox.text; },
+									count: function () { return selectbox.values.length; },
+									next: function () { selectbox.next (); },
+									previous: function () { selectbox.previous (); },
+									setValue: function (v) { selectbox.value = v; },
+									setIndex: function (i) { selectbox.index = i; },
+									setText: function (t) { selectbox.text = t; },
+									isChoice: function () {
+										return (selectbox instanceof easelbone.Controls.Choice) &&
+											(selectbox instanceof ControlBase);
+									}
+								};
+
+								// A dropdown on a second selectbox symbol: it draws its
+								// own popover list on the stage, above the (scaled) view.
+								var dropdownSymbol = new assets.SelectBox ();
+								dropdownSymbol.x = 470;
+								dropdownSymbol.y = 140;
+								this.view.addChild (dropdownSymbol);
+
+								var dropdown = new easelbone.Controls.Dropdown (dropdownSymbol, { rowHeight: 40, maxRows: 4 });
+								dropdown.setValues ({
+									'en' : 'English',
+									'nl' : 'Nederlands',
+									'de' : 'Deutsch',
+									'fr' : 'Français',
+									'es' : 'Español',
+									'it' : 'Italiano'
+								});
+								dropdown.value = 'nl';
+
+								var dropdownChanges = 0;
+								dropdown.on ('change', function () { dropdownChanges++; });
+
+								var dropdownIndex = this._options.length;
+								this.addControl (dropdown);
+
+								// A second dropdown with a list that is far
+								// longer than its window: keyboard scrolling,
+								// the wheel and the scrollbar all need one.
+								var longSymbol = new assets.SelectBox ();
+								longSymbol.x = 470;
+								longSymbol.y = 230;
+								this.view.addChild (longSymbol);
+
+								var dropdownLong = new easelbone.Controls.Dropdown (longSymbol, { rowHeight: 40, maxRows: 6 });
+								var longValues = {};
+								for (var o = 1; o <= 40; o ++) {
+									longValues['o' + o] = 'Option ' + o;
+								}
+								dropdownLong.setValues (longValues);
+
+								var dropdownLongChanges = 0;
+								dropdownLong.on ('change', function () { dropdownLongChanges++; });
+
+								var dropdownLongIndex = this._options.length;
+								this.addControl (dropdownLong);
+
+								var viewBacks = 0;
+								this.setBack (function () { viewBacks++; });
+
+								var self = this;
+								window.__dropdown = {
+									ready: true,
+									value: function () { return dropdown.getValue (); },
+									isOpen: function () { return dropdown.isOpen (); },
+									changes: function () { return dropdownChanges; },
+									rowHeight: function () { return dropdown.style.rowHeight; },
+									key: function (k) { dropdown.keyInput (k); },
+									back: function () { return dropdown.onBack (); },
+									focus: function () { self.activate (dropdownIndex); },
+									triggerViewBack: function () { self.triggerBack (); },
+									viewBacks: function () { return viewBacks; },
+									visibleRows: function () { return dropdown._visibleRows (); },
+									scrollTop: function () { return dropdown._scrollTop; },
+									highlight: function () { return dropdown._highlight; },
+									count: function () { return dropdown.allValues.length; },
+									stageChildren: function () { return rootView.stage.numChildren; },
+									// Move the symbol around the view, to open the list
+									// near an edge of the canvas.
+									moveTo: function (x, y) { dropdownSymbol.x = x; dropdownSymbol.y = y; },
+									canvasSize: function () {
+										var c = rootView.stage.canvas;
+										return { w: c.width, h: c.height };
+									},
+									// Tear the whole view off the display list, as a
+									// screen change would.
+									removeView: function () { self.el.parent.removeChild (self.el); },
+									// Where the popover SHOULD be, computed from the raw
+									// symbol coordinates and the scale addCenter gave
+									// the view (the example view is scaled up 800->1024).
+									anchorRect: function () {
+										var b = dropdownSymbol.nominalBounds;
+										return {
+											x: self.view.x + ((dropdownSymbol.x + b.x) * self.view.scaleX),
+											y: self.view.y + ((dropdownSymbol.y + b.y + b.height) * self.view.scaleY),
+											w: b.width * self.view.scaleX,
+											scale: self.view.scaleX
+										};
+									},
+									panelRect: function () {
+										var p = dropdown._panel;
+										if (!p) { return null; }
+										var s = p.localToGlobal (0, 0);
+										return {
+											x: s.x,
+											y: s.y,
+											w: dropdown._panelWidth,
+											h: dropdown._visibleRows () * dropdown._rowPx
+										};
+									},
+									index: function () { return dropdownIndex; },
+									// Shared value model checks (Controls/Choice).
+									isChoice: function () {
+										return (dropdown instanceof easelbone.Controls.Choice) &&
+											(dropdown instanceof ControlBase);
+									},
+									setValue: function (v) { dropdown.value = v; },
+									// The collapsed value: one BigText in the
+									// symbol's value placeholder.
+									textChildren: function () { return dropdown.textElement.children.length; },
+									textString: function () {
+										var child = dropdown.textElement.children[0];
+										return child ? child.textstring : null;
+									},
+									textColor: function () {
+										var child = dropdown.textElement.children[0];
+										return child ? child._color : null;
+									},
+									// A dropdown that never got any values: no
+									// value, no text, and it does not throw.
+									emptyValues: function () {
+										var throwaway = new easelbone.Controls.Dropdown (new assets.SelectBox ());
+										return {
+											getValue: throwaway.getValue (),
+											value: throwaway.value,
+											text: throwaway.text,
+											count: throwaway.values.length
+										};
+									},
+									// The long (40 option, 6 row) dropdown.
+									long: {
+										key: function (k) { dropdownLong.keyInput (k); },
+										isOpen: function () { return dropdownLong.isOpen (); },
+										value: function () { return dropdownLong.getValue (); },
+										changes: function () { return dropdownLongChanges; },
+										valueAt: function (i) { return dropdownLong.allValues[i].value; },
+										scrollTop: function () { return dropdownLong._scrollTop; },
+										highlight: function () { return dropdownLong._highlight; },
+										index: function () { return dropdownLongIndex; },
+										focus: function () { self.activate (dropdownLongIndex); },
+										panelRect: function () {
+											var p = dropdownLong._panel;
+											if (!p) { return null; }
+											var s = p.localToGlobal (0, 0);
+											return {
+												x: s.x,
+												y: s.y,
+												w: dropdownLong._panelWidth,
+												h: dropdownLong._visibleRows () * dropdownLong._rowPx
+											};
+										},
+										// Stage-pixel rect of the i'th VISIBLE row.
+										rowRect: function (i) {
+											var p = dropdownLong._panel;
+											if (!p) { return null; }
+											var s = p.localToGlobal (0, i * dropdownLong._rowPx);
+											return {
+												x: s.x,
+												y: s.y,
+												w: dropdownLong._panelWidth,
+												h: dropdownLong._rowPx
+											};
+										},
+										thumbRect: function () {
+											var t = dropdownLong._thumbRect;
+											if (!t || !dropdownLong._panel) {
+												return null;
+											}
+											var s = dropdownLong._panel.localToGlobal (t.x, t.y);
+											return { x: s.x, y: s.y, w: t.w, h: t.h };
+										}
+									},
+									// The navigatable view itself: focus moves
+									// only when the active control allows it.
+									view: {
+										currentIndex: function () { return self._currentIndex; },
+										next: function () { self.next (); },
+										previous: function () { self.previous (); },
+										// [previous, next] control names: this
+										// view is vertical, so [ 'up', 'down' ].
+										navigation: function () { return self._controls.navigation; }
+									}
+								};
 
 								var button1 = new easelbone.Controls.Button (this.view.button1);
 								button1.setText ("Short text", "sans-serif", "white");

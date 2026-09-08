@@ -1,32 +1,28 @@
 define(
     [
-        'CatLab/Easelbone/Controls/Base',
-        'CatLab/Easelbone/EaselJS/DisplayObjects/BigText',
-        'CatLab/Easelbone/EaselJS/DisplayObjects/TextPlaceholder'
+        'CatLab/Easelbone/Controls/Choice'
     ],
-    function (Base,
-              BigText,
-              TextPlaceholder) {
+    function (Choice) {
 
+        /**
+         * A spinner: the selected value in a `value` text placeholder, with a
+         * `buttons` symbol whose top half selects the next value and whose
+         * bottom half the previous one. The value model itself lives in Choice.
+         */
         var Selectbox = function (element) {
 
-            Base.call(this, element);
-
-            this.repeat = false;
-            this.textcontainer = BigText;
-
-            this.selectedIndex = 0;
-            this.selectedValue = null;
-            this.allValues = [];
-
-            // Check for text placeholder.
-            if (!this.element.value) {
+            // Checked before Choice so the selectbox' own messages survive.
+            if (!element.value) {
                 throw "All selectboxes should have a text placeholder.";
             }
 
-            if (!this.element.buttons) {
+            if (!element.buttons) {
                 throw "All selectboxes must have a buttons object";
             }
+
+            Choice.call(this, element);
+
+            this.repeat = false;
 
             this.element.buttons.on('click', function (evt) {
 
@@ -41,90 +37,11 @@ define(
 
             }.bind(this));
 
-            this.convertText();
-
         };
 
-        // Extend base.
-        Selectbox.prototype = Object.create(Base.prototype);
+        // Extend choice.
+        Selectbox.prototype = Object.create(Choice.prototype);
         Selectbox.prototype.constructor = Selectbox;
-
-        Selectbox.prototype.setText = function (text, font, color) {
-            var bigtext = new this.textcontainer(text, font, color);
-            this.textElement.removeAllChildren();
-            this.textElement.addChild(bigtext);
-        };
-
-        Selectbox.prototype.convertText = function () {
-            this.textElement = new TextPlaceholder(this.element.value);
-        };
-
-        Selectbox.prototype.setValues = function (values) {
-
-            var tmp = [];
-            if (!(values instanceof Array)) {
-                // Check if array of objects, or array of strings
-                for (var ind in values) {
-                    if (values.hasOwnProperty(ind)) {
-                        var v = values[ind];
-                        if (v instanceof Object) {
-                            tmp.push(v);
-                        }
-                        else {
-                            // 't is a map.
-                            tmp.push({
-                                'text': v,
-                                'value': ind
-                            });
-                        }
-                    }
-                }
-            } else {
-                for (var i = 0; i < values.length; i++) {
-                    tmp.push({
-                        'text': values[i],
-                        'value': values[i]
-                    });
-                }
-                values = tmp;
-            }
-
-            this.allValues = tmp;
-            this.select(0);
-        };
-
-        Selectbox.prototype.getValue = function () {
-            return this.value;
-        };
-
-        Selectbox.prototype.select = function (index) {
-
-            if (index < 0 || index > this.values.length - 1)
-                return;
-
-            this.selectedIndex = index;
-            this.selectedValue = this.values[this.selectedIndex];
-
-            this.setText(this.selectedValue.text);
-        };
-
-        Selectbox.prototype.getIndexFromText = function (value) {
-            for (var i = 0; i < this.allValues.length; i++) {
-                if (this.allValues[i].text == value) {
-                    return i;
-                }
-            }
-            return null;
-        };
-
-        Selectbox.prototype.getIndexFromValue = function (value) {
-            for (var i = 0; i < this.allValues.length; i++) {
-                if (this.allValues[i].value == value) {
-                    return i;
-                }
-            }
-            return null;
-        };
 
         Selectbox.prototype.next = function () {
             if (this.selectedIndex < this.allValues.length - 1) {
@@ -157,53 +74,6 @@ define(
             }
 
         };
-
-        Object.defineProperty(Selectbox.prototype, "text", {
-            get: function () {
-                return this.selectedValue.text;
-            },
-            set: function (value) {
-                //alert (value);
-                //this.selectedValue = value;
-                var index = this.getIndexFromText(value);
-                if (index !== null) {
-                    this.index = index;
-                }
-            }
-        });
-
-        Object.defineProperty(Selectbox.prototype, "value", {
-            get: function () {
-                return this.selectedValue.value;
-            },
-
-            set: function (value) {
-                var index = this.getIndexFromValue(value);
-                if (index !== null) {
-                    this.index = index;
-                }
-            }
-        });
-
-        Object.defineProperty(Selectbox.prototype, "index", {
-            get: function () {
-                return this.selectedIndex;
-            },
-
-            set: function (value) {
-                this.select(value);
-            }
-        });
-
-        Object.defineProperty(Selectbox.prototype, "values", {
-            get: function () {
-                return this.allValues;
-            },
-
-            set: function (values) {
-                this.setValues(values);
-            }
-        });
 
         return Selectbox;
 

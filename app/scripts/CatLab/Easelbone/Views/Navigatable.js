@@ -164,13 +164,40 @@ define (
              */
             triggerBack : function(actor)
             {
+                // Give the active control first refusal: an open Dropdown
+                // swallows the press and closes instead of leaving the view.
+                if (this._current && typeof (this._current.onBack) === 'function' && this._current.onBack(actor) === true) {
+                    return;
+                }
+
                 if (this._backCallback !== null) {
                     this._backCallback(actor);
                 }
             },
 
+            /**
+             * Like triggerBack, next/previous give the active control first
+             * refusal: a control whose capturesNavigation() returns true takes
+             * the whole navigation axis (an open Dropdown behaves like a native
+             * <select>: the focus cannot leave it until the list is committed
+             * or cancelled). The press is handed to the control as key input
+             * instead, under the name the VIEW gave it: this._controls.
+             * navigation[1] for next and [0] for previous. A horizontal view
+             * therefore forwards 'right'/'left', which a Dropdown ignores; a
+             * vertical view forwards 'down'/'up', so its own arrow keys move
+             * the highlight - in both cases exactly what a native <select>
+             * does with the keys the reader is already using. A control without
+             * a capturesNavigation() method never captures anything.
+             */
             next : function (actor)
             {
+                if (this._current && typeof (this._current.capturesNavigation) === 'function' && this._current.capturesNavigation()) {
+                    if (typeof (this._current.keyInput) === 'function') {
+                        this._current.keyInput(this._controls.navigation[1], actor);
+                    }
+                    return;
+                }
+
 				if (this._options.length === 0) {
 					return;
 				}
@@ -180,6 +207,13 @@ define (
 
             previous : function (actor)
             {
+                if (this._current && typeof (this._current.capturesNavigation) === 'function' && this._current.capturesNavigation()) {
+                    if (typeof (this._current.keyInput) === 'function') {
+                        this._current.keyInput(this._controls.navigation[0], actor);
+                    }
+                    return;
+                }
+
 				if (this._options.length === 0) {
 					return;
 				}

@@ -35,7 +35,9 @@ async function testPage(browser, baseUrl, url) {
 
     try {
         page.on('console', function (msg) {
-            if (msg.type() === 'error') {
+            // The browser's automatic favicon request is not the page's doing
+            // (some channels ask for it, the bundled chromium does not).
+            if (msg.type() === 'error' && String(msg.location().url).indexOf('favicon.ico') === -1) {
                 errors.push('console: ' + msg.text());
             }
         });
@@ -97,7 +99,7 @@ async function testPage(browser, baseUrl, url) {
 
 (async function main() {
     var baseUrl = process.argv[2] || 'http://localhost:8080';
-    var browser = await chromium.launch();
+    var browser = await chromium.launch({ channel: process.env.PW_CHANNEL || undefined });
     var failures = 0;
 
     for (var p = 0; p < PAGES.length; p++) {
