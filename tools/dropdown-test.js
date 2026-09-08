@@ -5,6 +5,10 @@
  *    row), and closing removes it again
  *  - 'down' moves the highlight, 'a' commits and fires 'change'
  *  - 'back' cancels: value unchanged, no 'change' event
+ *  - a symbol near the bottom of the view opens a list that is clamped inside
+ *    the canvas (every visible row still painted)
+ *  - the wheel, over the panel, scrolls the list (the control's own canvas
+ *    listener, not the Mousewheel singleton)
  * Usage: node tools/dropdown-test.js [port]
  */
 var spawn = require('child_process').spawn;
@@ -126,6 +130,46 @@ async function main() {
         if (await page.evaluate('window.__dropdown.viewBacks()') !== 1) { failures.push('the view did not receive the back press of a closed dropdown'); }
         if (await page.evaluate('window.__dropdown.back()') !== false) { failures.push('closed dropdown swallowed the back press'); }
         if (await page.evaluate('window.__dropdown.changes()') !== 1) { failures.push('triggerBack cancel fired change'); }
+
+        // A symbol near the bottom of the view must not open a list that runs
+        // off the canvas: the panel is clamped so every visible row shows.
+        await page.evaluate('window.__dropdown.moveTo(470, 560)');
+        await page.evaluate('window.__dropdown.key("a")');            // open low
+        await page.waitForTimeout(300);
+        if (!await page.evaluate('window.__dropdown.isOpen()')) { failures.push('the low dropdown did not open'); }
+        var canvas = await page.evaluate('window.__dropdown.canvasSize()');
+        var lowPanel = await page.evaluate('window.__dropdown.panelRect()');
+        var lowAnchor = await page.evaluate('window.__dropdown.anchorRect()');
+        if (!(lowAnchor.y + lowPanel.h > canvas.h)) { failures.push('the low dropdown would have fitted anyway, the clamp check is worthless'); }
+        if (lowPanel.y + lowPanel.h > canvas.h + 1) { failures.push('popover runs off the canvas bottom: ' + (lowPanel.y + lowPanel.h) + ' > ' + canvas.h); }
+        if (Math.abs(lowPanel.y - (canvas.h - lowPanel.h)) > 1) { failures.push('popover not clamped to the canvas bottom: y ' + lowPanel.y + ', expected ' + (canvas.h - lowPanel.h)); }
+        var lowInsideBottom = await pixel(page, Math.round(lowPanel.x + (lowPanel.w / 2)), Math.round(lowPanel.y + lowPanel.h - 4));
+        if (!isBackground(lowInsideBottom)) { failures.push('the clamped popover does not paint its last row: ' + lowInsideBottom.join(',')); }
+
+        // The wheel is the control's own DOM listener on the canvas: it must
+        // scroll the list while the pointer is over the panel.
+        var canvasRect = await page.evaluate(function () {
+            var c = document.getElementById('container').getElementsByTagName('canvas')[0];
+            var r = c.getBoundingClientRect();
+            return { left: r.left, top: r.top, sx: r.width / c.width, sy: r.height / c.height };
+        });
+        var scrollBefore = await page.evaluate('window.__dropdown.scrollTop()');
+        await page.mouse.move(
+            canvasRect.left + ((lowPanel.x + (lowPanel.w / 2)) * canvasRect.sx),
+            canvasRect.top + ((lowPanel.y + (lowPanel.h / 2)) * canvasRect.sy)
+        );
+        await page.mouse.wheel(0, 120);
+        await page.waitForTimeout(200);
+        var scrollAfter = await page.evaluate('window.__dropdown.scrollTop()');
+        if (scrollAfter !== scrollBefore + 1) { failures.push('wheel over the panel did not scroll the list: ' + scrollBefore + ' -> ' + scrollAfter); }
+        await page.mouse.wheel(0, -120);
+        await page.waitForTimeout(200);
+        if (await page.evaluate('window.__dropdown.scrollTop()') !== scrollBefore) { failures.push('wheel up did not scroll the list back'); }
+
+        await page.evaluate('window.__dropdown.back()');               // cancel
+        await page.waitForTimeout(200);
+        await page.evaluate('window.__dropdown.moveTo(470, 140)');
+        if (await page.evaluate('window.__dropdown.changes()') !== 1) { failures.push('the clamp/wheel round fired change'); }
 
         // Tearing the view off the display list with the list open must take the
         // popover (a stage child) and its stage listener with it. Last step: it

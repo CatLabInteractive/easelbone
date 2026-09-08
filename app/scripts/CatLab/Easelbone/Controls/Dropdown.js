@@ -4,10 +4,9 @@ define(
         'CatLab/Easelbone/Controls/Base',
         'CatLab/Easelbone/EaselJS/DisplayObjects/BigText',
         'CatLab/Easelbone/EaselJS/DisplayObjects/TextPlaceholder',
-        'CatLab/Easelbone/Utilities/Mousewheel',
         'CatLab/Easelbone/Utilities/DirtyFlag'
     ],
-    function (createjs, Base, BigText, TextPlaceholder, Mousewheel, DirtyFlag) {
+    function (createjs, Base, BigText, TextPlaceholder, DirtyFlag) {
 
         /**
          * A select control with a popover list. Binds to any symbol that has
@@ -20,6 +19,14 @@ define(
          * consumed; deactivate() cancels. Mouse: click the symbol to open,
          * click a row to commit, click outside to cancel, wheel to scroll.
          *
+         * The wheel is handled by a DOM listener the control owns on the
+         * stage's canvas for as long as the list is open, and it only acts
+         * while the pointer is over the panel. The Utilities/Mousewheel
+         * singleton is deliberately NOT used: a ScrollArea host re-arms it on
+         * every mouseover/mouseout, and the popover is a stage child outside
+         * that subtree, so the singleton's callback would be wiped the moment
+         * the cursor moved onto the list.
+         *
          * Events: 'change' (committed value), 'open', 'close'.
          *
          * All style metrics (rowHeight, padding, the border and the corner
@@ -27,6 +34,10 @@ define(
          * the ancestor transform when the popover is drawn, so the list matches
          * the symbol on every canvas size. The single exception is `width`,
          * which - when given - is an absolute stage-pixel width.
+         *
+         * The popover opens below the symbol, but its position is clamped to
+         * the canvas so the whole visible list stays on screen (it slides up /
+         * left rather than flipping).
          */
         var DEFAULTS = {
             background: '#1e1e1e',
@@ -72,7 +83,9 @@ define(
             this._onStageDown = null;
             this._onRemoved = null;
             this._removalListeners = null;
-            this._previousWheelCallback = null;
+            this._wheelCanvas = null;
+            this._wheelEventName = null;
+            this._onWheel = null;
 
             this.element.addEventListener('click', function () {
                 if (this._open) {
@@ -211,6 +224,19 @@ define(
             this._panel.y = topLeft.y;
             this._panelWidth = this.style.width !== null ? this.style.width : (topRight.x - topLeft.x);
 
+            // Keep the whole visible list on the canvas: a symbol near the
+            // bottom (or the right edge) would otherwise open into nothing.
+            var canvas = stage.canvas || null;
+            if (canvas) {
+                var visibleRows = this._visibleRows();
+                if (canvas.height) {
+                    this._panel.y = Math.min(this._panel.y, Math.max(0, canvas.height - (visibleRows * this._rowPx)));
+                }
+                if (canvas.width) {
+                    this._panel.x = Math.min(this._panel.x, Math.max(0, canvas.width - this._panelWidth));
+                }
+            }
+
             stage.addChild(this._panel);
             this._renderPanel();
 
@@ -231,14 +257,91 @@ define(
             stage.on('stagemousedown', this._onStageDown);
 
             this._listenForRemoval();
-
-            this._previousWheelCallback = Mousewheel.callback || null;
-            Mousewheel.listen(function (delta) {
-                this._scroll(delta.y > 0 ? -1 : 1);
-            }.bind(this));
+            this._listenForWheel();
 
             DirtyFlag.invalidate();
             this.trigger('open');
+        };
+
+        /**
+         * The wheel is ours for as long as the list is open. We listen on the
+         * canvas itself (never on the Mousewheel singleton, which a ScrollArea
+         * host takes back on mouseout) and only act while the pointer is over
+         * the panel, so the page and any scroll area keep their own wheel.
+         */
+        Dropdown.prototype._listenForWheel = function () {
+            var canvas = this._stage ? this._stage.canvas : null;
+            if (!canvas || !canvas.addEventListener) {
+                return;
+            }
+
+            this._wheelCanvas = canvas;
+            this._wheelEventName = (typeof canvas.onwheel !== 'undefined') ? 'wheel' : 'mousewheel';
+
+            this._onWheel = function (evt) {
+                if (!this._open || !this._panel) {
+                    return;
+                }
+
+                if (!this._isOnPanel(evt.clientX, evt.clientY)) {
+                    return;
+                }
+
+                var direction;
+                if (typeof evt.deltaY === 'number' && evt.deltaY !== 0) {
+                    direction = evt.deltaY > 0 ? 1 : -1;
+                } else if (typeof evt.wheelDelta === 'number' && evt.wheelDelta !== 0) {
+                    // Legacy 'mousewheel': wheelDelta is positive when scrolling up.
+                    direction = evt.wheelDelta > 0 ? -1 : 1;
+                } else {
+                    return;
+                }
+
+                if (evt.preventDefault) {
+                    evt.preventDefault();
+                }
+
+                this._scroll(direction);
+            }.bind(this);
+
+            this._wheelCanvas.addEventListener(this._wheelEventName, this._onWheel, { passive: false });
+        };
+
+        Dropdown.prototype._stopListeningForWheel = function () {
+            if (this._wheelCanvas && this._onWheel) {
+                this._wheelCanvas.removeEventListener(this._wheelEventName, this._onWheel);
+            }
+
+            this._wheelCanvas = null;
+            this._wheelEventName = null;
+            this._onWheel = null;
+        };
+
+        /**
+         * Is a DOM (client) point over the open panel? The canvas may be
+         * displayed at a different size than its backing store, so the client
+         * point is scaled into canvas pixels first.
+         */
+        Dropdown.prototype._isOnPanel = function (clientX, clientY) {
+            var canvas = this._wheelCanvas;
+            if (!canvas || !this._panel || typeof clientX !== 'number' || typeof clientY !== 'number') {
+                return false;
+            }
+
+            var rect = canvas.getBoundingClientRect ? canvas.getBoundingClientRect() : null;
+            var displayWidth = (rect && rect.width) || canvas.clientWidth || canvas.width;
+            var displayHeight = (rect && rect.height) || canvas.clientHeight || canvas.height;
+            if (!displayWidth || !displayHeight) {
+                return false;
+            }
+
+            var canvasX = ((clientX - (rect ? rect.left : 0)) * canvas.width) / displayWidth;
+            var canvasY = ((clientY - (rect ? rect.top : 0)) * canvas.height) / displayHeight;
+
+            var local = this._panel.globalToLocal(canvasX, canvasY);
+
+            return local.x >= 0 && local.x <= this._panelWidth &&
+                local.y >= 0 && local.y <= this._visibleRows() * this._rowPx;
         };
 
         /**
@@ -391,6 +494,7 @@ define(
 
             this._open = false;
             this._stopListeningForRemoval();
+            this._stopListeningForWheel();
 
             if (this._stage) {
                 this._stage.off('stagemousedown', this._onStageDown);
@@ -398,14 +502,6 @@ define(
                     this._stage.removeChild(this._panel);
                 }
             }
-
-            // Mousewheel is a singleton: hand the wheel back to whoever had it.
-            if (this._previousWheelCallback) {
-                Mousewheel.listen(this._previousWheelCallback);
-            } else {
-                Mousewheel.stop();
-            }
-            this._previousWheelCallback = null;
 
             this._panel = null;
             this._onStageDown = null;
