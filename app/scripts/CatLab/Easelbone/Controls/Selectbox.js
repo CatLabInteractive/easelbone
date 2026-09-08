@@ -1,10 +1,8 @@
 define(
     [
-        'CatLab/Easelbone/Controls/Choice',
-        'CatLab/Easelbone/EaselJS/DisplayObjects/TextPlaceholder'
+        'CatLab/Easelbone/Controls/Choice'
     ],
-    function (Choice,
-              TextPlaceholder) {
+    function (Choice) {
 
         /**
          * A spinner: the selected value in a `value` text placeholder, with a
@@ -44,14 +42,6 @@ define(
         // Extend choice.
         Selectbox.prototype = Object.create(Choice.prototype);
         Selectbox.prototype.constructor = Selectbox;
-
-        /**
-         * Kept for compatibility: Choice' constructor already built the text
-         * element, this rebuilds it.
-         */
-        Selectbox.prototype.convertText = function () {
-            this.textElement = new TextPlaceholder(this.element.value);
-        };
 
         Selectbox.prototype.next = function () {
             if (this.selectedIndex < this.allValues.length - 1) {
