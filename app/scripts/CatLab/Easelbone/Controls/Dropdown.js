@@ -1,0 +1,406 @@
+define(
+    [
+        'easeljs',
+        'CatLab/Easelbone/Controls/Base',
+        'CatLab/Easelbone/EaselJS/DisplayObjects/BigText',
+        'CatLab/Easelbone/EaselJS/DisplayObjects/TextPlaceholder',
+        'CatLab/Easelbone/Utilities/Mousewheel',
+        'CatLab/Easelbone/Utilities/DirtyFlag'
+    ],
+    function (createjs, Base, BigText, TextPlaceholder, Mousewheel, DirtyFlag) {
+
+        /**
+         * A select control with a popover list. Binds to any symbol that has
+         * a `value` text placeholder (the symbol's `buttons` child, if any, is
+         * ignored). The popover is drawn by the control itself on the stage,
+         * above every layer, so no theme symbol is needed for it.
+         *
+         * Input: 'a'/'start' opens or commits; 'down'/'up' move the highlight
+         * while open; onBack() cancels an open list and reports the press as
+         * consumed; deactivate() cancels. Mouse: click the symbol to open,
+         * click a row to commit, click outside to cancel, wheel to scroll.
+         *
+         * Events: 'change' (committed value), 'open', 'close'.
+         */
+        var DEFAULTS = {
+            background: '#1e1e1e',
+            border: '#888888',
+            highlight: '#555555',
+            text: '#ffffff',
+            textHighlight: '#ffffff',
+            font: null,
+            rowHeight: 48,
+            width: null,
+            maxRows: 8,
+            padding: 8
+        };
+
+        var Dropdown = function (element, options) {
+            Base.call(this, element);
+
+            if (!this.element.value) {
+                throw "All dropdowns should have a value text placeholder.";
+            }
+
+            this.style = {};
+            var key;
+            for (key in DEFAULTS) {
+                if (DEFAULTS.hasOwnProperty(key)) {
+                    this.style[key] = (options && typeof (options[key]) !== 'undefined') ? options[key] : DEFAULTS[key];
+                }
+            }
+
+            this.allValues = [];
+            this.selectedIndex = 0;
+            this.selectedValue = null;
+            this.textElement = new TextPlaceholder(this.element.value);
+
+            this._open = false;
+            this._highlight = 0;
+            this._scrollTop = 0;
+            this._panel = null;
+            this._panelWidth = 0;
+            this._stage = null;
+            this._onStageDown = null;
+            this._previousWheelCallback = null;
+
+            this.element.addEventListener('click', function () {
+                if (this._open) {
+                    return;
+                }
+                this.open();
+            }.bind(this));
+        };
+
+        Dropdown.prototype = Object.create(Base.prototype);
+        Dropdown.prototype.constructor = Dropdown;
+
+        /* ---- values (same shapes as Selectbox.setValues) ---- */
+
+        Dropdown.prototype.setValues = function (values) {
+            var tmp = [];
+            if (!(values instanceof Array)) {
+                for (var ind in values) {
+                    if (values.hasOwnProperty(ind)) {
+                        var v = values[ind];
+                        if (v instanceof Object) {
+                            tmp.push(v);
+                        } else {
+                            tmp.push({ 'text': v, 'value': ind });
+                        }
+                    }
+                }
+            } else {
+                for (var i = 0; i < values.length; i++) {
+                    tmp.push({ 'text': values[i], 'value': values[i] });
+                }
+            }
+            this.allValues = tmp;
+            this.select(0);
+        };
+
+        Dropdown.prototype.select = function (index) {
+            if (index < 0 || index > this.allValues.length - 1) {
+                return;
+            }
+            this.selectedIndex = index;
+            this.selectedValue = this.allValues[index];
+            this._highlight = index;
+            this.setText(this.selectedValue.text);
+        };
+
+        Dropdown.prototype.getValue = function () {
+            return this.selectedValue ? this.selectedValue.value : null;
+        };
+
+        Dropdown.prototype.setText = function (text, font, color) {
+            var bigtext = new BigText(text, font || this.style.font || undefined, color || undefined);
+            this.textElement.removeAllChildren();
+            this.textElement.addChild(bigtext);
+            DirtyFlag.invalidate();
+        };
+
+        Dropdown.prototype.getIndexFromValue = function (value) {
+            for (var i = 0; i < this.allValues.length; i++) {
+                if (this.allValues[i].value == value) {
+                    return i;
+                }
+            }
+            return null;
+        };
+
+        Object.defineProperty(Dropdown.prototype, 'value', {
+            get: function () { return this.getValue(); },
+            set: function (value) {
+                var index = this.getIndexFromValue(value);
+                if (index !== null) { this.select(index); }
+            }
+        });
+        Object.defineProperty(Dropdown.prototype, 'index', {
+            get: function () { return this.selectedIndex; },
+            set: function (value) { this.select(value); }
+        });
+        Object.defineProperty(Dropdown.prototype, 'values', {
+            get: function () { return this.allValues; },
+            set: function (values) { this.setValues(values); }
+        });
+
+        /* ---- popover ---- */
+
+        Dropdown.prototype.isOpen = function () {
+            return this._open;
+        };
+
+        /**
+         * Local (untransformed) bounds of the symbol we are attached to.
+         */
+        Dropdown.prototype._elementBounds = function () {
+            var bounds = this.element.nominalBounds || this.element.getBounds();
+            if (!bounds) {
+                bounds = new createjs.Rectangle(0, 0, 200, this.style.rowHeight);
+            }
+            return bounds;
+        };
+
+        Dropdown.prototype.open = function () {
+            if (this._open || this.allValues.length === 0) {
+                return;
+            }
+
+            var stage = this.element.stage;
+            if (!stage) {
+                return;
+            }
+
+            this._stage = stage;
+            this._open = true;
+            this._highlight = this.selectedIndex;
+            this._scrollTop = 0;
+            this._scrollHighlightIntoView();
+
+            this._panel = new createjs.Container();
+
+            // The popover lives on the stage, the symbol somewhere in a scaled
+            // view: localToGlobal carries the whole ancestor transform, so both
+            // the anchor and the width are measured through it. (Rotated
+            // ancestors are not supported; the width is taken horizontally.)
+            var bounds = this._elementBounds();
+            var topLeft = this.element.localToGlobal(bounds.x, bounds.y + bounds.height);
+            var topRight = this.element.localToGlobal(bounds.x + bounds.width, bounds.y + bounds.height);
+
+            this._panel.x = topLeft.x;
+            this._panel.y = topLeft.y;
+            this._panelWidth = this.style.width !== null ? this.style.width : (topRight.x - topLeft.x);
+
+            stage.addChild(this._panel);
+            this._renderPanel();
+
+            this._onStageDown = function (evt) {
+                var local = this._panel.globalToLocal(evt.stageX, evt.stageY);
+                var inside = local.x >= 0 && local.x <= this._panelWidth &&
+                    local.y >= 0 && local.y <= this._visibleRows() * this.style.rowHeight;
+
+                if (!inside && !this._isOnElement(evt.stageX, evt.stageY)) {
+                    this.close(false);
+                }
+            }.bind(this);
+            stage.on('stagemousedown', this._onStageDown);
+
+            this._previousWheelCallback = Mousewheel.callback || null;
+            Mousewheel.listen(function (delta) {
+                this._scroll(delta.y > 0 ? -1 : 1);
+            }.bind(this));
+
+            DirtyFlag.invalidate();
+            this.trigger('open');
+        };
+
+        /**
+         * Is the given stage point on the symbol itself? (Clicking it keeps the
+         * list open; the symbol's own click handler is what opened it.)
+         */
+        Dropdown.prototype._isOnElement = function (stageX, stageY) {
+            var bounds = this._elementBounds();
+            var local = this.element.globalToLocal(stageX, stageY);
+
+            return local.x >= bounds.x && local.x <= bounds.x + bounds.width &&
+                local.y >= bounds.y && local.y <= bounds.y + bounds.height;
+        };
+
+        Dropdown.prototype._visibleRows = function () {
+            return Math.min(this.style.maxRows, this.allValues.length);
+        };
+
+        Dropdown.prototype._renderPanel = function () {
+            var panel = this._panel;
+            var s = this.style;
+            var rows = this._visibleRows();
+            var w = this._panelWidth;
+            var h = rows * s.rowHeight;
+            panel.removeAllChildren();
+
+            var bg = new createjs.Shape();
+            bg.graphics.setStrokeStyle(2).beginStroke(s.border).beginFill(s.background).drawRoundRect(0, 0, w, h, 8);
+            panel.addChild(bg);
+
+            for (var r = 0; r < rows; r++) {
+                var i = this._scrollTop + r;
+                if (i >= this.allValues.length) {
+                    break;
+                }
+
+                var row = new createjs.Container();
+                row.y = r * s.rowHeight;
+
+                var rowBg = new createjs.Shape();
+                rowBg.graphics.beginFill(i === this._highlight ? s.highlight : s.background).drawRect(2, 1, w - 4, s.rowHeight - 2);
+                row.addChild(rowBg);
+
+                var text = new BigText(this.allValues[i].text, s.font || undefined, i === this._highlight ? s.textHighlight : s.text, 'left');
+                text.setLimits(w - 2 * s.padding, s.rowHeight - 2 * s.padding);
+                text.x = s.padding;
+                text.y = s.padding;
+                row.addChild(text);
+
+                row.on('click', (function (index) {
+                    return function (evt) {
+                        evt.stopPropagation();
+                        this._highlight = index;
+                        this.close(true);
+                    }.bind(this);
+                }.bind(this))(i));
+
+                panel.addChild(row);
+            }
+
+            DirtyFlag.invalidate();
+        };
+
+        /**
+         * Scroll the list just enough to show the highlighted row.
+         */
+        Dropdown.prototype._scrollHighlightIntoView = function () {
+            var rows = this._visibleRows();
+
+            if (this._highlight < this._scrollTop) {
+                this._scrollTop = this._highlight;
+            } else if (this._highlight >= this._scrollTop + rows) {
+                this._scrollTop = this._highlight - rows + 1;
+            }
+
+            this._scrollTop = Math.max(0, Math.min(this._scrollTop, Math.max(0, this.allValues.length - rows)));
+        };
+
+        Dropdown.prototype._moveHighlight = function (delta) {
+            var next = Math.max(0, Math.min(this.allValues.length - 1, this._highlight + delta));
+            if (next === this._highlight) {
+                return;
+            }
+
+            this._highlight = next;
+            this._scrollHighlightIntoView();
+            this._renderPanel();
+        };
+
+        Dropdown.prototype._scroll = function (delta) {
+            var max = Math.max(0, this.allValues.length - this._visibleRows());
+            var next = Math.max(0, Math.min(max, this._scrollTop + delta));
+            if (next === this._scrollTop) {
+                return;
+            }
+
+            this._scrollTop = next;
+            this._renderPanel();
+        };
+
+        Dropdown.prototype.close = function (commit) {
+            if (!this._open) {
+                return;
+            }
+
+            this._open = false;
+            if (this._stage) {
+                this._stage.off('stagemousedown', this._onStageDown);
+                if (this._panel) {
+                    this._stage.removeChild(this._panel);
+                }
+            }
+
+            // Mousewheel is a singleton: hand the wheel back to whoever had it.
+            if (this._previousWheelCallback) {
+                Mousewheel.listen(this._previousWheelCallback);
+            } else {
+                Mousewheel.stop();
+            }
+            this._previousWheelCallback = null;
+
+            this._panel = null;
+            this._onStageDown = null;
+            this._stage = null;
+            DirtyFlag.invalidate();
+
+            if (commit && this._highlight !== this.selectedIndex) {
+                this.select(this._highlight);
+                this.trigger('change', this.getValue());
+            } else {
+                this._highlight = this.selectedIndex;
+            }
+
+            this.trigger('close');
+        };
+
+        /* ---- input ---- */
+
+        Dropdown.prototype.keyInput = function (input) {
+            switch (input) {
+                case 'a':
+                case 'start':
+                    if (this._open) {
+                        this.close(true);
+                    } else {
+                        this.open();
+                    }
+                    break;
+
+                case 'down':
+                    if (this._open) {
+                        this._moveHighlight(1);
+                    }
+                    break;
+
+                case 'up':
+                    if (this._open) {
+                        this._moveHighlight(-1);
+                    }
+                    break;
+
+                case 'back':
+                case 'b':
+                    this.onBack();
+                    break;
+            }
+        };
+
+        /**
+         * Navigatable.triggerBack asks the active control first; an open list
+         * swallows the press (returns true) and closes without committing.
+         */
+        Dropdown.prototype.onBack = function () {
+            if (this._open) {
+                this.close(false);
+                return true;
+            }
+            return false;
+        };
+
+        Dropdown.prototype.deactivate = function (animate) {
+            if (this._open) {
+                this.close(false);
+            }
+            Base.prototype.deactivate.call(this, animate);
+        };
+
+        return Dropdown;
+
+    }
+);

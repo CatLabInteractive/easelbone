@@ -12,6 +12,7 @@ define(
         'CatLab/Easelbone/Controls/Checkbox',
         'CatLab/Easelbone/Controls/Button',
         'CatLab/Easelbone/Controls/Selectbox',
+        'CatLab/Easelbone/Controls/Dropdown',
 
         'CatLab/Easelbone/Controls/ScrollBar',
         'CatLab/Easelbone/Controls/ScrollArea',
@@ -48,6 +49,7 @@ define(
         CheckboxControl,
         ButtonControl,
         SelectboxControl,
+        DropdownControl,
 
         ScrollBar,
         ScrollArea,
@@ -96,6 +98,7 @@ define(
                 Checkbox: CheckboxControl,
                 Button: ButtonControl,
                 Selectbox: SelectboxControl,
+                Dropdown: DropdownControl,
                 ScrollBar: ScrollBar,
                 ScrollArea: ScrollArea,
                 List: ListControl,

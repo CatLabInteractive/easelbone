@@ -116,6 +116,69 @@
 
 								this.addControl (selectbox);
 
+								// A dropdown on a second selectbox symbol: it draws its
+								// own popover list on the stage, above the (scaled) view.
+								var dropdownSymbol = new assets.SelectBox ();
+								dropdownSymbol.x = 470;
+								dropdownSymbol.y = 140;
+								this.view.addChild (dropdownSymbol);
+
+								var dropdown = new easelbone.Controls.Dropdown (dropdownSymbol, { rowHeight: 40, maxRows: 4 });
+								dropdown.setValues ({
+									'en' : 'English',
+									'nl' : 'Nederlands',
+									'de' : 'Deutsch',
+									'fr' : 'Français',
+									'es' : 'Español',
+									'it' : 'Italiano'
+								});
+								dropdown.value = 'nl';
+
+								var dropdownChanges = 0;
+								dropdown.on ('change', function () { dropdownChanges++; });
+
+								var dropdownIndex = this._options.length;
+								this.addControl (dropdown);
+
+								var viewBacks = 0;
+								this.setBack (function () { viewBacks++; });
+
+								var self = this;
+								window.__dropdown = {
+									ready: true,
+									value: function () { return dropdown.getValue (); },
+									isOpen: function () { return dropdown.isOpen (); },
+									changes: function () { return dropdownChanges; },
+									rowHeight: function () { return dropdown.style.rowHeight; },
+									key: function (k) { dropdown.keyInput (k); },
+									back: function () { return dropdown.onBack (); },
+									focus: function () { self.activate (dropdownIndex); },
+									triggerViewBack: function () { self.triggerBack (); },
+									viewBacks: function () { return viewBacks; },
+									// Where the popover SHOULD be, computed from the raw
+									// symbol coordinates and the scale addCenter gave
+									// the view (the example view is scaled up 800->1024).
+									anchorRect: function () {
+										var b = dropdownSymbol.nominalBounds;
+										return {
+											x: self.view.x + ((dropdownSymbol.x + b.x) * self.view.scaleX),
+											y: self.view.y + ((dropdownSymbol.y + b.y + b.height) * self.view.scaleY),
+											w: b.width * self.view.scaleX,
+											scale: self.view.scaleX
+										};
+									},
+									panelRect: function () {
+										var p = dropdown._panel;
+										var s = p.localToGlobal (0, 0);
+										return {
+											x: s.x,
+											y: s.y,
+											w: dropdown._panelWidth,
+											h: dropdown._visibleRows () * dropdown.style.rowHeight
+										};
+									}
+								};
+
 								var button1 = new easelbone.Controls.Button (this.view.button1);
 								button1.setText ("Short text", "sans-serif", "white");
 								button1.on ('click', function () {

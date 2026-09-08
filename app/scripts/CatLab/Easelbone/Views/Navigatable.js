@@ -164,6 +164,12 @@ define (
              */
             triggerBack : function(actor)
             {
+                // Give the active control first refusal: an open Dropdown
+                // swallows the press and closes instead of leaving the view.
+                if (this._current && typeof (this._current.onBack) === 'function' && this._current.onBack(actor) === true) {
+                    return;
+                }
+
                 if (this._backCallback !== null) {
                     this._backCallback(actor);
                 }
