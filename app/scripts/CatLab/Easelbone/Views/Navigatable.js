@@ -181,15 +181,19 @@ define (
              * the whole navigation axis (an open Dropdown behaves like a native
              * <select>: the focus cannot leave it until the list is committed
              * or cancelled). The press is handed to the control as key input
-             * instead - 'right' for next, 'left' for previous - so the control
-             * can act on it or ignore it. A control without a
-             * capturesNavigation() method never captures anything.
+             * instead, under the name the VIEW gave it: this._controls.
+             * navigation[1] for next and [0] for previous. A horizontal view
+             * therefore forwards 'right'/'left', which a Dropdown ignores; a
+             * vertical view forwards 'down'/'up', so its own arrow keys move
+             * the highlight - in both cases exactly what a native <select>
+             * does with the keys the reader is already using. A control without
+             * a capturesNavigation() method never captures anything.
              */
             next : function (actor)
             {
                 if (this._current && typeof (this._current.capturesNavigation) === 'function' && this._current.capturesNavigation()) {
                     if (typeof (this._current.keyInput) === 'function') {
-                        this._current.keyInput('right', actor);
+                        this._current.keyInput(this._controls.navigation[1], actor);
                     }
                     return;
                 }
@@ -205,7 +209,7 @@ define (
             {
                 if (this._current && typeof (this._current.capturesNavigation) === 'function' && this._current.capturesNavigation()) {
                     if (typeof (this._current.keyInput) === 'function') {
-                        this._current.keyInput('left', actor);
+                        this._current.keyInput(this._controls.navigation[0], actor);
                     }
                     return;
                 }

@@ -17,8 +17,11 @@ define(
          * Focus model - a native <select>: while the list is OPEN the control
          * captures the whole navigation axis (capturesNavigation() is true, so
          * Navigatable.next/previous hand the press to keyInput instead of
-         * moving the focus, and 'left'/'right' are then ignored). The focus can
-         * only leave the dropdown once the list is committed or cancelled.
+         * moving the focus). The press arrives under the view's own navigation
+         * name: a HORIZONTAL view forwards 'right'/'left', which an open list
+         * ignores, and a VERTICAL one forwards 'down'/'up', which move the
+         * highlight. Either way the focus can only leave the dropdown once the
+         * list is committed or cancelled.
          *
          * Input: 'a'/'start' opens or commits; 'down'/'up' OPEN a closed list
          * and move the highlight in an open one; onBack() cancels an open list
@@ -619,9 +622,11 @@ define(
 
                 case 'left':
                 case 'right':
-                    // The navigation axis is captured while the list is open
-                    // (see capturesNavigation), and a native select does
-                    // nothing with it: swallow the press.
+                    // A horizontal view forwards its captured navigation press
+                    // as 'right'/'left' (see capturesNavigation). A native
+                    // select does nothing with that axis: swallow the press.
+                    // (A vertical view forwards 'down'/'up' instead, which the
+                    // cases above turn into highlight movement.)
                     break;
 
                 case 'back':

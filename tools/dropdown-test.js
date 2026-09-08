@@ -10,7 +10,9 @@
  *  - the wheel, over the panel, scrolls the list (the control's own canvas
  *    listener, not the Mousewheel singleton)
  *  - an OPEN list captures the navigation axis: Navigatable.next/previous do
- *    not move the focus, and 'left'/'right' do nothing - like a native <select>
+ *    not move the focus but forward the press under the view's own navigation
+ *    name (this example view is vertical, so 'down'/'up' move the highlight),
+ *    and 'left'/'right' themselves do nothing - like a native <select>
  *  - a CLOSED list opens on 'up'/'down' without stepping the value
  *  - a long list (40 options, 6 rows) scrolls with the keyboard, the wheel and
  *    the scrollbar, highlights the row under the cursor, and draws a thumb that
@@ -213,23 +215,47 @@ async function main() {
         if (!await page.evaluate('window.__dropdown.isOpen()')) { failures.push('the dropdown did not open for the capture check'); }
         var capturedHighlight = await page.evaluate('window.__dropdown.highlight()');
         var capturedValue = await page.evaluate('window.__dropdown.value()');
+        var count = await page.evaluate('window.__dropdown.count()');
+
+        // The captured press is forwarded under the VIEW's own navigation name,
+        // so what it does depends on the orientation: a vertical view forwards
+        // 'down'/'up' (the highlight moves, like a native select under the same
+        // arrow keys), a horizontal one 'right'/'left' (nothing happens). The
+        // focus must stay put either way.
+        var nav = await page.evaluate('window.__dropdown.view.navigation()');
+        var vertical = nav[1] === 'down';
+        if (nav.length !== 2 || (!vertical && nav[1] !== 'right')) { failures.push('unexpected view navigation controls: ' + nav.join(',')); }
+
         await page.evaluate('window.__dropdown.view.next()');
         await page.evaluate('window.__dropdown.view.next()');
         await page.waitForTimeout(150);
         if (await page.evaluate('window.__dropdown.view.currentIndex()') !== idx) { failures.push('view.next() moved the focus while the list was open'); }
         if (!await page.evaluate('window.__dropdown.isOpen()')) { failures.push('view.next() closed the open list'); }
+        var afterNext = await page.evaluate('window.__dropdown.highlight()');
+        var expectedAfterNext = vertical ? Math.min(count - 1, capturedHighlight + 2) : capturedHighlight;
+        if (afterNext !== expectedAfterNext) { failures.push('2x captured view.next() (' + nav[1] + ') left the highlight at ' + afterNext + ', expected ' + expectedAfterNext); }
+        if (await page.evaluate('window.__dropdown.value()') !== capturedValue) { failures.push('a captured view.next() changed the committed value'); }
+
+        await page.evaluate('window.__dropdown.view.previous()');
         await page.evaluate('window.__dropdown.view.previous()');
         await page.waitForTimeout(150);
         if (await page.evaluate('window.__dropdown.view.currentIndex()') !== idx) { failures.push('view.previous() moved the focus while the list was open'); }
+        var afterPrevious = await page.evaluate('window.__dropdown.highlight()');
+        var expectedAfterPrevious = vertical ? Math.max(0, expectedAfterNext - 2) : capturedHighlight;
+        if (afterPrevious !== expectedAfterPrevious) { failures.push('2x captured view.previous() (' + nav[0] + ') left the highlight at ' + afterPrevious + ', expected ' + expectedAfterPrevious); }
 
-        // The captured presses arrive as 'left'/'right', which an open list
-        // ignores the way a native select does.
+        // 'left'/'right' themselves are the cross axis of an open list: a native
+        // select does nothing with them, and neither does this one.
+        var beforeCrossAxis = await page.evaluate('window.__dropdown.highlight()');
         await page.evaluate('window.__dropdown.key("left")');
         await page.evaluate('window.__dropdown.key("right")');
         await page.waitForTimeout(150);
-        if (await page.evaluate('window.__dropdown.highlight()') !== capturedHighlight) { failures.push('left/right moved the highlight of an open list'); }
+        if (await page.evaluate('window.__dropdown.highlight()') !== beforeCrossAxis) { failures.push('left/right moved the highlight of an open list'); }
         if (await page.evaluate('window.__dropdown.value()') !== capturedValue) { failures.push('left/right changed the value of an open list'); }
         if (!await page.evaluate('window.__dropdown.isOpen()')) { failures.push('left/right closed the open list'); }
+
+        // Back where we started, so the commit below must not fire 'change'.
+        if (beforeCrossAxis !== capturedHighlight) { failures.push('the captured navigation round did not return the highlight to ' + capturedHighlight + ': ' + beforeCrossAxis); }
 
         await page.evaluate('window.__dropdown.key("a")');            // commit
         await page.waitForTimeout(200);

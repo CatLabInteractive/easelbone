@@ -180,6 +180,7 @@
 									visibleRows: function () { return dropdown._visibleRows (); },
 									scrollTop: function () { return dropdown._scrollTop; },
 									highlight: function () { return dropdown._highlight; },
+									count: function () { return dropdown.allValues.length; },
 									stageChildren: function () { return rootView.stage.numChildren; },
 									// Move the symbol around the view, to open the list
 									// near an edge of the canvas.
@@ -258,7 +259,10 @@
 									view: {
 										currentIndex: function () { return self._currentIndex; },
 										next: function () { self.next (); },
-										previous: function () { self.previous (); }
+										previous: function () { self.previous (); },
+										// [previous, next] control names: this
+										// view is vertical, so [ 'up', 'down' ].
+										navigation: function () { return self._controls.navigation; }
 									}
 								};
 
