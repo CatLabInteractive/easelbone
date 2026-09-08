@@ -34,6 +34,7 @@
   },
   "scripts": {
     "prepublishOnly": "bower install && npm run build",
+    "postpublish": "git push --follow-tags && gh release create v$npm_package_version --generate-notes --verify-tag",
     "update": "node_modules/.bin/bower update",
     "start": "grunt",
     "build": "grunt",
