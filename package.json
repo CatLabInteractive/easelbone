@@ -2,6 +2,10 @@
   "name": "easelbone",
   "version": "1.2.13",
   "main": "dist/scripts/easelbone.js",
+  "files": [
+    "dist/scripts/easelbone.js",
+    "dist/scripts/easelbone.js.map"
+  ],
   "author": "CatLab Interactive",
   "devDependencies": {
     "bower": "^1.8.8",
@@ -29,6 +33,7 @@
     "underscore": "^1.*"
   },
   "scripts": {
+    "prepublishOnly": "bower install && npm run build",
     "update": "node_modules/.bin/bower update",
     "start": "grunt",
     "build": "grunt",
