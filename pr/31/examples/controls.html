@@ -55,8 +55,10 @@
 					var rootView = new easelbone.Views.Root ({'container': document.getElementById ('container'), 'dirtyRendering': dirtyRendering });
 
 					// The Dropdown highlights the row under the cursor, which
-					// needs EaselJS' mouseover tracking (off by default).
-					rootView.stage.enableMouseOver (20);
+					// needs EaselJS' mouseover tracking (off by default). 5 Hz,
+					// the rate the game uses: slow enough that a mouseover tick
+					// can land between a mousedown and its mouseup.
+					rootView.stage.enableMouseOver (5);
 
 					// Set default properties
 					easelbone.setProperties (assets.properties);
@@ -159,6 +161,9 @@
 								}
 								dropdownLong.setValues (longValues);
 
+								var dropdownLongChanges = 0;
+								dropdownLong.on ('change', function () { dropdownLongChanges++; });
+
 								var dropdownLongIndex = this._options.length;
 								this.addControl (dropdownLong);
 
@@ -206,6 +211,7 @@
 									},
 									panelRect: function () {
 										var p = dropdown._panel;
+										if (!p) { return null; }
 										var s = p.localToGlobal (0, 0);
 										return {
 											x: s.x,
@@ -220,12 +226,15 @@
 										key: function (k) { dropdownLong.keyInput (k); },
 										isOpen: function () { return dropdownLong.isOpen (); },
 										value: function () { return dropdownLong.getValue (); },
+										changes: function () { return dropdownLongChanges; },
+										valueAt: function (i) { return dropdownLong.allValues[i].value; },
 										scrollTop: function () { return dropdownLong._scrollTop; },
 										highlight: function () { return dropdownLong._highlight; },
 										index: function () { return dropdownLongIndex; },
 										focus: function () { self.activate (dropdownLongIndex); },
 										panelRect: function () {
 											var p = dropdownLong._panel;
+											if (!p) { return null; }
 											var s = p.localToGlobal (0, 0);
 											return {
 												x: s.x,
@@ -237,6 +246,7 @@
 										// Stage-pixel rect of the i'th VISIBLE row.
 										rowRect: function (i) {
 											var p = dropdownLong._panel;
+											if (!p) { return null; }
 											var s = p.localToGlobal (0, i * dropdownLong._rowPx);
 											return {
 												x: s.x,
@@ -247,7 +257,7 @@
 										},
 										thumbRect: function () {
 											var t = dropdownLong._thumbRect;
-											if (!t) {
+											if (!t || !dropdownLong._panel) {
 												return null;
 											}
 											var s = dropdownLong._panel.localToGlobal (t.x, t.y);
