@@ -1,12 +1,11 @@
 define(
     [
         'easeljs',
-        'CatLab/Easelbone/Controls/Base',
+        'CatLab/Easelbone/Controls/Choice',
         'CatLab/Easelbone/EaselJS/DisplayObjects/BigText',
-        'CatLab/Easelbone/EaselJS/DisplayObjects/TextPlaceholder',
         'CatLab/Easelbone/Utilities/DirtyFlag'
     ],
-    function (createjs, Base, BigText, TextPlaceholder, DirtyFlag) {
+    function (createjs, Choice, BigText, DirtyFlag) {
 
         /**
          * A select control with a popover list. Binds to any symbol that has
@@ -68,11 +67,13 @@ define(
         };
 
         var Dropdown = function (element, options) {
-            Base.call(this, element);
 
-            if (!this.element.value) {
+            // Checked before Choice so the dropdown's own message survives.
+            if (!element.value) {
                 throw "All dropdowns should have a value text placeholder.";
             }
+
+            Choice.call(this, element);
 
             this.style = {};
             var key;
@@ -81,11 +82,6 @@ define(
                     this.style[key] = (options && typeof (options[key]) !== 'undefined') ? options[key] : DEFAULTS[key];
                 }
             }
-
-            this.allValues = [];
-            this.selectedIndex = 0;
-            this.selectedValue = null;
-            this.textElement = new TextPlaceholder(this.element.value);
 
             this._open = false;
             this._highlight = 0;
@@ -117,78 +113,35 @@ define(
             }.bind(this));
         };
 
-        Dropdown.prototype = Object.create(Base.prototype);
+        Dropdown.prototype = Object.create(Choice.prototype);
         Dropdown.prototype.constructor = Dropdown;
 
-        /* ---- values (same shapes as Selectbox.setValues) ---- */
+        /* ---- values (the model itself lives in Choice) ---- */
 
-        Dropdown.prototype.setValues = function (values) {
-            var tmp = [];
-            if (!(values instanceof Array)) {
-                for (var ind in values) {
-                    if (values.hasOwnProperty(ind)) {
-                        var v = values[ind];
-                        if (v instanceof Object) {
-                            tmp.push(v);
-                        } else {
-                            tmp.push({ 'text': v, 'value': ind });
-                        }
-                    }
-                }
-            } else {
-                for (var i = 0; i < values.length; i++) {
-                    tmp.push({ 'text': values[i], 'value': values[i] });
-                }
-            }
-            this.allValues = tmp;
-            this.select(0);
-        };
-
+        /**
+         * Selecting a value moves the highlight with it: the list opens on the
+         * selected row.
+         */
         Dropdown.prototype.select = function (index) {
-            if (index < 0 || index > this.allValues.length - 1) {
-                return;
+            if (!Choice.prototype.select.call(this, index)) {
+                return false;
             }
-            this.selectedIndex = index;
-            this.selectedValue = this.allValues[index];
             this._highlight = index;
-            this.setText(this.selectedValue.text);
+            return true;
         };
 
-        Dropdown.prototype.getValue = function () {
-            return this.selectedValue ? this.selectedValue.value : null;
+        /**
+         * The collapsed value is painted in the dropdown's own style, the way
+         * the rows in the list are.
+         */
+        Dropdown.prototype._syncText = function () {
+            this.setText(this.selectedValue.text, this.style.font, this.style.text);
         };
 
         Dropdown.prototype.setText = function (text, font, color) {
-            var bigtext = new BigText(text, font || this.style.font || undefined, color || undefined);
-            this.textElement.removeAllChildren();
-            this.textElement.addChild(bigtext);
+            Choice.prototype.setText.call(this, text, font || this.style.font || undefined, color || undefined);
             DirtyFlag.invalidate();
         };
-
-        Dropdown.prototype.getIndexFromValue = function (value) {
-            for (var i = 0; i < this.allValues.length; i++) {
-                if (this.allValues[i].value == value) {
-                    return i;
-                }
-            }
-            return null;
-        };
-
-        Object.defineProperty(Dropdown.prototype, 'value', {
-            get: function () { return this.getValue(); },
-            set: function (value) {
-                var index = this.getIndexFromValue(value);
-                if (index !== null) { this.select(index); }
-            }
-        });
-        Object.defineProperty(Dropdown.prototype, 'index', {
-            get: function () { return this.selectedIndex; },
-            set: function (value) { this.select(value); }
-        });
-        Object.defineProperty(Dropdown.prototype, 'values', {
-            get: function () { return this.allValues; },
-            set: function (values) { this.setValues(values); }
-        });
 
         /* ---- popover ---- */
 
@@ -734,7 +687,7 @@ define(
             if (this._open) {
                 this.close(false);
             }
-            Base.prototype.deactivate.call(this, animate);
+            Choice.prototype.deactivate.call(this, animate);
         };
 
         return Dropdown;

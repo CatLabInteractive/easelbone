@@ -11,6 +11,7 @@ define(
         'CatLab/Easelbone/Controls/Slider',
         'CatLab/Easelbone/Controls/Checkbox',
         'CatLab/Easelbone/Controls/Button',
+        'CatLab/Easelbone/Controls/Choice',
         'CatLab/Easelbone/Controls/Selectbox',
         'CatLab/Easelbone/Controls/Dropdown',
 
@@ -48,6 +49,7 @@ define(
         SliderControl,
         CheckboxControl,
         ButtonControl,
+        ChoiceControl,
         SelectboxControl,
         DropdownControl,
 
@@ -97,6 +99,7 @@ define(
                 Slider: SliderControl,
                 Checkbox: CheckboxControl,
                 Button: ButtonControl,
+                Choice: ChoiceControl,
                 Selectbox: SelectboxControl,
                 Dropdown: DropdownControl,
                 ScrollBar: ScrollBar,

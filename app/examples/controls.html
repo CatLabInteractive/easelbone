@@ -40,12 +40,14 @@
 				require ([
 					'backbone',
 					'easeljs',
-					'assets'
+					'assets',
+					'CatLab/Easelbone/Controls/Base'
 				],
 				function (
 					backbone,
 					createjs,
-					assets
+					assets,
+					ControlBase
 				) {
 
 					createjs.Ticker.timingMode = createjs.Ticker.TIMEOUT;
@@ -121,6 +123,25 @@
 
 
 								this.addControl (selectbox);
+
+								// The shared value model (Controls/Choice) is
+								// driven through the accessors from here.
+								window.__easelbone = easelbone;
+								window.__selectbox = {
+									value: function () { return selectbox.value; },
+									index: function () { return selectbox.index; },
+									text: function () { return selectbox.text; },
+									count: function () { return selectbox.values.length; },
+									next: function () { selectbox.next (); },
+									previous: function () { selectbox.previous (); },
+									setValue: function (v) { selectbox.value = v; },
+									setIndex: function (i) { selectbox.index = i; },
+									setText: function (t) { selectbox.text = t; },
+									isChoice: function () {
+										return (selectbox instanceof easelbone.Controls.Choice) &&
+											(selectbox instanceof ControlBase);
+									}
+								};
 
 								// A dropdown on a second selectbox symbol: it draws its
 								// own popover list on the stage, above the (scaled) view.
@@ -221,6 +242,34 @@
 										};
 									},
 									index: function () { return dropdownIndex; },
+									// Shared value model checks (Controls/Choice).
+									isChoice: function () {
+										return (dropdown instanceof easelbone.Controls.Choice) &&
+											(dropdown instanceof ControlBase);
+									},
+									setValue: function (v) { dropdown.value = v; },
+									// The collapsed value: one BigText in the
+									// symbol's value placeholder.
+									textChildren: function () { return dropdown.textElement.children.length; },
+									textString: function () {
+										var child = dropdown.textElement.children[0];
+										return child ? child.textstring : null;
+									},
+									textColor: function () {
+										var child = dropdown.textElement.children[0];
+										return child ? child._color : null;
+									},
+									// A dropdown that never got any values: no
+									// value, no text, and it does not throw.
+									emptyValues: function () {
+										var throwaway = new easelbone.Controls.Dropdown (new assets.SelectBox ());
+										return {
+											getValue: throwaway.getValue (),
+											value: throwaway.value,
+											text: throwaway.text,
+											count: throwaway.values.length
+										};
+									},
 									// The long (40 option, 6 row) dropdown.
 									long: {
 										key: function (k) { dropdownLong.keyInput (k); },

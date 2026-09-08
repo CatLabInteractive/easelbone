@@ -437,6 +437,58 @@ async function main() {
         await page.mouse.move(canvasRect.left + 5, canvasRect.top + 5);
         await page.waitForTimeout(150);
 
+        // ---- the shared value model (Controls/Choice) ----
+        // Both controls take their value list, their selection and their
+        // accessors from Controls/Choice; neither may have lost any of it.
+        if (await page.evaluate('typeof window.__easelbone.Controls.Choice')  !== 'function') {
+            failures.push('easelbone.Controls.Choice is not exported');
+        }
+        if (!await page.evaluate('window.__dropdown.isChoice()')) { failures.push('the dropdown is not a Choice / a Base'); }
+        if (!await page.evaluate('window.__selectbox.isChoice()')) { failures.push('the selectbox is not a Choice / a Base'); }
+
+        // A dropdown without values answers null instead of throwing.
+        var empty = await page.evaluate('window.__dropdown.emptyValues()');
+        if (empty.getValue !== null) { failures.push('a valueless dropdown getValue() is ' + empty.getValue + ', expected null'); }
+        if (empty.value !== null) { failures.push('a valueless dropdown .value is ' + empty.value + ', expected null'); }
+        if (empty.text !== null) { failures.push('a valueless dropdown .text is ' + empty.text + ', expected null'); }
+        if (empty.count !== 0) { failures.push('a valueless dropdown has ' + empty.count + ' values, expected 0'); }
+
+        // The selectbox: the example gives it the map { 1: One, 2: Two, 3: Three }
+        // and sets its text to 'Three' after a second. Wait that out first, so
+        // the round trip below cannot race the example's own setTimeout.
+        await page.waitForFunction("window.__selectbox && window.__selectbox.text() === 'Three'", null, { timeout: 10000 });
+        if (await page.evaluate('window.__selectbox.count()') !== 3) { failures.push('the selectbox lost its values'); }
+        if (String(await page.evaluate('window.__selectbox.value()')) !== '3') { failures.push('selectbox text setter selected ' + await page.evaluate('window.__selectbox.value()') + ', expected 3'); }
+
+        await page.evaluate('window.__selectbox.setValue("1")');
+        if (await page.evaluate('window.__selectbox.index()') !== 0) { failures.push('selectbox value setter did not select index 0'); }
+        if (await page.evaluate('window.__selectbox.text()') !== 'One') { failures.push('selectbox value setter shows ' + await page.evaluate('window.__selectbox.text()') + ', expected One'); }
+
+        await page.evaluate('window.__selectbox.next()');
+        if (await page.evaluate('window.__selectbox.index()') !== 1) { failures.push('selectbox next() did not move to index 1'); }
+        if (String(await page.evaluate('window.__selectbox.value()')) !== '2') { failures.push('selectbox next() selected ' + await page.evaluate('window.__selectbox.value()') + ', expected 2'); }
+
+        await page.evaluate('window.__selectbox.previous()');
+        if (await page.evaluate('window.__selectbox.index()') !== 0) { failures.push('selectbox previous() did not move back to index 0'); }
+        await page.evaluate('window.__selectbox.previous()');       // repeat is off: stays put
+        if (await page.evaluate('window.__selectbox.index()') !== 0) { failures.push('selectbox previous() wrapped around with repeat off'); }
+
+        await page.evaluate('window.__selectbox.setIndex(2)');
+        if (String(await page.evaluate('window.__selectbox.value()')) !== '3') { failures.push('selectbox index setter selected ' + await page.evaluate('window.__selectbox.value()') + ', expected 3'); }
+        await page.evaluate('window.__selectbox.setValue("nope")');  // unknown value: no move
+        if (await page.evaluate('window.__selectbox.index()') !== 2) { failures.push('selectbox value setter moved on an unknown value'); }
+
+        // The dropdown's value setter selects by lookup and repaints the
+        // collapsed value in the control's own style colour.
+        var changesBeforeSetter = await page.evaluate('window.__dropdown.changes()');
+        await page.evaluate('window.__dropdown.setValue("de")');
+        if (await page.evaluate('window.__dropdown.value()') !== 'de') { failures.push('dropdown value setter did not select de'); }
+        if (await page.evaluate('window.__dropdown.textChildren()') !== 1) { failures.push('the collapsed value is not exactly one text object'); }
+        if (await page.evaluate('window.__dropdown.textString()') !== 'Deutsch') { failures.push('the collapsed value reads ' + await page.evaluate('window.__dropdown.textString()') + ', expected Deutsch'); }
+        if (await page.evaluate('window.__dropdown.textColor()') !== '#ffffff') { failures.push('the collapsed value is not painted in style.text: ' + await page.evaluate('window.__dropdown.textColor()')); }
+        if (await page.evaluate('window.__dropdown.highlight()') !== 2) { failures.push('the dropdown value setter did not move the highlight'); }
+        if (await page.evaluate('window.__dropdown.changes()') !== changesBeforeSetter) { failures.push('the dropdown value setter fired change'); }
+
         // Tearing the view off the display list with the list open must take the
         // popover (a stage child) and its stage listener with it. Last step: it
         // destroys the example view.
