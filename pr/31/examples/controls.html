@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+	<head lang="en">
+
+	</head>
+
+	<body>
+
+		<!-- Ze canvas -->
+		<div id="container" style="width: 1024px; height: 768px;"></div>
+
+		<!-- Ze requirejs -->
+		<script src="../scripts/vendor/requirejs/require.js"></script>
+
+		<!-- Ze game code -->
+		<script>
+
+			require.config ({
+				'baseUrl' : '../scripts/',
+				'urlArgs' : 'bust=v2'
+			});
+
+			require ([ 'main' ], function (easelbone)
+			{
+				// Some additional config to load the assets is required here.
+				require.config ({
+					'paths' : {
+						'assets' : '../examples/assets/easelboneassets'
+					},
+
+					'shim' : {
+						assets: {
+							exports: "lib"
+						}
+					}
+				});
+
+				// We'll need backbone to define our view, and easeljs to handle our rendering.
+				// We'll also need the assets.
+				require ([
+					'backbone',
+					'easeljs',
+					'assets'
+				],
+				function (
+					backbone,
+					createjs,
+					assets
+				) {
+
+					createjs.Ticker.timingMode = createjs.Ticker.TIMEOUT;
+					createjs.Ticker.setFPS (24);
+
+					var dirtyRendering = /[?&]dirtyRendering=1/.test(window.location.search);
+					var rootView = new easelbone.Views.Root ({'container': document.getElementById ('container'), 'dirtyRendering': dirtyRendering });
+
+					// Set default properties
+					easelbone.setProperties (assets.properties);
+
+					// Ticker
+					//createjs.Ticker.setFPS (assets.properties.fps);
+
+
+					// Load assets
+					var loader = new easelbone.Loader();
+					loader.loadAssets (assets, '../examples/assets/');
+
+					// Prepare our "users"
+					var users = [
+						new easelbone.FakeWebremote.KeyboardUser ()
+					];
+
+					// And actually do load them.
+					loader.load (function () {
+
+						// NOW WE ARE READY FOR THE REAL SHIZZLE
+						// Create a view and add it to the root.
+
+						// An example settings view.slider1
+						var ExampleView = easelbone.Views.Navigatable.extend ({
+
+							initialize : function () {
+
+								// First call the parent.
+								this.initializeNavigable ({ 'orientation' : 'vertical' });
+
+								// Now set the view
+								this.view = new assets.ExampleSettingsView ();
+
+								// Register the various controls
+								this.addControl (new easelbone.Controls.Slider (this.view.slider1));
+								this.addControl (new easelbone.Controls.Slider (this.view.slider2));
+
+								var checkbox1 = new easelbone.Controls.Checkbox (this.view.checkbox1)
+								checkbox1.checked = true;
+								this.addControl (checkbox1);
+
+
+								var checkbox2 = new easelbone.Controls.Checkbox (this.view.checkbox2);
+								checkbox2.checked = false;
+								this.addControl (checkbox2);
+
+								var selectbox = new easelbone.Controls.Selectbox (this.view.selectbox);
+								selectbox.setValues ({
+									1 : "One",
+									2 : "Two",
+									3 : "Three"
+								});
+
+								selectbox.value = 2;
+
+								setTimeout (function () {
+									selectbox.text = "Three";
+								}, 1000);
+
+
+								this.addControl (selectbox);
+
+								// A dropdown on a second selectbox symbol: it draws its
+								// own popover list on the stage, above the (scaled) view.
+								var dropdownSymbol = new assets.SelectBox ();
+								dropdownSymbol.x = 470;
+								dropdownSymbol.y = 140;
+								this.view.addChild (dropdownSymbol);
+
+								var dropdown = new easelbone.Controls.Dropdown (dropdownSymbol, { rowHeight: 40, maxRows: 4 });
+								dropdown.setValues ({
+									'en' : 'English',
+									'nl' : 'Nederlands',
+									'de' : 'Deutsch',
+									'fr' : 'Français',
+									'es' : 'Español',
+									'it' : 'Italiano'
+								});
+								dropdown.value = 'nl';
+
+								var dropdownChanges = 0;
+								dropdown.on ('change', function () { dropdownChanges++; });
+
+								var dropdownIndex = this._options.length;
+								this.addControl (dropdown);
+
+								var viewBacks = 0;
+								this.setBack (function () { viewBacks++; });
+
+								var self = this;
+								window.__dropdown = {
+									ready: true,
+									value: function () { return dropdown.getValue (); },
+									isOpen: function () { return dropdown.isOpen (); },
+									changes: function () { return dropdownChanges; },
+									rowHeight: function () { return dropdown.style.rowHeight; },
+									key: function (k) { dropdown.keyInput (k); },
+									back: function () { return dropdown.onBack (); },
+									focus: function () { self.activate (dropdownIndex); },
+									triggerViewBack: function () { self.triggerBack (); },
+									viewBacks: function () { return viewBacks; },
+									// Where the popover SHOULD be, computed from the raw
+									// symbol coordinates and the scale addCenter gave
+									// the view (the example view is scaled up 800->1024).
+									anchorRect: function () {
+										var b = dropdownSymbol.nominalBounds;
+										return {
+											x: self.view.x + ((dropdownSymbol.x + b.x) * self.view.scaleX),
+											y: self.view.y + ((dropdownSymbol.y + b.y + b.height) * self.view.scaleY),
+											w: b.width * self.view.scaleX,
+											scale: self.view.scaleX
+										};
+									},
+									panelRect: function () {
+										var p = dropdown._panel;
+										var s = p.localToGlobal (0, 0);
+										return {
+											x: s.x,
+											y: s.y,
+											w: dropdown._panelWidth,
+											h: dropdown._visibleRows () * dropdown.style.rowHeight
+										};
+									}
+								};
+
+								var button1 = new easelbone.Controls.Button (this.view.button1);
+								button1.setText ("Short text", "sans-serif", "white");
+								button1.on ('click', function () {
+									alert ('Short text clicked');
+								});
+								this.addControl (button1);
+
+								var button2 = new easelbone.Controls.Button (this.view.button2);
+								button2.setText ("Rather long text for demonstration purposes. Don't try to put too much text in a small space though, it might ruin your user experience.", "sans-serif", "white");
+								this.addControl (button2);
+							},
+
+							'render' : function () {
+
+								this.addCenter (this.view);
+
+							}
+
+						});
+
+						var view = new ExampleView ();
+						view.setUsers (users);
+
+						rootView.setView (view);
+					});
+				});
+			});
+
+		</script>
+
+	</body>
+</html>
