@@ -175,7 +175,11 @@
 								longSymbol.y = 230;
 								this.view.addChild (longSymbol);
 
-								var dropdownLong = new easelbone.Controls.Dropdown (longSymbol, { rowHeight: 40, maxRows: 6 });
+								// width is given in the symbol's own (nominalBounds)
+								// units, not stage pixels: 450 here, wider than the
+								// symbol's natural ~301.6, so the scaled popover is
+								// checkable against 450 * scale.
+								var dropdownLong = new easelbone.Controls.Dropdown (longSymbol, { rowHeight: 40, maxRows: 6, width: 450 });
 								var longValues = {};
 								for (var o = 1; o <= 40; o ++) {
 									longValues['o' + o] = 'Option ' + o;
@@ -311,7 +315,13 @@
 											}
 											var s = dropdownLong._panel.localToGlobal (t.x, t.y);
 											return { x: s.x, y: s.y, w: t.w, h: t.h };
-										}
+										},
+										// The ancestor scale the control measured at open
+										// time (element units -> stage pixels), and the
+										// explicit style.width it was given, in those same
+										// element units.
+										scale: function () { return dropdownLong._scale; },
+										widthUnits: function () { return dropdownLong.style.width; }
 									},
 									// The navigatable view itself: focus moves
 									// only when the active control allows it.
