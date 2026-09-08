@@ -14,10 +14,21 @@ define(
          * ignored). The popover is drawn by the control itself on the stage,
          * above every layer, so no theme symbol is needed for it.
          *
-         * Input: 'a'/'start' opens or commits; 'down'/'up' move the highlight
-         * while open; onBack() cancels an open list and reports the press as
-         * consumed; deactivate() cancels. Mouse: click the symbol to open,
-         * click a row to commit, click outside to cancel, wheel to scroll.
+         * Focus model - a native <select>: while the list is OPEN the control
+         * captures the whole navigation axis (capturesNavigation() is true, so
+         * Navigatable.next/previous hand the press to keyInput instead of
+         * moving the focus, and 'left'/'right' are then ignored). The focus can
+         * only leave the dropdown once the list is committed or cancelled.
+         *
+         * Input: 'a'/'start' opens or commits; 'down'/'up' OPEN a closed list
+         * and move the highlight in an open one; onBack() cancels an open list
+         * and reports the press as consumed; deactivate() cancels. Mouse: click
+         * the symbol to open, hover a row to highlight it, click a row to
+         * commit, click outside to cancel, wheel to scroll.
+         *
+         * A list longer than maxRows draws a scrollbar inside its right edge:
+         * the thumb shows the visible window, and a click on the track above or
+         * below the thumb pages the list (there is no dragging).
          *
          * The wheel is handled by a DOM listener the control owns on the
          * stage's canvas for as long as the list is open, and it only acts
@@ -43,6 +54,7 @@ define(
             background: '#1e1e1e',
             border: '#888888',
             highlight: '#555555',
+            scrollbar: '#aaaaaa',
             text: '#ffffff',
             textHighlight: '#ffffff',
             font: null,
@@ -77,6 +89,9 @@ define(
             this._scrollTop = 0;
             this._panel = null;
             this._panelWidth = 0;
+            // Panel-local rect of the scrollbar thumb, or null while the list
+            // is short enough to need no scrollbar.
+            this._thumbRect = null;
             this._scale = 1;
             this._rowPx = this.style.rowHeight;
             this._stage = null;
@@ -411,6 +426,15 @@ define(
             var radius = 8 * scale;
             var w = this._panelWidth;
             var h = rows * rowHeight;
+
+            // A list that does not fit gets a scrollbar inside its right edge;
+            // the rows give up that much of their text width.
+            var hasScrollbar = this.allValues.length > rows;
+            var trackWidth = 6 * scale;
+            var trackInset = 2 * scale;
+            var trackX = w - trackInset - trackWidth;
+            var gutter = hasScrollbar ? (trackWidth + trackInset) : 0;
+
             panel.removeAllChildren();
 
             var bg = new createjs.Shape();
@@ -431,7 +455,7 @@ define(
                 row.addChild(rowBg);
 
                 var text = new BigText(this.allValues[i].text, s.font || undefined, i === this._highlight ? s.textHighlight : s.text, 'left');
-                text.setLimits(w - (2 * padding), rowHeight - (2 * padding));
+                text.setLimits(w - (2 * padding) - gutter, rowHeight - (2 * padding));
                 text.x = padding;
                 text.y = padding;
                 row.addChild(text);
@@ -444,7 +468,50 @@ define(
                     }.bind(this);
                 }.bind(this))(i));
 
+                // Hovering a row highlights it, the way a native select does.
+                // The re-render replaces the row that dispatched this event, so
+                // EaselJS hands the fresh row another mouseover: the guard is
+                // what stops that from looping.
+                row.on('mouseover', (function (index) {
+                    return function () {
+                        if (!this._open || index === this._highlight) {
+                            return;
+                        }
+                        this._highlight = index;
+                        this._renderPanel();
+                    }.bind(this);
+                }.bind(this))(i));
+
                 panel.addChild(row);
+            }
+
+            this._thumbRect = null;
+            if (hasScrollbar) {
+                var thumbHeight = h * (rows / this.allValues.length);
+                var thumbY = h * (this._scrollTop / this.allValues.length);
+
+                var track = new createjs.Shape();
+                track.graphics.setStrokeStyle(1 * scale).beginStroke(s.border).beginFill(s.background).drawRect(trackX, 0, trackWidth, h);
+                // Clicking the track above or below the thumb pages the list.
+                track.on('click', function (evt) {
+                    evt.stopPropagation();
+                    if (!this._thumbRect) {
+                        return;
+                    }
+                    var local = this._panel.globalToLocal(evt.stageX, evt.stageY);
+                    if (local.y < this._thumbRect.y) {
+                        this._scroll(-this._visibleRows());
+                    } else if (local.y > this._thumbRect.y + this._thumbRect.h) {
+                        this._scroll(this._visibleRows());
+                    }
+                }.bind(this));
+                panel.addChild(track);
+
+                var thumb = new createjs.Shape();
+                thumb.graphics.beginFill(s.scrollbar).drawRect(trackX, thumbY, trackWidth, thumbHeight);
+                panel.addChild(thumb);
+
+                this._thumbRect = { x: trackX, y: thumbY, w: trackWidth, h: thumbHeight };
             }
 
             DirtyFlag.invalidate();
@@ -504,6 +571,7 @@ define(
             }
 
             this._panel = null;
+            this._thumbRect = null;
             this._onStageDown = null;
             this._stage = null;
             DirtyFlag.invalidate();
@@ -534,13 +602,26 @@ define(
                 case 'down':
                     if (this._open) {
                         this._moveHighlight(1);
+                    } else {
+                        // A closed native select opens on up/down, it does not
+                        // step through the values behind the reader's back.
+                        this.open();
                     }
                     break;
 
                 case 'up':
                     if (this._open) {
                         this._moveHighlight(-1);
+                    } else {
+                        this.open();
                     }
+                    break;
+
+                case 'left':
+                case 'right':
+                    // The navigation axis is captured while the list is open
+                    // (see capturesNavigation), and a native select does
+                    // nothing with it: swallow the press.
                     break;
 
                 case 'back':
@@ -548,6 +629,16 @@ define(
                     this.onBack();
                     break;
             }
+        };
+
+        /**
+         * Navigatable.next/previous ask the active control first: an open list
+         * captures the navigation axis, so the focus cannot wander off to the
+         * next control before the list is committed or cancelled - exactly what
+         * a native <select> does.
+         */
+        Dropdown.prototype.capturesNavigation = function () {
+            return this._open;
         };
 
         /**

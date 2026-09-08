@@ -9,6 +9,12 @@
  *    the canvas (every visible row still painted)
  *  - the wheel, over the panel, scrolls the list (the control's own canvas
  *    listener, not the Mousewheel singleton)
+ *  - an OPEN list captures the navigation axis: Navigatable.next/previous do
+ *    not move the focus, and 'left'/'right' do nothing - like a native <select>
+ *  - a CLOSED list opens on 'up'/'down' without stepping the value
+ *  - a long list (40 options, 6 rows) scrolls with the keyboard, the wheel and
+ *    the scrollbar, highlights the row under the cursor, and draws a thumb that
+ *    is sized and positioned by the visible window
  * Usage: node tools/dropdown-test.js [port]
  */
 var spawn = require('child_process').spawn;
@@ -26,6 +32,16 @@ function pixel(page, x, y) {
 // The example popover paints #1e1e1e (30,30,30) opaque, highlight #555555.
 function isBackground(rgb) {
     return rgb[3] === 255 && rgb[0] < 60 && rgb[1] < 60 && rgb[2] < 60;
+}
+
+// The scrollbar thumb paints #aaaaaa (170,170,170) opaque.
+function isScrollbar(rgb) {
+    return rgb[3] === 255 && Math.abs(rgb[0] - 170) < 25 && Math.abs(rgb[1] - 170) < 25 && Math.abs(rgb[2] - 170) < 25;
+}
+
+// Canvas (stage) pixels -> client pixels, for page.mouse.
+function toClient(rect, x, y) {
+    return { x: rect.left + (x * rect.sx), y: rect.top + (y * rect.sy) };
 }
 
 function isHighlight(rgb) {
@@ -170,6 +186,161 @@ async function main() {
         await page.waitForTimeout(200);
         await page.evaluate('window.__dropdown.moveTo(470, 140)');
         if (await page.evaluate('window.__dropdown.changes()') !== 1) { failures.push('the clamp/wheel round fired change'); }
+
+        // ---- focus capture: an open list owns the navigation axis ----
+        // Park the cursor away from every panel first: with mouseover tracking
+        // on, a stale pointer position keeps re-highlighting the row under it.
+        await page.mouse.move(canvasRect.left + 5, canvasRect.top + 5);
+        await page.waitForTimeout(150);
+
+        var idx = await page.evaluate('window.__dropdown.index()');
+        var steps = 0;
+        while (steps < 20 && await page.evaluate('window.__dropdown.view.currentIndex()') !== idx) {
+            await page.evaluate('window.__dropdown.view.next()');
+            steps++;
+        }
+        if (await page.evaluate('window.__dropdown.view.currentIndex()') !== idx) { failures.push('could not focus the dropdown with view.next()'); }
+
+        // Closed, the view still owns the axis (otherwise the capture check
+        // below would pass for the wrong reason).
+        await page.evaluate('window.__dropdown.view.previous()');
+        if (await page.evaluate('window.__dropdown.view.currentIndex()') === idx) { failures.push('view.previous() did not leave the closed dropdown'); }
+        await page.evaluate('window.__dropdown.view.next()');
+        if (await page.evaluate('window.__dropdown.view.currentIndex()') !== idx) { failures.push('view.next() did not come back to the dropdown'); }
+
+        await page.evaluate('window.__dropdown.key("a")');            // open
+        await page.waitForTimeout(200);
+        if (!await page.evaluate('window.__dropdown.isOpen()')) { failures.push('the dropdown did not open for the capture check'); }
+        var capturedHighlight = await page.evaluate('window.__dropdown.highlight()');
+        var capturedValue = await page.evaluate('window.__dropdown.value()');
+        await page.evaluate('window.__dropdown.view.next()');
+        await page.evaluate('window.__dropdown.view.next()');
+        await page.waitForTimeout(150);
+        if (await page.evaluate('window.__dropdown.view.currentIndex()') !== idx) { failures.push('view.next() moved the focus while the list was open'); }
+        if (!await page.evaluate('window.__dropdown.isOpen()')) { failures.push('view.next() closed the open list'); }
+        await page.evaluate('window.__dropdown.view.previous()');
+        await page.waitForTimeout(150);
+        if (await page.evaluate('window.__dropdown.view.currentIndex()') !== idx) { failures.push('view.previous() moved the focus while the list was open'); }
+
+        // The captured presses arrive as 'left'/'right', which an open list
+        // ignores the way a native select does.
+        await page.evaluate('window.__dropdown.key("left")');
+        await page.evaluate('window.__dropdown.key("right")');
+        await page.waitForTimeout(150);
+        if (await page.evaluate('window.__dropdown.highlight()') !== capturedHighlight) { failures.push('left/right moved the highlight of an open list'); }
+        if (await page.evaluate('window.__dropdown.value()') !== capturedValue) { failures.push('left/right changed the value of an open list'); }
+        if (!await page.evaluate('window.__dropdown.isOpen()')) { failures.push('left/right closed the open list'); }
+
+        await page.evaluate('window.__dropdown.key("a")');            // commit
+        await page.waitForTimeout(200);
+        if (await page.evaluate('window.__dropdown.isOpen()')) { failures.push('the list stayed open after the capture commit'); }
+        await page.evaluate('window.__dropdown.view.next()');
+        await page.waitForTimeout(150);
+        if (await page.evaluate('window.__dropdown.view.currentIndex()') === idx) { failures.push('the focus stayed captured after the list was committed'); }
+        await page.evaluate('window.__dropdown.view.previous()');     // back on the dropdown
+        if (await page.evaluate('window.__dropdown.changes()') !== 1) { failures.push('the capture round fired change'); }
+
+        // ---- a CLOSED list opens on up/down, it does not step the value ----
+        var beforeOpenKeys = await page.evaluate('window.__dropdown.value()');
+        await page.evaluate('window.__dropdown.key("down")');
+        await page.waitForTimeout(200);
+        if (!await page.evaluate('window.__dropdown.isOpen()')) { failures.push('"down" did not open the closed list'); }
+        if (await page.evaluate('window.__dropdown.value()') !== beforeOpenKeys) { failures.push('"down" changed the value of a closed list'); }
+        await page.evaluate('window.__dropdown.key("b")');            // cancel
+        await page.waitForTimeout(200);
+        if (await page.evaluate('window.__dropdown.isOpen()')) { failures.push('"b" did not close the list opened with "down"'); }
+
+        await page.evaluate('window.__dropdown.key("up")');
+        await page.waitForTimeout(200);
+        if (!await page.evaluate('window.__dropdown.isOpen()')) { failures.push('"up" did not open the closed list'); }
+        await page.evaluate('window.__dropdown.key("b")');            // cancel
+        await page.waitForTimeout(200);
+        if (await page.evaluate('window.__dropdown.value()') !== beforeOpenKeys) { failures.push('opening a closed list with up/down changed the value'); }
+        if (await page.evaluate('window.__dropdown.changes()') !== 1) { failures.push('opening a closed list with up/down fired change'); }
+
+        // ---- the long list: 40 options in a 6 row window ----
+        var d;
+        await page.evaluate('window.__dropdown.long.key("a")');
+        await page.waitForTimeout(300);
+        if (!await page.evaluate('window.__dropdown.long.isOpen()')) { failures.push('the long dropdown did not open'); }
+        var longPanel = await page.evaluate('window.__dropdown.long.panelRect()');
+        if (longPanel.y + longPanel.h > canvas.h + 1) { failures.push('the long popover does not fit on the canvas: ' + (longPanel.y + longPanel.h) + ' > ' + canvas.h); }
+
+        for (d = 0; d < 10; d++) { await page.evaluate('window.__dropdown.long.key("down")'); }
+        await page.waitForTimeout(200);
+        var longHighlight = await page.evaluate('window.__dropdown.long.highlight()');
+        var longScroll = await page.evaluate('window.__dropdown.long.scrollTop()');
+        if (longHighlight !== 10) { failures.push('10x "down" left the highlight at ' + longHighlight + ', expected 10'); }
+        if (longScroll !== 5) { failures.push('10x "down" scrolled to ' + longScroll + ', expected 5'); }
+        var hiRow = await page.evaluate('window.__dropdown.long.rowRect(5)');
+        if (hiRow.y < longPanel.y - 1 || hiRow.y + hiRow.h > longPanel.y + longPanel.h + 1) {
+            failures.push('the highlighted row is not inside the panel: row ' + hiRow.y + '..' + (hiRow.y + hiRow.h) + ', panel ' + longPanel.y + '..' + (longPanel.y + longPanel.h));
+        }
+
+        for (d = 0; d < 10; d++) { await page.evaluate('window.__dropdown.long.key("up")'); }
+        await page.waitForTimeout(200);
+        if (await page.evaluate('window.__dropdown.long.scrollTop()') !== 0) { failures.push('10x "up" did not scroll the long list back to the top'); }
+        if (await page.evaluate('window.__dropdown.long.highlight()') !== 0) { failures.push('10x "up" did not move the highlight back to the first row'); }
+
+        // The wheel scrolls it too, one row per notch.
+        var wheelPoint = toClient(canvasRect, longPanel.x + (longPanel.w * 0.35), longPanel.y + (longPanel.h * 0.9));
+        await page.mouse.move(wheelPoint.x, wheelPoint.y);
+        await page.waitForTimeout(150);
+        for (d = 0; d < 3; d++) { await page.mouse.wheel(0, 120); await page.waitForTimeout(80); }
+        await page.waitForTimeout(150);
+        var wheeled = await page.evaluate('window.__dropdown.long.scrollTop()');
+        if (wheeled !== 3) { failures.push('3 wheel notches scrolled the long list to ' + wheeled + ', expected 3'); }
+        for (d = 0; d < 3; d++) { await page.mouse.wheel(0, -120); await page.waitForTimeout(80); }
+        await page.waitForTimeout(150);
+        if (await page.evaluate('window.__dropdown.long.scrollTop()') !== 0) { failures.push('the wheel did not scroll the long list back to the top'); }
+
+        // Hovering a row highlights it (visible row 2, whatever is scrolled).
+        var hoverRow = await page.evaluate('window.__dropdown.long.rowRect(2)');
+        var hoverPoint = toClient(canvasRect, hoverRow.x + (hoverRow.w * 0.35), hoverRow.y + (hoverRow.h / 2));
+        await page.mouse.move(hoverPoint.x, hoverPoint.y);
+        await page.waitForTimeout(400);
+        var hoverScroll = await page.evaluate('window.__dropdown.long.scrollTop()');
+        var hovered = await page.evaluate('window.__dropdown.long.highlight()');
+        if (hovered !== hoverScroll + 2) { failures.push('hovering visible row 2 highlighted ' + hovered + ', expected ' + (hoverScroll + 2)); }
+
+        // The scrollbar shows the window and pages on a track click.
+        var thumb = await page.evaluate('window.__dropdown.long.thumbRect()');
+        if (!thumb) {
+            failures.push('a 40 item list has no scrollbar thumb');
+        } else {
+            var expectedThumbHeight = longPanel.h * (6 / 40);
+            if (Math.abs(thumb.h - expectedThumbHeight) > 2) { failures.push('thumb height ' + thumb.h + ', expected ' + expectedThumbHeight); }
+            if (Math.abs(thumb.y - longPanel.y) > 1) { failures.push('the thumb of an unscrolled list is not at the top: ' + thumb.y + ' vs ' + longPanel.y); }
+            if (thumb.x + thumb.w > longPanel.x + longPanel.w + 1) { failures.push('the scrollbar is drawn outside the panel'); }
+
+            // ... and it is really painted, in the scrollbar colour (#aaaaaa).
+            var thumbPixel = await pixel(page, Math.round(thumb.x + (thumb.w / 2)), Math.round(thumb.y + (thumb.h / 2)));
+            if (!isScrollbar(thumbPixel)) { failures.push('the scrollbar thumb is not painted: ' + thumbPixel.join(',')); }
+
+            for (d = 0; d < 3; d++) { await page.mouse.wheel(0, 120); await page.waitForTimeout(80); }
+            await page.waitForTimeout(150);
+            var scrolledThumb = await page.evaluate('window.__dropdown.long.thumbRect()');
+            if (!(scrolledThumb.y > thumb.y)) { failures.push('the thumb did not move down when the list scrolled: ' + thumb.y + ' -> ' + scrolledThumb.y); }
+            if (Math.abs(scrolledThumb.h - thumb.h) > 1) { failures.push('the thumb changed height while scrolling'); }
+
+            for (d = 0; d < 3; d++) { await page.mouse.wheel(0, -120); await page.waitForTimeout(80); }
+            await page.waitForTimeout(150);
+            if (await page.evaluate('window.__dropdown.long.scrollTop()') !== 0) { failures.push('the scrollbar round did not leave the list at the top'); }
+
+            // Click the track well below the thumb: exactly one page down.
+            var trackPoint = toClient(canvasRect, thumb.x + (thumb.w / 2), longPanel.y + (longPanel.h * 0.75));
+            await page.mouse.click(trackPoint.x, trackPoint.y);
+            await page.waitForTimeout(300);
+            var paged = await page.evaluate('window.__dropdown.long.scrollTop()');
+            if (paged !== 6) { failures.push('a click on the track below the thumb paged to ' + paged + ', expected 6'); }
+            if (!await page.evaluate('window.__dropdown.long.isOpen()')) { failures.push('the track click closed the list'); }
+        }
+
+        await page.evaluate('window.__dropdown.long.key("b")');       // cancel
+        await page.waitForTimeout(200);
+        if (await page.evaluate('window.__dropdown.long.isOpen()')) { failures.push('the long list stayed open after "b"'); }
+        await page.mouse.move(canvasRect.left + 5, canvasRect.top + 5);
+        await page.waitForTimeout(150);
 
         // Tearing the view off the display list with the list open must take the
         // popover (a stage child) and its stage listener with it. Last step: it

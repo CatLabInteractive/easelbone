@@ -175,8 +175,25 @@ define (
                 }
             },
 
+            /**
+             * Like triggerBack, next/previous give the active control first
+             * refusal: a control whose capturesNavigation() returns true takes
+             * the whole navigation axis (an open Dropdown behaves like a native
+             * <select>: the focus cannot leave it until the list is committed
+             * or cancelled). The press is handed to the control as key input
+             * instead - 'right' for next, 'left' for previous - so the control
+             * can act on it or ignore it. A control without a
+             * capturesNavigation() method never captures anything.
+             */
             next : function (actor)
             {
+                if (this._current && typeof (this._current.capturesNavigation) === 'function' && this._current.capturesNavigation()) {
+                    if (typeof (this._current.keyInput) === 'function') {
+                        this._current.keyInput('right', actor);
+                    }
+                    return;
+                }
+
 				if (this._options.length === 0) {
 					return;
 				}
@@ -186,6 +203,13 @@ define (
 
             previous : function (actor)
             {
+                if (this._current && typeof (this._current.capturesNavigation) === 'function' && this._current.capturesNavigation()) {
+                    if (typeof (this._current.keyInput) === 'function') {
+                        this._current.keyInput('left', actor);
+                    }
+                    return;
+                }
+
 				if (this._options.length === 0) {
 					return;
 				}
