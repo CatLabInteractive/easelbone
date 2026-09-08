@@ -68,6 +68,26 @@ beyond their em box or advance widths. Registering an offset still works and
 takes precedence (restoring the fully legacy behavior for that font), as does
 the legacy heuristic on browsers without extended TextMetrics.
 
+## Releasing
+
+```bash
+npm run bump        # or bump:minor — bumps package.json, commits, creates the vX.Y.Z tag
+npm publish
+```
+
+`npm publish` wraps itself around that:
+
+- `prepublishOnly` runs `bower install && npm run build`, so a stale or missing
+  `dist/scripts/easelbone.js` can never be published.
+- The published tarball is limited to the built bundle and its source map (see
+  the `files` field) — the examples, sources and tooling stay in the repo.
+- `postpublish` pushes the branch and the new tag with `git push --follow-tags`,
+  then creates the matching GitHub Release with auto-generated notes
+  (`gh release create ... --generate-notes --verify-tag`). This needs the
+  [GitHub CLI](https://cli.github.com/) to be installed and authenticated
+  (`gh auth login`); `--verify-tag` makes it abort rather than invent a tag if
+  you published without bumping first.
+
 ## License
 
 [MIT](LICENSE)
