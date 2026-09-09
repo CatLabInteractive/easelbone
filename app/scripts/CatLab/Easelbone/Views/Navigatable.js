@@ -160,6 +160,36 @@ define (
             },
 
             /**
+             * The control map this view navigates by: which physical buttons
+             * move the focus (navigation), change the active control's value
+             * (manipulation), activate it (toggle) and leave the view (back).
+             * It is decided once by initializeNavigable() from
+             * options.orientation - a VERTICAL view navigates on up/down and
+             * manipulates on left/right, a HORIZONTAL one the other way round.
+             *
+             * Local input is bound straight from this map (see
+             * setWebremoteControlsInView), but REMOTE input - phones, gamepads
+             * and the local keyboard device, all routed through the player pool
+             * - is bound pool-side by CatLab/Webremote's NavigateableProxy,
+             * which has no access to the view. That proxy therefore has to be
+             * TOLD this map (the pool manager's enableNavigation forwards it),
+             * so a vertical view navigates vertically on a phone too instead of
+             * falling back to the proxy's horizontal defaults.
+             *
+             * A copy is returned: a caller may not mutate the view's mapping.
+             *
+             * @returns {{navigation: Array, toggle: Array, manipulation: Array, back: Array}}
+             */
+            getControls : function ()
+            {
+                var controls = {};
+                _.each(this._controls, function (buttons, name) {
+                    controls[name] = _.isArray(buttons) ? buttons.slice() : buttons;
+                });
+                return controls;
+            },
+
+            /**
              *
              */
             triggerBack : function(actor)

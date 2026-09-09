@@ -175,7 +175,11 @@
 								longSymbol.y = 230;
 								this.view.addChild (longSymbol);
 
-								var dropdownLong = new easelbone.Controls.Dropdown (longSymbol, { rowHeight: 40, maxRows: 6 });
+								// width is given in the symbol's own (nominalBounds)
+								// units, not stage pixels: 450 here, wider than the
+								// symbol's natural ~301.6, so the scaled popover is
+								// checkable against 450 * scale.
+								var dropdownLong = new easelbone.Controls.Dropdown (longSymbol, { rowHeight: 40, maxRows: 6, width: 450 });
 								var longValues = {};
 								for (var o = 1; o <= 40; o ++) {
 									longValues['o' + o] = 'Option ' + o;
@@ -311,7 +315,13 @@
 											}
 											var s = dropdownLong._panel.localToGlobal (t.x, t.y);
 											return { x: s.x, y: s.y, w: t.w, h: t.h };
-										}
+										},
+										// The ancestor scale the control measured at open
+										// time (element units -> stage pixels), and the
+										// explicit style.width it was given, in those same
+										// element units.
+										scale: function () { return dropdownLong._scale; },
+										widthUnits: function () { return dropdownLong.style.width; }
 									},
 									// The navigatable view itself: focus moves
 									// only when the active control allows it.
@@ -335,6 +345,54 @@
 								var button2 = new easelbone.Controls.Button (this.view.button2);
 								button2.setText ("Rather long text for demonstration purposes. Don't try to put too much text in a small space though, it might ruin your user experience.", "sans-serif", "white");
 								this.addControl (button2);
+
+								// Icon-only button: the same Button symbol as button1/
+								// button2, but with its `.text` cleared before the
+								// control is constructed. The asset library ships no
+								// text-less MovieClip, so this is a faithful stand-in
+								// for an icon-only symbol - Controls.Button never sees
+								// a text placeholder to convert, exactly as if the
+								// symbol had none to begin with. (The symbol's own
+								// timeline still owns and keeps painting its unused
+								// placeholder art regardless of what we do to the
+								// `.text` property - a cosmetic artifact of reusing an
+								// existing text-bearing symbol for this stand-in, not
+								// something Controls.Button does - so this button is
+								// placed well clear of the dropdown popover checks
+								// below, which sample exact canvas pixels.)
+								var iconSymbol = new assets.Button ();
+								iconSymbol.text = undefined;
+								iconSymbol.setTransform (152.1,480,1,1,0,0,0,108.6,39.4);
+								this.view.addChild (iconSymbol);
+
+								var iconClicks = 0;
+								var iconSetTextThrew = false;
+
+								var iconButton = new easelbone.Controls.Button (iconSymbol);
+								iconButton.on ('click', function () {
+									iconClicks++;
+								});
+								this.addControl (iconButton);
+
+								// setText() must be a safe no-op without a text placeholder.
+								try {
+									iconButton.setText ("should be ignored");
+								} catch (e) {
+									iconSetTextThrew = true;
+								}
+
+								window.__iconButton = {
+									clicks: function () { return iconClicks; },
+									click: function () { iconButton.trigger ('click'); },
+									setTextThrew: function () { return iconSetTextThrew; },
+									// Proves the unchanged TextPlaceholder/BigText path: a
+									// normal button (button1) on the same page still ends
+									// up with its label drawn.
+									normalButtonRendered: function () {
+										var bigText = button1.text && button1.text.children[0];
+										return !!(bigText && bigText.textElement && bigText.textElement.text === "Short text");
+									}
+								};
 							},
 
 							'render' : function () {

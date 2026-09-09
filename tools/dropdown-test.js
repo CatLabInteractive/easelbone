@@ -437,6 +437,28 @@ async function main() {
         await page.mouse.move(canvasRect.left + 5, canvasRect.top + 5);
         await page.waitForTimeout(150);
 
+        // ---- style.width is in element units, scaled at open time ----
+        // The long dropdown is given an explicit width in the symbol's own
+        // nominalBounds space (see controls.html); the painted popover must
+        // come out that many units wide, scaled by the same ancestor
+        // transform _scale as every other metric.
+        await page.evaluate('window.__dropdown.long.key("a")');       // open
+        await page.waitForTimeout(300);
+        if (!await page.evaluate('window.__dropdown.long.isOpen()')) { failures.push('the long list did not open for the width check'); }
+        var widthPanel = await page.evaluate('window.__dropdown.long.panelRect()');
+        var widthScale = await page.evaluate('window.__dropdown.long.scale()');
+        var widthUnits = await page.evaluate('window.__dropdown.long.widthUnits()');
+        if (!(widthScale > 1.1)) { failures.push('the long dropdown is not scaled, the style.width check is worthless: ' + widthScale); }
+        var expectedWidthPx = widthUnits * widthScale;
+        if (Math.abs(widthPanel.w - expectedWidthPx) > 2) {
+            failures.push('style.width popover width ' + widthPanel.w + ', expected ' + expectedWidthPx + ' (width ' + widthUnits + ' units x scale ' + widthScale + ')');
+        }
+        await page.evaluate('window.__dropdown.long.key("b")');       // cancel
+        await page.waitForTimeout(200);
+        if (await page.evaluate('window.__dropdown.long.isOpen()')) { failures.push('the long list stayed open after the width check'); }
+        await page.mouse.move(canvasRect.left + 5, canvasRect.top + 5);
+        await page.waitForTimeout(150);
+
         // ---- the shared value model (Controls/Choice) ----
         // Both controls take their value list, their selection and their
         // accessors from Controls/Choice; neither may have lost any of it.
@@ -488,6 +510,23 @@ async function main() {
         if (await page.evaluate('window.__dropdown.textColor()') !== '#ffffff') { failures.push('the collapsed value is not painted in style.text: ' + await page.evaluate('window.__dropdown.textColor()')); }
         if (await page.evaluate('window.__dropdown.highlight()') !== 2) { failures.push('the dropdown value setter did not move the highlight'); }
         if (await page.evaluate('window.__dropdown.changes()') !== changesBeforeSetter) { failures.push('the dropdown value setter fired change'); }
+
+        // ---- Controls.Button with no text placeholder ----
+        // An icon-only button (its symbol's `.text` child cleared before the
+        // control was constructed - see the example) must not throw, must
+        // still click normally, and setText() on it must be a safe no-op.
+        if (await page.evaluate('typeof window.__iconButton') !== 'object') {
+            failures.push('window.__iconButton was not set up (constructing a text-less Button threw?)');
+        } else {
+            if (await page.evaluate('window.__iconButton.setTextThrew()')) { failures.push('setText() threw on a text-less button'); }
+            if (await page.evaluate('window.__iconButton.clicks()') !== 0) { failures.push('icon button reports clicks before it was clicked'); }
+            await page.evaluate('window.__iconButton.click()');
+            if (await page.evaluate('window.__iconButton.clicks()') !== 1) { failures.push('icon button click did not reach its handler'); }
+
+            // A normal button on the same page (button1) still renders its
+            // label - the TextPlaceholder/BigText path is untouched.
+            if (!await page.evaluate('window.__iconButton.normalButtonRendered()')) { failures.push('a normal button no longer renders its label'); }
+        }
 
         // Tearing the view off the display list with the list open must take the
         // popover (a stage child) and its stage listener with it. Last step: it
