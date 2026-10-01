@@ -28,6 +28,9 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Check that sources and bundle are ES5
+        run: npm run test:es5
+
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
 

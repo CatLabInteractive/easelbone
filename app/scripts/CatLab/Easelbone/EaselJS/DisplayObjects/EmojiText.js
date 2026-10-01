@@ -255,12 +255,12 @@ define(
 			var i = 0;
 
 			while (i < text.length) {
-				let matched = false;
+				var matched = false;
 
-				for (let k = 0; k < emojiKeys.length; k++) {
-					let emoji = emojiKeys[k];
+				for (var k = 0; k < emojiKeys.length; k++) {
+					var emoji = emojiKeys[k];
 					if (text.substr(i, emoji.length) === emoji) {
-						let replaced = this._replaceEmoji(emoji);
+						var replaced = this._replaceEmoji(emoji);
 						if (replaced) {
 							this._emoji.push({ index: outputIndex, data: replaced });
 							replacedText += replaced.replacement;

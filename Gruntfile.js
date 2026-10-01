@@ -39,6 +39,9 @@ module.exports = function (grunt) {
                         var terser = require("terser");
 
                         var options = {
+                            // The games ship this bundle to ES5 browsers
+                            // (tools/es5-test.js guards sources and output).
+                            ecma: 5,
                             toplevel: true,
                             compress: {
                                 global_defs: {
