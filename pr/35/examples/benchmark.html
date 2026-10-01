@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>easelbone benchmark</title>
+    <style>
+        #stats { font-family: monospace; padding: 8px; background: #222; color: #0f0; }
+        #controls { padding: 8px; font-family: sans-serif; }
+    </style>
+</head>
+<body>
+
+<div id="stats">waiting for first sample...</div>
+<div id="controls">
+    <label><input type="checkbox" id="animate"> animate movieclips</label>
+    <label><input type="checkbox" id="dirty"> dirty rendering (reloads page)</label>
+</div>
+
+<div id="container" style="width: 1024px; height: 768px;"></div>
+
+<script src="../scripts/vendor/requirejs/require.js"></script>
+<script>
+
+    var dirtyRendering = /[?&]dirtyRendering=1/.test(window.location.search);
+    document.getElementById('dirty').checked = dirtyRendering;
+    document.getElementById('dirty').addEventListener('change', function () {
+        window.location.search = this.checked ? '?dirtyRendering=1' : '';
+    });
+
+    require.config({
+        'baseUrl': '../scripts/',
+        'urlArgs': 'bust=v2'
+    });
+
+    require(['main'], function (easelbone) {
+
+        require.config({
+            'paths': {
+                'assets': '../examples/assets/easelboneassets'
+            },
+            'shim': {
+                assets: { exports: "lib" }
+            }
+        });
+
+        require(['backbone', 'easeljs', 'assets'], function (backbone, createjs, assets) {
+
+            createjs.Ticker.timingMode = createjs.Ticker.RAF;
+
+            var rootView = new easelbone.Views.Root({
+                'container': document.getElementById('container'),
+                'dirtyRendering': dirtyRendering
+            });
+
+            easelbone.setProperties(assets.properties);
+
+            var loader = new easelbone.Loader();
+            loader.loadAssets(assets, '../examples/assets/');
+
+            // --- stats ---------------------------------------------------
+            window.__benchmark = { ticksPerSecond: 0, paintsPerSecond: 0, avgTickMs: 0 };
+
+            var tickCount = 0;
+            var paintCount = 0;
+            var tickTimeSum = 0;
+
+            var originalUpdate = rootView.update.bind(rootView);
+            rootView.update = function () {
+                paintCount++;
+                originalUpdate();
+            };
+
+            var originalTick = rootView.tick.bind(rootView);
+            rootView.tick = function (event) {
+                var start = performance.now();
+                originalTick(event);
+                tickTimeSum += performance.now() - start;
+                tickCount++;
+            };
+
+            setInterval(function () {
+                window.__benchmark.ticksPerSecond = tickCount;
+                window.__benchmark.paintsPerSecond = paintCount;
+                window.__benchmark.avgTickMs = tickCount ? (tickTimeSum / tickCount) : 0;
+
+                document.getElementById('stats').textContent =
+                    'ticks/s: ' + tickCount +
+                    ' | paints/s: ' + paintCount +
+                    ' | avg tick: ' + window.__benchmark.avgTickMs.toFixed(2) + 'ms' +
+                    ' | dirtyRendering: ' + (dirtyRendering ? 'ON' : 'OFF');
+
+                tickCount = 0;
+                paintCount = 0;
+                tickTimeSum = 0;
+            }, 1000);
+
+            // --- scene ---------------------------------------------------
+            loader.load(function () {
+
+                var cogs = [];
+
+                var BenchmarkView = easelbone.Views.Base.extend({
+
+                    render: function () {
+                        var COLS = 8;
+                        var ROWS = 6;
+                        var CELL_W = 1024 / COLS;
+                        var CELL_H = 640 / ROWS;
+
+                        for (var row = 0; row < ROWS; row++) {
+                            for (var col = 0; col < COLS; col++) {
+                                var element = new assets.Placeholder();
+                                element.x = col * CELL_W + 4;
+                                element.y = row * CELL_H + 4;
+                                element.scaleX = (CELL_W - 8) / 100;
+                                element.scaleY = (CELL_H - 8) / 100;
+                                this.el.addChild(element);
+
+                                var placeholder = new easelbone.EaselJS.Placeholder(element);
+                                placeholder.addChild(new createjs.BigText(
+                                    'Cell ' + (row * COLS + col) + ' with some longer text',
+                                    'Arial',
+                                    '#333333'
+                                ));
+                            }
+                        }
+
+                        for (var c = 0; c < 6; c++) {
+                            var cog = new assets.Cog();
+                            cog.x = 80 + c * 160;
+                            cog.y = 700;
+                            cog.stop();
+                            this.el.addChild(cog);
+                            cogs.push(cog);
+                        }
+                    },
+
+                    // With dirty rendering off, keep the always-paint
+                    // behavior as the baseline. With it on, rely on the
+                    // dirty signals.
+                    tick: function () {
+                        return !dirtyRendering;
+                    }
+                });
+
+                document.getElementById('animate').addEventListener('change', function () {
+                    var playing = this.checked;
+                    cogs.forEach(function (cog) {
+                        if (playing) { cog.play(); } else { cog.stop(); }
+                    });
+                });
+
+                rootView.setView(new BenchmarkView());
+            });
+        });
+    });
+
+</script>
+</body>
+</html>
