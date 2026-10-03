@@ -112,6 +112,23 @@ define(
 
 				stage.snapToPixelEnabled = this.snapToPixel;
 
+				// Touch. Without this EaselJS only ever sees the mouse events a
+				// browser synthesises from a tap (a click), never mousedown /
+				// pressmove / pressup / mouseover from a finger: buttons worked
+				// on a phone but nothing could be dragged (a scroll area, a
+				// scrollbar thumb, a slider). Single-touch keeps the one-pointer
+				// click semantics; preventDefault (allowDefault false) keeps the
+				// page from scrolling or zooming under the canvas and stops the
+				// browser's own synthetic click after the touch one. Pass
+				// `touch: false` to opt out.
+				if (
+					options.touch !== false &&
+					typeof (createjs.Touch) !== 'undefined' &&
+					createjs.Touch.isSupported()
+				) {
+					createjs.Touch.enable(stage, true, false);
+				}
+
 				return stage;
             },
 
