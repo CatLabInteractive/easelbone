@@ -3,9 +3,9 @@
 A GUI engine combining [EaselJS](https://createjs.com/easeljs) and [Backbone.js](https://backbonejs.org/). Originally developed for use with Flash CC HTML5 output, but can be used with any EaselJS content.
 
 ## Features
-- Navigatable views with keyboard and mouse support
+- Navigatable views with keyboard, mouse and touch support (single-touch is enabled on the stage; `new easelbone.Views.Root({ ..., touch: false })` opts out)
 - UI controls: sliders, checkboxes, selectboxes, and buttons
-- Scrollable containers with list and float layouts
+- Scrollable containers with list and float layouts, scrolled by wheel, scrollbar, keyboard focus or dragging the content (touch)
 - Text rendering with auto-sizing and emoji support
 - Alpha mask support
 - Asset loading and management
@@ -58,6 +58,7 @@ npx grunt watch
 npx http-server dist -p 8080 --silent &   # serve the build first
 npm run smoke                             # every example page renders cleanly
 npm run test:baseline                     # BigText vertical centering (self-serving)
+npm run test:touch                        # touch on the stage, drag scrolling (self-serving)
 ```
 
 Note: `BigText` fits and centers text on the measured glyph bounds

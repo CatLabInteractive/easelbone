@@ -45,6 +45,7 @@
     "test:baseline": "node tools/baseline-test.js",
     "test:pin": "node tools/pin-test.js",
     "test:dropdown": "node tools/dropdown-test.js",
+    "test:touch": "node tools/touch-scroll-test.js",
     "test:pin:placeholder": "node tools/pin-placeholder-test.js",
     "test:pin:suppress": "node tools/pin-suppress-test.js"
   }

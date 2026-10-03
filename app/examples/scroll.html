@@ -95,22 +95,55 @@
 
 								this.scroll.content.addChild (this.list);
 
-								this.list.createElement ().element.text.text = 'Item 1';
-								this.list.createElement ().element.text.text = 'Item 2';
-								this.list.createElement ().element.text.text = 'Item 3';
-								this.list.createElement ().element.text.text = 'Item 4';
-								this.list.createElement ().element.text.text = 'Item 5';
-								this.list.createElement ().element.text.text = 'Item 6';
-								this.list.createElement ().element.text.text = 'Item 7';
-								this.list.createElement ().element.text.text = 'Item 8';
-								this.list.createElement ().element.text.text = 'Item 9';
+								// tools/touch-scroll-test.js reads these hooks.
+								var hooks = window.__scroll = { ready: false, clicks: [] };
+								this.items = [];
 
-								var item10 = this.list.createElement ();
-								item10.element.text.text = 'Item 10';
+								for (var i = 1; i <= 10; i++) {
+									var item = this.list.createElement ();
+									item.element.text.text = 'Item ' + i;
+									this.items.push (item);
+
+									// Which row a tap lands on (an EaselJS click on the symbol).
+									item.element.on ('click', function (index) {
+										hooks.clicks.push (index);
+									}.bind (null, i - 1));
+								}
+
+								var item10 = this.items[9];
+								var view = this;
+
+								// Canvas pixels of a display object's box (the stage is not scaled).
+								function rect (object, b) {
+									var p = object.localToGlobal (b.x, b.y);
+									var q = object.localToGlobal (b.x + b.width, b.y + b.height);
+									return { x: p.x, y: p.y, w: q.x - p.x, h: q.y - p.y };
+								}
+
+								hooks.touchEnabled = function () { return !!rootView.stage.__touch; };
+								hooks.scroll = function () { return view.scroll.content.getScroll (); };
+								hooks.max = function () {
+									var c = view.scroll.content;
+									return c.getBounds ().height - c.parent.getBounds ().height;
+								};
+								hooks.itemRect = function (index) {
+									var element = view.items[index].element;
+									return rect (element, element.nominalBounds);
+								};
+								// Canvas pixels per content unit: the view is scaled to fit.
+								hooks.scale = function () {
+									var surface = view.scroll.content.parent;
+									return rect (surface, surface.getBounds ()).h / surface.getBounds ().height;
+								};
+								hooks.windowRect = function () {
+									var surface = view.scroll.content.parent;
+									return rect (surface, surface.getBounds ());
+								};
 
 								setTimeout(function ()
 								{
-									scroll.focus(item10.element);
+									scroll.focus(item10.element)
+										.then (function () { hooks.ready = true; });
 								}, 1000);
 
 
