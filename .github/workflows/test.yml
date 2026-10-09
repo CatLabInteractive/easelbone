@@ -44,3 +44,6 @@ jobs:
 
       - name: Run BigText baseline tests
         run: npm run test:baseline
+
+      - name: Run EmojiText placement tests
+        run: npm run test:emoji
