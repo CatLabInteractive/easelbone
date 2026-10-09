@@ -198,32 +198,63 @@ define(
 			return strW;
 		};
 
-		// JavaScript
+		/**
+		 * The height of an emoji image as a share of the line box.
+		 * @type {number}
+		 */
+		EmojiText.EMOJI_LINE_FRACTION = 0.9;
+
+		/**
+		 * Draw one emoji image over its placeholder.
+		 *
+		 * The image is sized from the line box (EMOJI_LINE_FRACTION of its
+		 * height, width per the sprite's aspect ratio) and centred on the
+		 * placeholder horizontally and on the line box vertically. BigText
+		 * centres the text's ink in its space (or, for a line with no ink,
+		 * the line box itself), so a centred image lands where the text
+		 * does, and an image never taller than the line never leaves the
+		 * space BigText fitted the text into.
+		 *
+		 * It used to be as wide as the platform's emoji glyph and hang from
+		 * the bottom of the line box: on an iPhone that glyph is wider than
+		 * the line is tall, so the image rose above the line (and out of its
+		 * box). The fonts' manual offsets, which pushed every line down,
+		 * hid that until they went away.
+		 *
+		 * @param {CanvasRenderingContext2D} ctx
+		 * @param emoji
+		 * @param {number} x the placeholder's left edge
+		 * @param {number} y the line box's top
+		 * @param {number} lineHeight
+		 * @private
+		 */
 		p._drawEmoji = function (ctx, emoji, x, y, lineHeight) {
-			// Cache spacer size
-			var spacerSize = ctx._emojiSpacerSize || ctx.measureText(emojiPlaceholder);
-			ctx._emojiSpacerSize = spacerSize;
-
-			if (emoji.src) {
-				// Cache image size
-				var imageSize = ctx._emojiImageSize || ctx.measureText('😀');
-				ctx._emojiImageSize = imageSize;
-
-				this._getEmojiImage(emoji, imageSize.width, function (img) {
-					var targetWidth = imageSize.width;
-					var targetHeight = imageSize.width * (img.width / img.height);
-
-					ctx.drawImage(
-						img,
-						0, 0,
-						img.width, img.height,
-						x + ((spacerSize.width - imageSize.width) / 2),
-						y - (targetHeight - lineHeight),
-						targetWidth, targetHeight
-					);
-				}.bind(this));
+			if (!emoji.src) {
+				return;
 			}
-		}
+
+			// Measured per font: one context draws texts of many sizes.
+			if (ctx._emojiMetricsFont !== ctx.font) {
+				ctx._emojiMetricsFont = ctx.font;
+				ctx._emojiSpacerWidth = ctx.measureText(emojiPlaceholder).width;
+			}
+
+			var spacerWidth = ctx._emojiSpacerWidth;
+			var targetHeight = lineHeight * EmojiText.EMOJI_LINE_FRACTION;
+
+			this._getEmojiImage(emoji, targetHeight, function (img) {
+				var targetWidth = targetHeight * (img.width / img.height);
+
+				ctx.drawImage(
+					img,
+					0, 0,
+					img.width, img.height,
+					x + ((spacerWidth - targetWidth) / 2),
+					y + ((lineHeight - targetHeight) / 2),
+					targetWidth, targetHeight
+				);
+			}.bind(this));
+		};
 
 		/**
 		 * Split string into words

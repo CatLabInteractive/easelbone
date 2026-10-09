@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="utf-8">
+    <title>BigText emoji fixture</title>
+    <style>body { margin: 0; }</style>
+</head>
+<body>
+
+<canvas id="canvas" width="800" height="400"></canvas>
+
+<script src="/app/scripts/vendor/requirejs/require.js"></script>
+<script>
+    // Test fixture for tools/emoji-test.js.
+    //
+    // Renders a white BigText (drawn through EmojiText) on a black stage
+    // inside a container of known bounds. The emoji "🟥" is registered as a
+    // solid red image, so the test can tell the emoji's ink (red) from the
+    // text's (white) and measure where each landed.
+    //
+    // Query parameters:
+    //   text  - the string to render (default '🟥')
+    //   font  - font family (default 'sans-serif')
+    //   w, h  - container size (default 700x300)
+    //   lineHeightFactor - when present, registers it for `font` via
+    //             BigText.setFontLineHeightFactor. Below 1 the line box is
+    //             shorter than the emoji image, the ratio an iPhone's wide
+    //             emoji glyph produces with a normal line.
+
+    require.config({
+        'baseUrl': '/app/scripts/'
+    });
+
+    require(['main'], function () {
+        require([
+            'easeljs',
+            'CatLab/Easelbone/EaselJS/DisplayObjects/BigText',
+            'CatLab/Easelbone/EaselJS/DisplayObjects/EmojiText'
+        ], function (createjs, BigText, EmojiText) {
+
+            var params = {};
+            window.location.search.replace(/[?&]([^=&]+)=([^&]*)/g, function (m, k, v) {
+                params[k] = decodeURIComponent(v);
+            });
+
+            // U+1F7E5, the red square, written as escapes so the key cannot
+            // depend on the page's charset.
+            var RED_SQUARE = '🟥';
+            var text = params.text || RED_SQUARE;
+            var font = params.font || 'sans-serif';
+
+            // A 72x72 solid red square, like a Twemoji sprite in shape.
+            var sprite = document.createElement('canvas');
+            sprite.width = 72;
+            sprite.height = 72;
+            var spriteCtx = sprite.getContext('2d');
+            spriteCtx.fillStyle = '#f00';
+            spriteCtx.fillRect(0, 0, 72, 72);
+
+            var emojis = {};
+            emojis[RED_SQUARE] = sprite.toDataURL('image/png');
+            EmojiText.setEmojis(emojis);
+            BigText.setTextClass(EmojiText);
+
+            if (typeof params.lineHeightFactor !== 'undefined') {
+                BigText.setFontLineHeightFactor(font, parseFloat(params.lineHeightFactor));
+            }
+
+            var CONTAINER = {
+                x: 50,
+                y: 50,
+                width: parseInt(params.w, 10) || 700,
+                height: parseInt(params.h, 10) || 300
+            };
+            window.__container = CONTAINER;
+
+            var stage = new createjs.Stage(document.getElementById('canvas'));
+
+            var background = new createjs.Shape();
+            background.graphics.beginFill('#000').drawRect(0, 0, 800, 400);
+            stage.addChild(background);
+
+            var container = new createjs.Container();
+            container.setBounds(0, 0, CONTAINER.width, CONTAINER.height);
+            container.x = CONTAINER.x;
+            container.y = CONTAINER.y;
+            stage.addChild(container);
+
+            var bigText = new BigText(text, font, '#fff');
+            container.addChild(bigText);
+
+            createjs.Ticker.timingMode = createjs.Ticker.TIMEOUT;
+            createjs.Ticker.setFPS(24);
+            createjs.Ticker.addEventListener('tick', stage);
+
+            window.__bigText = bigText;
+
+            // Layout, the image load (a data URL, one tick) and the redraw
+            // it requests all need a few ticks before the canvas is final.
+            var ticks = 0;
+            createjs.Ticker.addEventListener('tick', function () {
+                if (++ticks === 12) {
+                    window.__ready = true;
+                }
+            });
+        });
+    });
+</script>
+
+</body>
+</html>
