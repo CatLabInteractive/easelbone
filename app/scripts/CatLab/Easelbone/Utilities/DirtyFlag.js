@@ -1,8 +1,14 @@
 /**
+ * "Paint the next frame" (dirty rendering mode). The root view finds changed
+ * display objects by itself (Utilities/DirtyRendering); this flag is for
+ * what the display list does not show: an image that arrived for something
+ * already painted, a layout that is redone at draw time, an explicit
+ * `rootView.invalidate()`.
+ *
  * This flag is a module-level singleton shared by all stages: on a page with
  * multiple dirty-rendering Root instances, one stage's consume() may claim
  * another's invalidation; the heartbeat bounds the resulting paint delay to
- * ~1s.
+ * `heartbeatInterval`.
  */
 define(
     [],
@@ -10,7 +16,6 @@ define(
         "use strict";
 
         var invalidated = false;
-        var movieClipHookInstalled = false;
 
         return {
 
@@ -29,28 +34,6 @@ define(
                 var value = invalidated;
                 invalidated = false;
                 return value;
-            },
-
-            /**
-             * Wrap MovieClip._tick so any clip that actually advances a frame
-             * marks the stage dirty. Installed once, and only when a root
-             * view enables dirty rendering.
-             * @param createjs
-             */
-            installMovieClipHook: function (createjs) {
-                if (movieClipHookInstalled || typeof (createjs.MovieClip) === 'undefined') {
-                    return;
-                }
-                movieClipHookInstalled = true;
-
-                var originalTick = createjs.MovieClip.prototype._tick;
-                createjs.MovieClip.prototype._tick = function (evtObj) {
-                    var frameBefore = this.currentFrame;
-                    originalTick.call(this, evtObj);
-                    if (this.currentFrame !== frameBefore) {
-                        invalidated = true;
-                    }
-                };
             }
         };
     }
