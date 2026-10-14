@@ -45,7 +45,10 @@ function describeArgument(value) {
             return 'canvas<' + value.__context.picture() + '>';
         }
         if (value.__fakeImage) {
-            return 'image#' + value.__id;
+            // Which picture it holds: what it loaded last, not its src (a
+            // new src shows only once it has loaded). No id: the two copies
+            // of a scene have their own image objects.
+            return 'image<' + (value.__loadedSrc || '') + '>';
         }
         return 'object';
     }
@@ -118,8 +121,33 @@ function FakeImage() {
     this.width = 0;
     this.height = 0;
     this.complete = false;
+    this.src = '';
+    this.__loadedSrc = null;
+    this.__listeners = [];
 }
-FakeImage.prototype.addEventListener = function () {};
+FakeImage.prototype.addEventListener = function (name, listener) {
+    if (name === 'load') {
+        this.__listeners.push(listener);
+    }
+};
+FakeImage.prototype.removeEventListener = function () {};
+
+/**
+ * What a browser does when an image finishes loading `src`: the new size
+ * and pixels, then `onload` and the load listeners.
+ */
+function loadImage(image, src, width, height) {
+    image.src = src;
+    image.__loadedSrc = src;
+    image.naturalWidth = image.width = width;
+    image.naturalHeight = image.height = height;
+    image.complete = true;
+    var event = { type: 'load', target: image };
+    if (typeof image.onload === 'function') {
+        image.onload(event);
+    }
+    image.__listeners.slice().forEach(function (listener) { listener(event); });
+}
 
 // ---------------------------------------------------------------------------
 // The world: one vm context with createjs and easelbone's source modules.
@@ -152,8 +180,15 @@ function createWorld() {
             }
             return { style: {}, appendChild: function () {} };
         },
-        addEventListener: function (name, callback) { documentListeners[name] = callback; },
-        removeEventListener: function () {},
+        addEventListener: function (name, callback) {
+            (documentListeners[name] = documentListeners[name] || []).push(callback);
+        },
+        removeEventListener: function (name, callback) {
+            var list = documentListeners[name] || [];
+            if (list.indexOf(callback) !== -1) {
+                list.splice(list.indexOf(callback), 1);
+            }
+        },
         body: {}
     };
 
@@ -163,13 +198,22 @@ function createWorld() {
 
     var createjs = sandbox.createjs;
 
-    // The ticker is driven by hand.
-    createjs.Ticker.addEventListener = function () {};
+    // The ticker is driven by hand; its listeners are only recorded.
+    var tickerListeners = [];
+    createjs.Ticker.addEventListener = function (name, listener) {
+        tickerListeners.push(listener);
+    };
+    createjs.Ticker.removeEventListener = function (name, listener) {
+        var index = tickerListeners.indexOf(listener);
+        if (index !== -1) {
+            tickerListeners.splice(index, 1);
+        }
+    };
     createjs.Ticker.getTime = function () { return now; };
 
     var Backbone = require('backbone');
     Backbone.$ = function (el) {
-        return { 0: el, attr: function () {}, on: function () {}, off: function () {} };
+        return { 0: el, attr: function () {}, on: function () {}, off: function () {}, remove: function () {} };
     };
 
     var modules = {
@@ -203,6 +247,7 @@ function createWorld() {
         createjs: createjs,
         load: load,
         documentListeners: documentListeners,
+        tickerListeners: tickerListeners,
         advance: function (ms) { now += ms; },
         now: function () { return now; }
     };
@@ -590,15 +635,24 @@ describe('tracker', function () {
         }
     }
 
-    it('tracking switches the mode on, stopping switches it off', function () {
-        assert.strictEqual(loadDirtyRendering().isActive(), false);
-        assert.strictEqual(DirtyRendering.isActive(), true);
+    it('stop() lets go of the stage, and stopping twice is harmless', function () {
+        tracker.stop();
+        tracker.stop();
+        assert.strictEqual(tracker.tracking, false);
+        assert.strictEqual(tracker.stage, null);
+    });
 
-        var second = DirtyRendering.track(container([]), null);
-        tracker.stop();
-        tracker.stop();
+    it('a view only hears "dirty" while the views of a dirty root tick', function () {
+        assert.strictEqual(DirtyRendering.isActive(), false);
+        var previous = DirtyRendering.setTicking(tracker);
+        assert.strictEqual(previous, null);
         assert.strictEqual(DirtyRendering.isActive(), true);
-        second.stop();
+        // A plain root ticking inside it (nested) is plain.
+        var inner = DirtyRendering.setTicking(null);
+        assert.strictEqual(DirtyRendering.isActive(), false);
+        DirtyRendering.setTicking(inner);
+        assert.strictEqual(DirtyRendering.isActive(), true);
+        DirtyRendering.setTicking(previous);
         assert.strictEqual(DirtyRendering.isActive(), false);
     });
 
@@ -690,15 +744,16 @@ describe('root view', function () {
         }
 
         it('ticking and painting are separated', function (root, item, world) {
-            var DirtyRendering = world.load('CatLab/Easelbone/Utilities/DirtyRendering');
             assert.notStrictEqual(root.dirtyTracker, null);
-            assert.strictEqual(DirtyRendering.isActive(), true);
             assert.strictEqual(root.stage.tickOnUpdate, false);
         });
 
         it('a base view no longer asks for a paint on every tick', function (root, item, world) {
             var BaseView = world.load('CatLab/Easelbone/Views/Base');
-            assert.strictEqual(BaseView.prototype.tick(), false);
+            root.layers.push({ tick: function () { return BaseView.prototype.tick(); }, render: function () {} });
+            root.settle();
+            assert.strictEqual(root.frame(10), false);
+            assert.strictEqual(root.frame(10), false);
         });
 
         it('the stage ticks every frame, but an idle stage is not painted', function (root) {
@@ -781,7 +836,7 @@ describe('root view', function () {
             root.settle();
             var paints = root.paintCount;
 
-            world.documentListeners.visibilitychange();
+            world.documentListeners.visibilitychange.forEach(function (listener) { listener(); });
             root.frame(10);
 
             assert.strictEqual(root.paintCount, paints + 1);
@@ -869,6 +924,127 @@ describe('root view', function () {
             assert.strictEqual(root.frame(10), true);
             assert.strictEqual(content.scaleX, 40);
         });
+    });
+});
+
+describe('several root views, and teardown', function () {
+
+    function baseLayer(world) {
+        var BaseView = world.load('CatLab/Easelbone/Views/Base');
+        return { tick: function () { return BaseView.prototype.tick(); }, render: function () {} };
+    }
+
+    test('a plain root next to a dirty root still paints every frame its views ask for', function () {
+        var world = createWorld();
+        var plain = createRoot(world, {});
+        var dirty = createRoot(world, { dirtyRendering: true });
+        plain.layers.push(baseLayer(world));
+        dirty.layers.push(baseLayer(world));
+        dirty.settle();
+
+        for (var i = 0; i < 5; i++) {
+            assert.strictEqual(plain.frame(10), true, 'plain, frame ' + i);
+            assert.strictEqual(dirty.frame(10), false, 'dirty, frame ' + i);
+        }
+
+        // Outside any root's tick a base view keeps its old answer.
+        var BaseView = world.load('CatLab/Easelbone/Views/Base');
+        assert.strictEqual(BaseView.prototype.tick(), true);
+    });
+
+    test('two dirty roots both paint for an easelbone object that raised the flag', function () {
+        var world = createWorld();
+        var DirtyFlag = world.load('CatLab/Easelbone/Utilities/DirtyFlag');
+        var a = createRoot(world, { dirtyRendering: true });
+        var b = createRoot(world, { dirtyRendering: true });
+        a.settle();
+        b.settle();
+
+        DirtyFlag.invalidate();
+        assert.strictEqual(a.frame(10), true);
+        assert.strictEqual(b.frame(10), true);
+        assert.strictEqual(a.frame(10), false);
+        assert.strictEqual(b.frame(10), false);
+    });
+
+    test('invalidate() on one root view paints that one only', function () {
+        var world = createWorld();
+        var a = createRoot(world, { dirtyRendering: true });
+        var b = createRoot(world, { dirtyRendering: true });
+        a.settle();
+        b.settle();
+
+        a.invalidate();
+        assert.strictEqual(b.frame(10), false);
+        assert.strictEqual(a.frame(10), true);
+    });
+
+    test('destroy() stops the tracker and lets go of the ticker, the stage and the page', function () {
+        var world = createWorld();
+        var root = createRoot(world, { dirtyRendering: true });
+        var tracker = root.dirtyTracker;
+        assert.strictEqual(world.tickerListeners.length, 1);
+        assert.strictEqual(world.documentListeners.visibilitychange.length, 1);
+        assert.strictEqual(root.stage.hasEventListener('stagemousemove'), true);
+
+        root.destroy();
+        root.destroy();
+
+        assert.strictEqual(tracker.tracking, false);
+        assert.strictEqual(root.dirtyTracker, null);
+        assert.strictEqual(root.dirtyRendering, false);
+        assert.strictEqual(world.tickerListeners.length, 0);
+        assert.strictEqual(world.documentListeners.visibilitychange.length, 0);
+        ['stagemousedown', 'stagemouseup', 'stagemousemove'].forEach(function (name) {
+            assert.strictEqual(root.stage.hasEventListener(name), false, name);
+        });
+    });
+
+    test('remove() tears the root view down as well', function () {
+        var world = createWorld();
+        var root = createRoot(world, { dirtyRendering: true });
+        var tracker = root.dirtyTracker;
+        root.remove();
+        assert.strictEqual(tracker.tracking, false);
+        assert.strictEqual(world.tickerListeners.length, 0);
+    });
+
+    test('dirty rendering turned off: the views decide again; back on: the display list does', function () {
+        var world = createWorld();
+        var root = createRoot(world, { dirtyRendering: true });
+        var item = new world.createjs.Shape();
+        root.stage.addChild(item);
+        var answer = false;
+        root.layers.push({ tick: function () { return answer; }, render: function () {} });
+        root.settle();
+        var tracker = root.dirtyTracker;
+
+        root.setDirtyRendering(false);
+        assert.strictEqual(tracker.tracking, false);
+        assert.strictEqual(root.dirtyTracker, null);
+        assert.strictEqual(root.stage.tickOnUpdate, true);
+        assert.strictEqual(root.stage.hasEventListener('stagemousemove'), false);
+        assert.strictEqual(world.documentListeners.visibilitychange.length, 0);
+
+        item.x = 50;
+        assert.strictEqual(root.frame(10), false);
+        answer = true;
+        assert.strictEqual(root.frame(10), true);
+
+        answer = false;
+        root.setDirtyRendering(true);
+        assert.notStrictEqual(root.dirtyTracker, null);
+        assert.strictEqual(root.stage.tickOnUpdate, false);
+        root.settle();
+        assert.strictEqual(root.frame(10), false);
+        item.x = 60;
+        assert.strictEqual(root.frame(10), true);
+
+        // Turning it on twice tracks once.
+        var current = root.dirtyTracker;
+        root.setDirtyRendering(true);
+        assert.strictEqual(root.dirtyTracker, current);
+        assert.strictEqual(world.documentListeners.visibilitychange.length, 1);
     });
 });
 
@@ -1182,6 +1358,115 @@ describe('nested MovieClips', function () {
         assert.strictEqual(sum(result.paints, 7, 20), 0);
         assert.strictEqual(result.paints[20], 1);
         assert.strictEqual(sum(result.paints, 24), 0);
+    });
+});
+
+describe('what else decides the picture', function () {
+
+    test('a sprite sheet whose image finishes loading late', function () {
+        var result = compare(function (createjs, parent) {
+            var image = new FakeImage();
+            var sheet = new createjs.SpriteSheet({ images: [image], frames: { width: 10, height: 10 } });
+            parent.addChild(new createjs.Sprite(sheet));
+            return { image: image };
+        }, function (frame, scene) {
+            if (frame === 10) {
+                loadImage(scene.image, 'sheet.png', 40, 10);
+            }
+        }, 20);
+
+        assert.strictEqual(result.paints[10], 1);
+        assert.strictEqual(sum(result.paints, 14), 0);
+    });
+
+    test('an image whose src is swapped for another of the same size', function () {
+        var result = compare(function (createjs, parent) {
+            var image = new FakeImage();
+            loadImage(image, 'a.png', 10, 10);
+            parent.addChild(new createjs.Bitmap(image));
+            return { image: image };
+        }, function (frame, scene) {
+            if (frame === 10) {
+                scene.image.src = 'b.png';
+            }
+            if (frame === 14) {
+                loadImage(scene.image, 'b.png', 10, 10);
+            }
+        }, 24);
+
+        assert.strictEqual(result.paints[14], 1);
+        assert.strictEqual(sum(result.paints, 18), 0);
+    });
+
+    test('BitmapText letterSpacing, lineHeight and spaceWidth', function () {
+        var result = compare(function (createjs, parent) {
+            var image = new FakeImage();
+            loadImage(image, 'font.png', 20, 10);
+            var sheet = new createjs.SpriteSheet({
+                images: [image],
+                frames: { width: 10, height: 10 },
+                animations: { A: 0, B: 1 }
+            });
+            var label = new createjs.BitmapText('A B\nAB', sheet);
+            parent.addChild(label);
+            return { label: label };
+        }, function (frame, scene) {
+            if (frame === 10) {
+                scene.label.letterSpacing = 6;
+            }
+            if (frame === 15) {
+                scene.label.lineHeight = 30;
+            }
+            if (frame === 20) {
+                scene.label.spaceWidth = 25;
+            }
+        }, 26);
+
+        assert.strictEqual(result.paints[10], 1);
+        assert.strictEqual(result.paints[15], 1);
+        assert.strictEqual(result.paints[20], 1);
+    });
+
+    test('loop toggled on a synched clip past the end of its timeline', function () {
+        var result = compare(function (createjs, parent) {
+            var child = clip(createjs, 'synched', [slidingBox(createjs, '#f00')]);
+            var outer = clip(createjs, 'independent', [hold(child, 20)], { stopped: true });
+            outer.gotoAndStop(12);
+            parent.addChild(outer);
+            return { child: child };
+        }, function (frame, scene) {
+            if (frame === 10) {
+                scene.child.loop = false;
+            }
+        }, 20);
+
+        assert.strictEqual(result.paints[10], 1);
+        assert.strictEqual(sum(result.paints, 14), 0);
+    });
+
+    test('snapToPixel on an object, and snapToPixelEnabled on the stage', function () {
+        var result = compare(function (createjs, parent) {
+            parent.snapToPixelEnabled = true;
+            var shape = box(createjs, '#f00');
+            shape.x = 10.4;
+            shape.y = 3.3;
+            parent.addChild(shape);
+            return { shape: shape, stage: parent };
+        }, function (frame, scene) {
+            if (frame === 10) {
+                scene.shape.snapToPixel = false;
+            }
+            if (frame === 15) {
+                scene.shape.snapToPixel = true;
+            }
+            if (frame === 20) {
+                scene.stage.snapToPixelEnabled = false;
+            }
+        }, 26);
+
+        assert.strictEqual(result.paints[10], 1);
+        assert.strictEqual(result.paints[15], 1);
+        assert.strictEqual(result.paints[20], 1);
     });
 });
 

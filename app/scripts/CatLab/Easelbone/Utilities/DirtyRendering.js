@@ -25,7 +25,9 @@
  *  - a Graphics object redrawn in place: `install()` stamps every Graphics
  *    when its commands change, the walk reads the stamp;
  *  - a playing video behind a Bitmap: the walk reads `currentTime`;
- *  - an image that finished loading: the walk reads its natural size;
+ *  - an image that finished loading, also a new `src` of the same size and
+ *    the images of a sprite sheet: the walk listens for `load` on every
+ *    image it meets (once per image), a load paints the next frame;
  *  - what easelbone's own objects do behind the display list (an emoji
  *    image that arrived, a Fill that still waits for its content, a pinned
  *    object): they raise Utilities/DirtyFlag themselves;
@@ -56,8 +58,11 @@ define(
         var ANGLE = 64;
         var ALPHA = 1024;
 
-        // Number of stages being tracked (see isActive()).
-        var active = 0;
+        // The tracker of the root view whose views are ticking right now
+        // (null: none, or a plain root view). See isActive().
+        var ticking = null;
+        // Images that finished loading since the page started (see watch()).
+        var loads = 0;
         var stampCounter = 0;
         var installed = false;
 
@@ -109,6 +114,36 @@ define(
             return object.__dirtyStamp;
         }
 
+        function onImageLoad() {
+            loads++;
+        }
+
+        /**
+         * Listen for `load` on an image, once per image. Its pixels change
+         * when it loads, and nothing in the display list has to: a sprite
+         * sheet that was still loading, a `src` swapped for another picture
+         * of the same size. Not for a canvas or a video (no load, and a
+         * video is read through currentTime).
+         */
+        function watch(image) {
+            image.__dirtyWatched = true;
+            if (typeof (image.addEventListener) === 'function' && !image.getContext) {
+                image.addEventListener('load', onImageLoad);
+            }
+        }
+
+        function watchSpriteSheet(sheet) {
+            sheet.__dirtyWatched = true;
+            var images = sheet._images;
+            if (images) {
+                for (var i = 0; i < images.length; i++) {
+                    if (images[i] && !images[i].__dirtyWatched) {
+                        watch(images[i]);
+                    }
+                }
+            }
+        }
+
         function isDrawn(node) {
             return !!(node.visible && node.alpha > 0 && node.scaleX !== 0 && node.scaleY !== 0);
         }
@@ -152,6 +187,10 @@ define(
                 return h;
             }
 
+            if (!image.__dirtyWatched) {
+                watch(image);
+            }
+
             // Not loaded yet = nothing is drawn; loaded = a size.
             h = mix(h, (image.naturalWidth || image.width) | 0);
             h = mix(h, (image.naturalHeight || image.height) | 0);
@@ -180,7 +219,9 @@ define(
         }
 
         function walk(node, h) {
-            h = mix(h, node.id | 0);
+            // snapToPixel rides along with the id: it rounds the position
+            // when the stage has snapToPixelEnabled.
+            h = mix(h, ((node.id | 0) << 1) | (node.snapToPixel ? 1 : 0));
 
             if (!isDrawn(node)) {
                 // Not painted, and neither is anything below it.
@@ -240,17 +281,27 @@ define(
                 h = mixNumber(h, node._synchOffset, 1);
                 h = mixNumber(h, node.startPosition, 1);
                 h = mixString(h, node.mode);
+                // Past the end of its timeline, loop decides between
+                // wrapping around and holding the last frame.
+                h = mix(h, node.loop | 0);
             }
 
             if (node.spriteSheet) {
                 h = mix(h, stampOf(node.spriteSheet));
+                if (!node.spriteSheet.__dirtyWatched) {
+                    watchSpriteSheet(node.spriteSheet);
+                }
             }
 
             if (typeof (node.text) !== 'undefined' && typeof (node.font) !== 'undefined') {
                 h = mixText(h, node);
             } else if (typeof (node.text) !== 'undefined' && node.spriteSheet) {
-                // BitmapText
+                // BitmapText: lays its characters out when it is drawn, so
+                // what it will lay them out with counts.
                 h = mixString(h, node.text);
+                h = mixNumber(h, node.letterSpacing, POSITION);
+                h = mixNumber(h, node.lineHeight, POSITION);
+                h = mixNumber(h, node.spaceWidth, POSITION);
             }
 
             if (node.image) {
@@ -290,6 +341,7 @@ define(
             this.stage = stage;
             this.last = null;
             this.trailing = 0;
+            this.loadsSeen = loads;
 
             this.tracking = true;
 
@@ -305,7 +357,12 @@ define(
             var current = DirtyRendering.fingerprint(this.stage);
             this.frames++;
 
-            if (current !== this.last) {
+            // An image loaded (anywhere: a load is rare, a paint too many
+            // is cheaper than knowing which stage shows it).
+            var loaded = this.loadsSeen !== loads;
+            this.loadsSeen = loads;
+
+            if (current !== this.last || loaded) {
                 this.last = current;
                 this.changes++;
                 this.trailing = TRAILING_FRAMES;
@@ -321,12 +378,14 @@ define(
         };
 
         /**
-         * Stop watching (a root view that is thrown away).
+         * Stop watching (a root view that is thrown away, or that turned
+         * dirty rendering off). Lets go of the stage.
          */
         Tracker.prototype.stop = function () {
-            if (this.tracking) {
-                this.tracking = false;
-                active = Math.max(0, active - 1);
+            this.tracking = false;
+            this.stage = null;
+            if (ticking === this) {
+                ticking = null;
             }
         };
 
@@ -337,15 +396,27 @@ define(
             Tracker: Tracker,
 
             /**
-             * Is a root view painting from the display list? Views/Base asks
-             * this in `tick()`: its "repaint every frame" answer only holds
-             * without it. Page-wide, like Utilities/DirtyFlag: with two root
-             * views on one page of which one is dirty, the views of the
-             * other have to return true from `tick()` themselves.
+             * Are the views that tick right now those of a root view that
+             * paints from the display list? Views/Base asks this in `tick()`:
+             * its "repaint every frame" answer only holds without it. Per
+             * root view: a plain root view next to a dirty one gets the old
+             * answer. Outside a root view's tick: false.
              * @returns {boolean}
              */
             isActive: function () {
-                return active > 0;
+                return ticking !== null;
+            },
+
+            /**
+             * Views/Root, around ticking its views: the tracker of a dirty
+             * root view, or null for a plain one.
+             * @param {Tracker|null} tracker
+             * @returns {Tracker|null} what was set before (put it back after)
+             */
+            setTicking: function (tracker) {
+                var previous = ticking;
+                ticking = tracker && tracker.tracking ? tracker : null;
+                return previous;
             },
 
             /**
@@ -354,7 +425,7 @@ define(
              * @returns {number}
              */
             fingerprint: function (stage) {
-                return walk(stage, 0x811c9dc5);
+                return walk(stage, stage.snapToPixelEnabled ? 0x811c9dc4 : 0x811c9dc5);
             },
 
             /**
@@ -397,15 +468,14 @@ define(
             },
 
             /**
-             * Start watching a stage. From here on `isActive()` is true and
-             * Views/Base stops asking for a paint on every tick.
+             * Start watching a stage. Stop the tracker when the root view
+             * goes away or turns dirty rendering off.
              * @param stage
              * @param createjs
              * @returns {Tracker}
              */
             track: function (stage, createjs) {
                 DirtyRendering.install(createjs);
-                active++;
                 return new Tracker(stage);
             },
 
@@ -413,7 +483,7 @@ define(
              * Tests only.
              */
             reset: function () {
-                active = 0;
+                ticking = null;
             }
         };
 
