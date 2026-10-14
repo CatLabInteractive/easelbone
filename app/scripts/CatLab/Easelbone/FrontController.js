@@ -35,7 +35,8 @@ define(
 
         'CatLab/FakeWebremote/Models/KeyboardUser',
 
-        'CatLab/Easelbone/EaselJS/Pinner'
+        'CatLab/Easelbone/EaselJS/Pinner',
+        'CatLab/Easelbone/Utilities/DirtyRendering'
     ],
     function (
         Loader,
@@ -73,7 +74,8 @@ define(
 
         KeyboardUser,
 
-        Pinner
+        Pinner,
+        DirtyRendering
     ) {
 
         return {
@@ -147,6 +149,14 @@ define(
             },
 
             Loader: Loader,
+
+            // What a root view created with `dirtyRendering: true` paints
+            // from: `fingerprint(stage)`, `isActive()` (per root view, while
+            // it ticks its views). A host can also use its presence to tell
+            // that this build decides on the display list (before it, the
+            // option painted on MovieClip and tween activity and missed
+            // changes made outside a tick).
+            DirtyRendering: DirtyRendering,
 
             Helpers: {
                 MovieClipHelper: MovieClipHelper

@@ -1,8 +1,9 @@
 define(
     [
-        'easeljs'
+        'easeljs',
+        'CatLab/Easelbone/Utilities/DirtyFlag'
     ],
-    function (createjs) {
+    function (createjs, DirtyFlag) {
         var width;
         var height;
         var debug = false;
@@ -90,6 +91,10 @@ define(
          */
         p.setLimits = function (width, height) {
             this.limits = {'width': width, 'height': height};
+
+            // The layout is redone at draw time, and the limits are not a
+            // display property a dirty-rendering root view could see.
+            DirtyFlag.invalidate();
         };
 
         /**
@@ -200,6 +205,14 @@ define(
             }
 
             this.initialized = true;
+
+            // This layout happens while painting. Whatever it is based on
+            // that is not in the display list (the available space, the
+            // bounds of content that is still loading) is invisible to a
+            // dirty-rendering root view, so ask for the next frame as well:
+            // as long as the content has no bounds (see below) that keeps
+            // every frame painted, as without dirty rendering.
+            DirtyFlag.invalidate();
 
             this.removeAllChildren();
 

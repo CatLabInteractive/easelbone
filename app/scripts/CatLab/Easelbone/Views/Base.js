@@ -4,14 +4,16 @@ define(
         'easeljs',
         'CatLab/Easelbone/Utilities/GlobalProperties',
         'CatLab/Easelbone/Utilities/MovieClipHelper',
-        'CatLab/Easelbone/Utilities/Deferred'
+        'CatLab/Easelbone/Utilities/Deferred',
+        'CatLab/Easelbone/Utilities/DirtyRendering'
     ],
     function (
         Backbone,
         createjs,
         GlobalProperties,
         MovieClipHelper,
-        Deferred
+        Deferred,
+        DirtyRendering
     ) {
         "use strict";
 
@@ -413,10 +415,15 @@ define(
 
             /**
              * Tick and return TRUE if the view should be updated.
+             *
+             * The default is "repaint every frame", unless a root view
+             * paints in dirty mode: then the display list decides, and a
+             * view that always said yes would switch that off. A view that
+             * overrides this and returns true is obeyed in both modes.
              * @returns {boolean}
              */
             tick: function () {
-                return true;
+                return !DirtyRendering.isActive();
             },
 
             /**

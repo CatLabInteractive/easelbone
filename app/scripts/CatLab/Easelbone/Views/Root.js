@@ -5,9 +5,10 @@ define(
 
         'CatLab/Easelbone/Views/Layer',
         'CatLab/Easelbone/Utilities/DirtyFlag',
+        'CatLab/Easelbone/Utilities/DirtyRendering',
         'CatLab/Easelbone/EaselJS/Pinner'
     ],
-    function (Backbone, createjs, Layer, DirtyFlag, Pinner) {
+    function (Backbone, createjs, Layer, DirtyFlag, DirtyRendering, Pinner) {
         var i;
         var layer;
 
@@ -57,6 +58,9 @@ define(
                     this.height = options.height;
                 }
 
+                // Before the stage and the main layer: both copy it.
+                this.snapToPixel = typeof(options.snapToPixel) !== 'undefined' ? options.snapToPixel : false;
+
                 this.stage = this.createStage(options);
 
                 // Create the main layer.
@@ -66,40 +70,118 @@ define(
                 this.dirty = false;
                 this.mainLayer = this.nextLayer('main');
 
-				this.snapToPixel = typeof(options.snapToPixel) !== 'undefined' ? options.snapToPixel : false;
-
-                this.dirtyRendering = typeof(options.dirtyRendering) !== 'undefined' ? !!options.dirtyRendering : false;
-                this.heartbeatInterval = 1000;
+                // Longest time without a paint in dirty mode (ms): a change
+                // nothing noticed shows this late instead of not at all.
+                this.heartbeatInterval = 500;
                 this._lastPaintTime = 0;
 
-                if (this.dirtyRendering) {
-                    // Split EaselJS's combined tick-and-paint: we tick the
-                    // stage every frame ourselves and paint only when dirty.
-                    this.stage.tickOnUpdate = false;
+                // Every stage paint, in either mode. A host can show paints
+                // per second next to the ticker's FPS.
+                this.paintCount = 0;
 
-                    DirtyFlag.installMovieClipHook(createjs);
+                this.dirtyRendering = false;
+                this.dirtyTracker = null;
+                this._invalidated = false;
+                this._flagGeneration = 0;
+                this._invalidateListener = this.invalidate.bind(this);
 
-                    // Mouse interaction changes hover/press visuals.
-                    var invalidate = this.invalidate.bind(this);
-                    this.stage.on('stagemousedown', invalidate);
-                    this.stage.on('stagemouseup', invalidate);
-                    this.stage.on('stagemousemove', invalidate);
-                }
+                // Dirty rendering: the stage still ticks every frame, but is
+                // only painted when what it would paint has changed (see
+                // Utilities/DirtyRendering for what counts and what does not).
+                this.setDirtyRendering(!!options.dirtyRendering);
 
                 // Ticker
                 //createjs.Ticker.timingMode = createjs.Ticker.RAF_SYNCHED;
-                createjs.Ticker.addEventListener('tick', function (e) {
+                this._tickListener = function (e) {
                     if (createjs.Ticker.paused) {
                         return;
                     }
 
                     this.tick(e)
-                }.bind(this));
+                }.bind(this);
+                createjs.Ticker.addEventListener('tick', this._tickListener);
 
                 //createjs.Ticker.addEventListener('tick', this.stage);
 
                 //this.stage.enableMouseOver(assets.properties.fps);
                 this.resize();
+            },
+
+            /**
+             * Turn dirty rendering on or off. Off stops the tracker and
+             * hands painting back to the views' tick(), as without the
+             * option.
+             * @param {boolean} enabled
+             */
+            setDirtyRendering: function (enabled) {
+                enabled = !!enabled;
+                if (enabled === this.dirtyRendering) {
+                    return;
+                }
+                this.dirtyRendering = enabled;
+
+                var invalidate = this._invalidateListener;
+                var names = ['stagemousedown', 'stagemouseup', 'stagemousemove'];
+                var hasDocument = typeof (document) !== 'undefined' && document.addEventListener;
+                var n;
+
+                if (enabled) {
+                    // Split EaselJS's combined tick-and-paint: we tick the
+                    // stage every frame ourselves and paint only when dirty.
+                    this.stage.tickOnUpdate = false;
+
+                    this.dirtyTracker = DirtyRendering.track(this.stage, createjs);
+                    this._flagGeneration = DirtyFlag.generation();
+                    this._invalidated = false;
+
+                    // Mouse interaction changes hover/press visuals.
+                    for (n = 0; n < names.length; n++) {
+                        this.stage.addEventListener(names[n], invalidate);
+                    }
+
+                    // A browser may drop the canvas of a page in the
+                    // background: paint as soon as it is looked at again.
+                    if (hasDocument) {
+                        document.addEventListener('visibilitychange', invalidate);
+                    }
+                } else {
+                    this.stage.tickOnUpdate = true;
+
+                    if (this.dirtyTracker) {
+                        this.dirtyTracker.stop();
+                        this.dirtyTracker = null;
+                    }
+
+                    for (n = 0; n < names.length; n++) {
+                        this.stage.removeEventListener(names[n], invalidate);
+                    }
+
+                    if (hasDocument) {
+                        document.removeEventListener('visibilitychange', invalidate);
+                    }
+                }
+            },
+
+            /**
+             * Let go of the ticker, the page and the tracker. The root view
+             * does not tick or paint after this. Safe to call twice.
+             */
+            destroy: function () {
+                if (this._destroyed) {
+                    return;
+                }
+                this._destroyed = true;
+
+                this.setDirtyRendering(false);
+                createjs.Ticker.removeEventListener('tick', this._tickListener);
+            },
+
+            /**
+             * Backbone's remove(), after destroy().
+             */
+            remove: function () {
+                this.destroy();
+                return Backbone.View.prototype.remove.apply(this, arguments);
             },
 
             createStage : function(options) {
@@ -190,10 +272,14 @@ define(
             },
 
             /**
-             * Force a repaint on the next frame (dirty rendering mode).
+             * Force a repaint on the next frame (dirty rendering mode). Only
+             * needed for what the display list does not show: pixels drawn
+             * into a canvas that a Bitmap displays, a custom draw(), a
+             * Graphics command edited after it was appended. A changed
+             * display object is found without it.
              */
             invalidate: function () {
-                DirtyFlag.invalidate();
+                this._invalidated = true;
             },
 
             /**
@@ -204,11 +290,18 @@ define(
                 this.trigger('tick:before', event);
                 this.dirty = false;
 
-                for (i = 0; i < this.layers.length; i++) {
-                    layer = this.layers[i];
-                    if (layer.tick(event)) {
-                        this.dirty = true;
+                // Views/Base.tick() asks DirtyRendering whether its root view
+                // is a dirty one: tell it, for the length of this loop.
+                var previous = DirtyRendering.setTicking(this.dirtyTracker);
+                try {
+                    for (i = 0; i < this.layers.length; i++) {
+                        layer = this.layers[i];
+                        if (layer.tick(event)) {
+                            this.dirty = true;
+                        }
                     }
+                } finally {
+                    DirtyRendering.setTicking(previous);
                 }
 
                 if (this.dirtyRendering) {
@@ -216,26 +309,34 @@ define(
                     // detection) without painting; paint only when dirty.
                     this.stage.tick(event);
 
-                    if (DirtyFlag.consume()) {
+                    // What the stage would paint now differs from the last
+                    // frame (or did one of the last few frames). Asked on
+                    // every tick, also when something else already decided
+                    // to paint: the tracker has to see every frame.
+                    if (this.dirtyTracker.afterTick()) {
                         this.dirty = true;
                     }
 
-                    if (
-                        typeof (createjs.Tween) !== 'undefined' &&
-                        createjs.Tween.hasActiveTweens &&
-                        createjs.Tween.hasActiveTweens()
-                    ) {
+                    // invalidate() on this root view, or an easelbone object
+                    // that changed something the display list does not show
+                    // (DirtyFlag: page-wide, every root view sees it once).
+                    if (this._invalidated) {
+                        this._invalidated = false;
+                        this.dirty = true;
+                    }
+                    var generation = DirtyFlag.generation();
+                    if (generation !== this._flagGeneration) {
+                        this._flagGeneration = generation;
                         this.dirty = true;
                     }
 
                     // Self-healing safety net: never go longer than the
                     // heartbeat interval without a paint.
-                    if (event.time - this._lastPaintTime >= this.heartbeatInterval) {
+                    if (createjs.Ticker.getTime() - this._lastPaintTime >= this.heartbeatInterval) {
                         this.dirty = true;
                     }
 
                     if (this.dirty) {
-                        this._lastPaintTime = event.time;
                         this.update();
                     }
                 } else if (this.dirty) {
@@ -254,17 +355,30 @@ define(
                     this.layers[i].render();
                 }
 
+                // A direct render (setView, resize, a host that renders
+                // while the ticker is paused) has always ticked the stage as
+                // well: that is what stage.update() does. Dirty rendering
+                // switches that off on the stage (tickOnUpdate = false), so
+                // the tick is done here. Without it what was just rendered
+                // would be painted before its texts were laid out (BigText
+                // draws from its tick).
+                if (this.dirtyRendering) {
+                    this.stage.tick();
+                }
+
                 // And update the stage.
                 this.update();
                 return this;
             },
 
             /**
-             *
+             * Paint the stage now. In dirty mode this does not tick the
+             * stage (tick() and render() have done that).
              */
             update: function () {
+                this.paintCount++;
                 if (this.dirtyRendering) {
-                    // Direct paints (render/resize) also reset the heartbeat.
+                    // Every paint restarts the heartbeat.
                     this._lastPaintTime = createjs.Ticker.getTime();
                 }
                 Pinner.sync(this.stage);

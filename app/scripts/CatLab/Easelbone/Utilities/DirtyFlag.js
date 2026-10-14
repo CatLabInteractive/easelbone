@@ -1,8 +1,13 @@
 /**
- * This flag is a module-level singleton shared by all stages: on a page with
- * multiple dirty-rendering Root instances, one stage's consume() may claim
- * another's invalidation; the heartbeat bounds the resulting paint delay to
- * ~1s.
+ * "Paint the next frame" (dirty rendering mode). The root view finds changed
+ * display objects by itself (Utilities/DirtyRendering); this flag is for
+ * what the display list does not show: an image that arrived for something
+ * already painted, a layout that is redone at draw time, an explicit
+ * `rootView.invalidate()`.
+ *
+ * Page-wide (the objects that raise it do not know their root view), but
+ * every root view keeps the generation it saw last: an invalidation paints
+ * each dirty-rendering root view once, none of them takes it from another.
  */
 define(
     [],
@@ -10,7 +15,7 @@ define(
         "use strict";
 
         var invalidated = false;
-        var movieClipHookInstalled = false;
+        var generation = 0;
 
         return {
 
@@ -19,38 +24,27 @@ define(
              */
             invalidate: function () {
                 invalidated = true;
+                generation++;
             },
 
             /**
-             * Read and clear the flag. Called once per frame by the root view.
+             * Goes up by one on every invalidate(). A root view paints when
+             * it differs from the value it saw last.
+             * @returns {number}
+             */
+            generation: function () {
+                return generation;
+            },
+
+            /**
+             * Read and clear the flag. Kept for hosts that read it; the root
+             * views use generation().
              * @returns {boolean}
              */
             consume: function () {
                 var value = invalidated;
                 invalidated = false;
                 return value;
-            },
-
-            /**
-             * Wrap MovieClip._tick so any clip that actually advances a frame
-             * marks the stage dirty. Installed once, and only when a root
-             * view enables dirty rendering.
-             * @param createjs
-             */
-            installMovieClipHook: function (createjs) {
-                if (movieClipHookInstalled || typeof (createjs.MovieClip) === 'undefined') {
-                    return;
-                }
-                movieClipHookInstalled = true;
-
-                var originalTick = createjs.MovieClip.prototype._tick;
-                createjs.MovieClip.prototype._tick = function (evtObj) {
-                    var frameBefore = this.currentFrame;
-                    originalTick.call(this, evtObj);
-                    if (this.currentFrame !== frameBefore) {
-                        invalidated = true;
-                    }
-                };
             }
         };
     }
