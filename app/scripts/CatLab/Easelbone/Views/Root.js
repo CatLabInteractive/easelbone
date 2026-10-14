@@ -58,6 +58,9 @@ define(
                     this.height = options.height;
                 }
 
+                // Before the stage and the main layer: both copy it.
+                this.snapToPixel = typeof(options.snapToPixel) !== 'undefined' ? options.snapToPixel : false;
+
                 this.stage = this.createStage(options);
 
                 // Create the main layer.
@@ -66,8 +69,6 @@ define(
 
                 this.dirty = false;
                 this.mainLayer = this.nextLayer('main');
-
-				this.snapToPixel = typeof(options.snapToPixel) !== 'undefined' ? options.snapToPixel : false;
 
                 // Longest time without a paint in dirty mode (ms): a change
                 // nothing noticed shows this late instead of not at all.

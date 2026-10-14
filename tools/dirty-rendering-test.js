@@ -731,6 +731,19 @@ describe('root view', function () {
         assert.strictEqual(BaseView.prototype.tick(), true);
     });
 
+    test('the snapToPixel option reaches the stage and every layer', function () {
+        var world = createWorld();
+
+        var snapping = createRoot(world, { snapToPixel: true });
+        assert.strictEqual(snapping.stage.snapToPixelEnabled, true);
+        assert.strictEqual(snapping.mainLayer.container.snapToPixel, true);
+        assert.strictEqual(snapping.nextLayer('top').container.snapToPixel, true);
+
+        var plain = createRoot(world, {});
+        assert.strictEqual(plain.stage.snapToPixelEnabled, false);
+        assert.strictEqual(plain.mainLayer.container.snapToPixel, false);
+    });
+
     describe('with dirtyRendering', function () {
         function it(name, body) {
             test(name, function () {
