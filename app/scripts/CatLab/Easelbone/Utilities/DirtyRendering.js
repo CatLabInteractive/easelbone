@@ -90,6 +90,7 @@ define(
         }
 
         function hashString(value) {
+            DirtyRendering.stringHashes++;
             var h = 0x811c9dc5;
             for (var i = 0; i < value.length; i++) {
                 h = mul(h ^ value.charCodeAt(i), 16777619);
@@ -207,10 +208,24 @@ define(
             }
             h = mix(h, node.__dirtyTextHash);
 
-            h = mixString(h, node.font);
-            h = mixString(h, node.color);
-            h = mixString(h, node.textAlign);
-            h = mixString(h, node.textBaseline);
+            // The style strings change even less often than the text.
+            if (
+                node.__dirtyFont !== node.font ||
+                node.__dirtyColor !== node.color ||
+                node.__dirtyAlign !== node.textAlign ||
+                node.__dirtyBaseline !== node.textBaseline
+            ) {
+                node.__dirtyFont = node.font;
+                node.__dirtyColor = node.color;
+                node.__dirtyAlign = node.textAlign;
+                node.__dirtyBaseline = node.textBaseline;
+                var style = mixString(0x811c9dc5, node.font);
+                style = mixString(style, node.color);
+                style = mixString(style, node.textAlign);
+                node.__dirtyStyleHash = mixString(style, node.textBaseline);
+            }
+            h = mix(h, node.__dirtyStyleHash);
+
             h = mixNumber(h, node.lineWidth, POSITION);
             h = mixNumber(h, node.lineHeight, POSITION);
             h = mixNumber(h, node.maxWidth, POSITION);
@@ -293,7 +308,9 @@ define(
                 }
             }
 
-            if (typeof (node.text) !== 'undefined' && typeof (node.font) !== 'undefined') {
+            // A Text has a font property even when it was built without
+            // one (EaselJS then draws it with its default font).
+            if (typeof (node.text) !== 'undefined' && ('font' in node)) {
                 h = mixText(h, node);
             } else if (typeof (node.text) !== 'undefined' && node.spriteSheet) {
                 // BitmapText: lays its characters out when it is drawn, so
@@ -378,6 +395,16 @@ define(
         };
 
         /**
+         * A paint happened outside the tick (a direct render): what the
+         * stage shows now is the picture to compare the next frame with.
+         */
+        Tracker.prototype.painted = function () {
+            if (this.stage) {
+                this.last = DirtyRendering.fingerprint(this.stage);
+            }
+        };
+
+        /**
          * Stop watching (a root view that is thrown away, or that turned
          * dirty rendering off). Lets go of the stage.
          */
@@ -394,6 +421,10 @@ define(
             TRAILING_FRAMES: TRAILING_FRAMES,
 
             Tracker: Tracker,
+
+            // Strings hashed since the page started (diagnostics and tests:
+            // a text's style is hashed once, not on every walk).
+            stringHashes: 0,
 
             /**
              * Are the views that tick right now those of a root view that

@@ -488,6 +488,30 @@ describe('fingerprint', function () {
         assert.strictEqual(changes(function () { label.text = 'Score: 11'; }), false);
     });
 
+    it('a Text built without a font still counts (EaselJS draws it with a default font)', function () {
+        var label = node({ text: '3', font: undefined });
+        stage.children.push(label);
+        assert.strictEqual(changes(function () { label.text = '2'; }), true);
+        assert.strictEqual(changes(function () { label.color = '#f00'; }), true);
+    });
+
+    it('the style of a text is hashed once, not on every walk', function () {
+        var many = [];
+        for (var i = 0; i < 50; i++) {
+            many.push(text('Player ' + i));
+        }
+        stage.children.push(container(many));
+
+        DirtyRendering.fingerprint(stage);
+        var before = DirtyRendering.stringHashes;
+        DirtyRendering.fingerprint(stage);
+        assert.strictEqual(DirtyRendering.stringHashes - before, 0);
+
+        many[3].font = '30px Arial';
+        DirtyRendering.fingerprint(stage);
+        assert.ok(DirtyRendering.stringHashes > before);
+    });
+
     it('a mask that moves counts', function () {
         child.mask = node();
         assert.strictEqual(changes(function () { child.mask.x += 5; }), true);
@@ -744,6 +768,17 @@ describe('root view', function () {
         assert.strictEqual(plain.mainLayer.container.snapToPixel, false);
     });
 
+    test('setMaxCanvasSize() applies at once, not on the next resize()', function () {
+        var world = createWorld();
+        var root = createRoot(world, { width: 800, height: 600 });
+        assert.strictEqual(root.canvas.width, 800);
+
+        root.setMaxCanvasSize(400, 300);
+
+        assert.strictEqual(root.canvas.width, 400);
+        assert.strictEqual(root.canvas.height, 300);
+    });
+
     describe('with dirtyRendering', function () {
         function it(name, body) {
             test(name, function () {
@@ -835,13 +870,16 @@ describe('root view', function () {
             assert.strictEqual(root.paintCount, paints + 2);
         });
 
-        it('mouse movement over the stage paints', function (root, item, world) {
+        it('mouse movement over the stage does not paint, a press does', function (root, item, world) {
             root.settle();
             var paints = root.paintCount;
 
             root.stage.dispatchEvent(new world.createjs.Event('stagemousemove'));
             root.frame(10);
+            assert.strictEqual(root.paintCount, paints);
 
+            root.stage.dispatchEvent(new world.createjs.Event('stagemousedown'));
+            root.frame(10);
             assert.strictEqual(root.paintCount, paints + 1);
         });
 
@@ -889,6 +927,35 @@ describe('root view', function () {
             assert.strictEqual(root.paintCount, paints + 1);
         });
 
+        it('a direct render passes no time to the stage: a clip with a framerate keeps playing', function (root, item, world) {
+            var createjs = world.createjs;
+            var mc = clip(createjs, 'independent', [slidingBox(createjs, '#f00')]);
+            mc.framerate = 25;
+            root.stage.addChild(mc);
+            root.settle();
+
+            root.render();
+
+            var before = mc.currentFrame;
+            for (var i = 0; i < 4; i++) {
+                root.frame(40);
+            }
+            assert.notStrictEqual(mc.currentFrame, before);
+        });
+
+        it('a direct render of a changed display list costs one paint, and the next frames none', function (root, item, world) {
+            root.settle();
+            var paints = root.paintCount;
+
+            root.stage.addChild(box(world.createjs, '#0f0'));
+            root.render();
+            assert.strictEqual(root.paintCount, paints + 1);
+
+            assert.strictEqual(root.frame(10), false);
+            assert.strictEqual(root.frame(10), false);
+            assert.strictEqual(root.frame(10), false);
+        });
+
         it('a direct render restarts the heartbeat', function (root, item, world) {
             root.settle();
             world.advance(root.heartbeatInterval - 20);
@@ -903,7 +970,7 @@ describe('root view', function () {
             assert.strictEqual(root.paintCount, paints);
         });
 
-        it('a Fill that waits for its content keeps every frame painted, then comes to rest', function (root, item, world) {
+        it('a Fill that waits for its content comes to rest, and lays out when the content loads', function (root, item, world) {
             var createjs = world.createjs;
             var Fill = world.load('CatLab/Easelbone/EaselJS/DisplayObjects/Background');
 
@@ -917,15 +984,18 @@ describe('root view', function () {
             holder.addChild(fill);
             root.stage.addChild(holder);
 
+            // The new object is painted, plus the two trailing frames, and
+            // then nothing: a loading image does not keep the stage painting.
+            var paints = 0;
             for (var i = 0; i < 20; i++) {
-                assert.strictEqual(root.frame(10), true, 'frame ' + i);
+                paints += root.frame(10) ? 1 : 0;
             }
+            assert.ok(paints <= 3, paints + ' paints while the image loads');
             assert.strictEqual(fill.children.length, 0);
 
-            // The content arrives: not a change in the display list.
-            image.naturalWidth = image.width = 10;
-            image.naturalHeight = image.height = 10;
-            image.complete = true;
+            // The content arrives: not a change in the display list (the
+            // Bitmap is not in it yet), the Fill hears the load itself.
+            loadImage(image, 'a.png', 10, 10);
             assert.strictEqual(root.frame(10), true);
             assert.strictEqual(fill.children.length, 1);
 
@@ -998,7 +1068,7 @@ describe('several root views, and teardown', function () {
         var tracker = root.dirtyTracker;
         assert.strictEqual(world.tickerListeners.length, 1);
         assert.strictEqual(world.documentListeners.visibilitychange.length, 1);
-        assert.strictEqual(root.stage.hasEventListener('stagemousemove'), true);
+        assert.strictEqual(root.stage.hasEventListener('stagemousedown'), true);
 
         root.destroy();
         root.destroy();
@@ -1008,7 +1078,7 @@ describe('several root views, and teardown', function () {
         assert.strictEqual(root.dirtyRendering, false);
         assert.strictEqual(world.tickerListeners.length, 0);
         assert.strictEqual(world.documentListeners.visibilitychange.length, 0);
-        ['stagemousedown', 'stagemouseup', 'stagemousemove'].forEach(function (name) {
+        ['stagemousedown', 'stagemouseup'].forEach(function (name) {
             assert.strictEqual(root.stage.hasEventListener(name), false, name);
         });
     });
@@ -1036,7 +1106,7 @@ describe('several root views, and teardown', function () {
         assert.strictEqual(tracker.tracking, false);
         assert.strictEqual(root.dirtyTracker, null);
         assert.strictEqual(root.stage.tickOnUpdate, true);
-        assert.strictEqual(root.stage.hasEventListener('stagemousemove'), false);
+        assert.strictEqual(root.stage.hasEventListener('stagemousedown'), false);
         assert.strictEqual(world.documentListeners.visibilitychange.length, 0);
 
         item.x = 50;
@@ -1080,6 +1150,8 @@ function compare(build, script, frames) {
     // hide a stale picture.
     root.heartbeatInterval = Infinity;
     var scene = build(createjs, root.stage);
+    // The dirty copy's script may render (setView, resize) in the middle.
+    scene.root = root;
 
     var referenceCanvas = createCanvas();
     referenceCanvas.width = root.canvas.width;
@@ -1212,6 +1284,25 @@ describe('nested MovieClips', function () {
         }, null, 48);
 
         assert.strictEqual(sum(result.paints, 0), 48);
+    });
+
+    test('a direct render in the middle of synched clips three deep leaves no stale picture', function () {
+        compare(function (createjs, parent) {
+            var inner = clip(createjs, SYNCHED, [slidingBox(createjs, '#f00'), fadingBox(createjs, '#0f0')]);
+            var middle = clip(createjs, SYNCHED, [hold(inner, 20)]);
+            var outer = clip(createjs, INDEPENDENT, [hold(middle, 20)]);
+            parent.addChild(outer);
+            return { stage: parent };
+        }, function (frame, scene) {
+            if (frame === 10) {
+                if (scene.root) {
+                    scene.root.render();
+                } else {
+                    // What the render's own tick does to the clips.
+                    scene.stage.tick({ delta: 0 });
+                }
+            }
+        }, 30);
     });
 
     test('a frame change that adds and removes children, deep down', function () {
@@ -1411,6 +1502,20 @@ describe('what else decides the picture', function () {
         assert.strictEqual(sum(result.paints, 18), 0);
     });
 
+    test('a Text built without a font', function () {
+        var result = compare(function (createjs, parent) {
+            var label = new createjs.Text('3');
+            parent.addChild(label);
+            return { label: label };
+        }, function (frame, scene) {
+            if (frame === 10) {
+                scene.label.text = '2';
+            }
+        }, 16);
+
+        assert.strictEqual(result.paints[10], 1);
+    });
+
     test('BitmapText letterSpacing, lineHeight and spaceWidth', function () {
         var result = compare(function (createjs, parent) {
             var image = new FakeImage();
@@ -1480,6 +1585,24 @@ describe('what else decides the picture', function () {
         assert.strictEqual(result.paints[10], 1);
         assert.strictEqual(result.paints[15], 1);
         assert.strictEqual(result.paints[20], 1);
+    });
+});
+
+describe('DirtyFlag', function () {
+    function loadDirtyFlag() {
+        var file = path.join(SCRIPTS, 'CatLab', 'Easelbone', 'Utilities', 'DirtyFlag.js');
+        var result = null;
+        new Function('define', fs.readFileSync(file, 'utf8'))(function (deps, factory) { result = factory(); });
+        return result;
+    }
+
+    test('generation() goes up by one per invalidate(), and that is the whole API', function () {
+        var DirtyFlag = loadDirtyFlag();
+        var start = DirtyFlag.generation();
+        DirtyFlag.invalidate();
+        DirtyFlag.invalidate();
+        assert.strictEqual(DirtyFlag.generation(), start + 2);
+        assert.deepStrictEqual(Object.keys(DirtyFlag).sort(), ['generation', 'invalidate']);
     });
 });
 
