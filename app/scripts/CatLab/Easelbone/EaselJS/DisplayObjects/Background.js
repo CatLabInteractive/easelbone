@@ -1,8 +1,9 @@
 define(
     [
-        'easeljs'
+        'easeljs',
+        'CatLab/Easelbone/Utilities/DirtyFlag'
     ],
-    function (createjs) {
+    function (createjs, DirtyFlag) {
         var width;
         var height;
         var debug = false;
@@ -90,6 +91,10 @@ define(
          */
         p.setLimits = function (width, height) {
             this.limits = {'width': width, 'height': height};
+
+            // The layout is redone at draw time, and the limits are not a
+            // display property a dirty-rendering root view could see.
+            DirtyFlag.invalidate();
         };
 
         /**
@@ -200,8 +205,23 @@ define(
             }
 
             this.initialized = true;
-
             this.removeAllChildren();
+
+            if (this.displayobject && !this.hasContentBounds()) {
+                // Nothing to lay out yet (an image that is still loading).
+                // waitForContent() hears the load; asking for a paint on
+                // every frame until then would keep a dirty-rendering root
+                // view painting for nothing.
+                this.initialized = false;
+                this.waitForContent();
+                return;
+            }
+
+            // This layout happens while painting. Whatever it is based on
+            // that is not in the display list (the available space) is
+            // invisible to a dirty-rendering root view, so ask for the next
+            // frame as well.
+            DirtyFlag.invalidate();
 
             var space = this.getAvailableSpace();
 
@@ -217,16 +237,6 @@ define(
 
                 this.addChild(border);
             } else if (this.displayobject) {
-
-                try {
-                    if (!this.getChildBounds()) {
-                        this.initialized = false;
-                        return;
-                    }
-                } catch (e) {
-                    this.initialized = false;
-                    return;
-                }
 
                 var childBounds = this.getChildBounds();
                 zooms = {
@@ -268,6 +278,35 @@ define(
 
             this.applyFilterCacheInParents(5);
             return this.Container_draw(ctx, ignoreCache);
+        };
+
+        /**
+         * @returns {boolean} the content has a size to lay out
+         */
+        p.hasContentBounds = function () {
+            try {
+                return !!this.getChildBounds();
+            } catch (e) {
+                return false;
+            }
+        };
+
+        /**
+         * Content without bounds is an image that is still loading (the
+         * Bitmap on it; a display object handed in must have bounds). Hear
+         * its load, once: the Bitmap is not in the display list until it
+         * is laid out, so a dirty-rendering root view cannot see the load
+         * by itself.
+         */
+        p.waitForContent = function () {
+            var image = this.displayobject && this.displayobject.image;
+            if (!image || image.__fillWatched || typeof (image.addEventListener) !== 'function') {
+                return;
+            }
+            image.__fillWatched = true;
+            image.addEventListener('load', function () {
+                DirtyFlag.invalidate();
+            });
         };
 
         /**
