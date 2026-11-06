@@ -10,7 +10,7 @@
   "devDependencies": {
     "bower": "^1.8.8",
     "bower-npm-resolver": "github:ibcooley/bower-npm-resolver",
-    "grunt": "^1.6.1",
+    "grunt": "^1.6.3",
     "grunt-bower-requirejs": "^2.0.0",
     "grunt-bump": "^0.8.0",
     "grunt-cache-breaker": "^1.0.1",
