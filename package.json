@@ -1,6 +1,6 @@
 {
   "name": "easelbone",
-  "version": "1.2.18",
+  "version": "1.2.19",
   "main": "dist/scripts/easelbone.js",
   "files": [
     "dist/scripts/easelbone.js",
