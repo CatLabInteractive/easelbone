@@ -121,7 +121,12 @@ define(
                 this.dirtyRendering = enabled;
 
                 var invalidate = this._invalidateListener;
-                var names = ['stagemousedown', 'stagemouseup', 'stagemousemove'];
+                // A press changes what a control shows without a display
+                // property necessarily moving (a custom draw). A move does
+                // not: hover visuals are display properties, which the
+                // fingerprint sees, and a moving pointer over a still screen
+                // would otherwise paint every frame.
+                var names = ['stagemousedown', 'stagemouseup'];
                 var hasDocument = typeof (document) !== 'undefined' && document.addEventListener;
                 var n;
 
@@ -217,6 +222,11 @@ define(
             setMaxCanvasSize: function(width, height)
             {
                 this.maxCanvasSize = [ width, height ];
+
+                // Apply it now: resize() ran in the constructor already.
+                if (this.stage) {
+                    this.resize();
+                }
             },
 
             /**
@@ -362,12 +372,22 @@ define(
                 // the tick is done here. Without it what was just rendered
                 // would be painted before its texts were laid out (BigText
                 // draws from its tick).
+                // No time has passed since the last ticker tick: a delta of
+                // 0 (a tick without one leaves a clip that has a framerate
+                // with NaN for its leftover time, and it never advances
+                // again).
                 if (this.dirtyRendering) {
-                    this.stage.tick();
+                    this.stage.tick({ delta: 0 });
                 }
 
                 // And update the stage.
                 this.update();
+
+                // What was just painted is the picture the next frame is
+                // compared with: the render is not painted a second time.
+                if (this.dirtyRendering) {
+                    this.dirtyTracker.painted();
+                }
                 return this;
             },
 

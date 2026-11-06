@@ -14,7 +14,6 @@ define(
     function () {
         "use strict";
 
-        var invalidated = false;
         var generation = 0;
 
         return {
@@ -23,7 +22,6 @@ define(
              * Request a repaint on the next frame (dirty rendering mode).
              */
             invalidate: function () {
-                invalidated = true;
                 generation++;
             },
 
@@ -34,17 +32,6 @@ define(
              */
             generation: function () {
                 return generation;
-            },
-
-            /**
-             * Read and clear the flag. Kept for hosts that read it; the root
-             * views use generation().
-             * @returns {boolean}
-             */
-            consume: function () {
-                var value = invalidated;
-                invalidated = false;
-                return value;
             }
         };
     }

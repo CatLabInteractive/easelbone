@@ -76,16 +76,16 @@ Off by default. With `dirtyRendering: true` the root view paints a frame when on
 
 1. the display-list fingerprint differs from the previous frame, plus the two frames after that;
 2. a view's `tick()` returned `true` (`Views.Base.tick()` returns `false` when it is ticked by a dirty-rendering root view and `true` otherwise, so a view that does not override it leaves the decision to the fingerprint; a view that overrides it and returns `true` keeps painting every frame);
-3. `rootView.invalidate()` was called, the mouse moved or was pressed over the stage, or the page became visible again;
-4. an image the walk has met finished loading (a sprite sheet that was still loading, a `src` swapped for a picture of the same size), or an easelbone object asked for it: an emoji image that arrived after its text was painted, a `Fill` that is laid out at draw time or still waits for its content (it keeps every frame painted until the content has bounds), a pinned object that moved;
+3. `rootView.invalidate()` was called, the mouse was pressed or released over the stage, or the page became visible again (a mouse move does not paint: hover visuals are display properties, which the fingerprint sees);
+4. an image the walk has met finished loading (a sprite sheet that was still loading, a `src` swapped for a picture of the same size), or an easelbone object asked for it: an emoji image that arrived after its text was painted, a `Fill` that is laid out at draw time or whose image finished loading (it listens for the load itself, and nothing is painted for it while the image loads), a pinned object that moved;
 5. nothing was painted for `rootView.heartbeatInterval` ms (default `500`): a change nothing noticed shows that late instead of not at all.
 
-What the fingerprint cannot see, and needs `rootView.invalidate()`: pixels drawn into a canvas that a Bitmap shows, a display object with a custom `draw()`, a Graphics command whose fields are edited after it was appended. (A Graphics object that is cleared and redrawn, or appended to, is seen.)
+What the fingerprint cannot see, and needs `rootView.invalidate()`: pixels drawn into a canvas that a Bitmap shows, a display object with a custom `draw()` (also one that draws a hover state from the mouse position), a Graphics command whose fields are edited after it was appended. (A Graphics object that is cleared and redrawn, or appended to, is seen. A `Text` counts whether or not it was given a font.)
 
 Other things to know:
 
 - A MovieClip or tween that changes nothing visible (under a hidden or cached ancestor) no longer causes paints. A cached container shows what is below it only after `updateCache()`, as always.
-- `rootView.render()` (and so `setView()` and `resize()`) ticks the stage before painting, as `stage.update()` does without the option. `rootView.update()` only paints.
+- `rootView.render()` (and so `setView()` and `resize()`) ticks the stage before painting, as `stage.update()` does without the option, with no time passed (`delta: 0`: a clip with a framerate does not advance). It is one paint: the next frame is compared with what it painted. `rootView.update()` only paints.
 - `rootView.paintCount` counts stage paints in both modes; a host can show paints per second next to the ticker FPS.
 - `easelbone.DirtyRendering` exposes `fingerprint(stage)` and `isActive()`. Its presence also tells a host that this build decides on the display list. Up to 1.2.18 the option painted while any MovieClip advanced or any tween was active, visible or not, and missed changes made outside a tick.
 - Per root view: `isActive()` answers for the root view whose views are ticking, `rootView.invalidate()` paints that root view only. What easelbone objects raise is seen once by every dirty-rendering root view.
