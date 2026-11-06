@@ -71,6 +71,7 @@ async function main() {
         await page.goto('http://localhost:' + PORT + '/app/examples/controls.html');
         await page.waitForFunction('window.__dropdown && window.__dropdown.ready', null, { timeout: 20000 });
 
+        var stageDownBefore = await page.evaluate('window.__dropdown.stageDownListeners()');
         var before = await page.evaluate('window.__dropdown.value()');
         await page.evaluate('window.__dropdown.key("a")');            // open
         await page.waitForTimeout(300);
@@ -543,6 +544,18 @@ async function main() {
         var stageChildrenAfter = await page.evaluate('window.__dropdown.stageChildren()');
         if (stageChildrenAfter !== stageChildrenClosed) { failures.push('the popover was orphaned on the stage (' + stageChildrenClosed + ' -> ' + stageChildrenAfter + ')'); }
         if (await page.evaluate('window.__dropdown.changes()') !== 1) { failures.push('the teardown committed a value'); }
+
+        // Every close must take its stagemousedown listener off the stage
+        // again. EaselJS on() registers a wrapper, so off() with the bare
+        // function removed nothing: the stale listener then read the nulled
+        // panel on the next press anywhere once the view was gone
+        // ("Cannot read properties of null (reading 'globalToLocal')").
+        var stageDownAfter = await page.evaluate('window.__dropdown.stageDownListeners()');
+        if (stageDownAfter !== stageDownBefore) { failures.push('closed lists left stagemousedown listeners on the stage (' + stageDownBefore + ' -> ' + stageDownAfter + ')'); }
+        var errorsBeforePress = errors.length;
+        await page.mouse.click(canvasRect.left + 5, canvasRect.top + 5);
+        await page.waitForTimeout(150);
+        if (errors.length !== errorsBeforePress) { failures.push('a press on the stage after the teardown threw: ' + errors.slice(errorsBeforePress).join(' | ')); }
 
         if (errors.length) { failures.push('page errors: ' + errors.join(' | ')); }
     } finally {
