@@ -212,6 +212,10 @@
 									highlight: function () { return dropdown._highlight; },
 									count: function () { return dropdown.allValues.length; },
 									stageChildren: function () { return rootView.stage.numChildren; },
+									stageDownListeners: function () {
+										var l = rootView.stage._listeners;
+										return (l && l.stagemousedown) ? l.stagemousedown.length : 0;
+									},
 									// Move the symbol around the view, to open the list
 									// near an edge of the canvas.
 									moveTo: function (x, y) { dropdownSymbol.x = x; dropdownSymbol.y = y; },

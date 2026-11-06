@@ -220,6 +220,12 @@ define(
             this._renderPanel();
 
             this._onStageDown = function (evt) {
+                // A listener on the same dispatch may have closed the list
+                // already (EaselJS copies the listener array before calling it).
+                if (!this._open || !this._panel) {
+                    return;
+                }
+
                 if (this.element.stage !== this._stage) {
                     this.close(false);
                     return;
@@ -233,7 +239,9 @@ define(
                     this.close(false);
                 }
             }.bind(this);
-            stage.on('stagemousedown', this._onStageDown);
+            // EaselJS on() wraps the listener and only that wrapper can be
+            // removed again with off(): keep the handle it returns.
+            this._stageDownHandle = stage.on('stagemousedown', this._onStageDown);
 
             this._listenForRemoval();
             this._listenForWheel();
@@ -339,8 +347,10 @@ define(
 
             var node = this.element;
             while (node && node !== this._stage) {
-                node.on('removed', this._onRemoved);
-                this._removalListeners.push(node);
+                this._removalListeners.push({
+                    node: node,
+                    handle: node.on('removed', this._onRemoved)
+                });
                 node = node.parent;
             }
         };
@@ -351,7 +361,7 @@ define(
             }
 
             for (var i = 0; i < this._removalListeners.length; i++) {
-                this._removalListeners[i].off('removed', this._onRemoved);
+                this._removalListeners[i].node.off('removed', this._removalListeners[i].handle);
             }
 
             this._removalListeners = null;
@@ -594,7 +604,9 @@ define(
             this._stopListeningForWheel();
 
             if (this._stage) {
-                this._stage.off('stagemousedown', this._onStageDown);
+                if (this._stageDownHandle) {
+                    this._stage.off('stagemousedown', this._stageDownHandle);
+                }
                 if (this._panel) {
                     this._stage.removeChild(this._panel);
                 }
@@ -605,6 +617,7 @@ define(
             this._thumb = null;
             this._thumbRect = null;
             this._onStageDown = null;
+            this._stageDownHandle = null;
             this._stage = null;
             DirtyFlag.invalidate();
 
